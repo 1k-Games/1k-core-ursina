@@ -28,6 +28,11 @@ class PauseMenu:
         self.resume_b = Button(y=.11,  scale=(.2, .1), text='Resume (esc)', on_click = self.pause_resume, enabled=False, ignore_paused=True)
         self.restart_b = Button(y=-.11,  scale=(.2, .1), text='Restart (r)', on_click = self.restart, enabled=False, ignore_paused=True)
         self.exit_b   = Button(y=-.22, scale=(.2, .1), text='Exit (q)', on_click = self.exit, enabled=False, ignore_paused=True)
+        self.ui_positioner = Draggable(
+            scale=(self.exit_b.scale),
+            position=Vec2(0,.225),
+            text="UI Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"UI_Positioner 1: {self.ui_positioner.position}"), z=-300, enabled=False, ignore_paused=True)
+
 
     def pause_input(self, key):
         if key == 'escape':
@@ -56,6 +61,7 @@ class PauseMenu:
         self.resume_b.enabled = not self.resume_b.enabled
         self.restart_b.enabled = not self.restart_b.enabled
         self.exit_b.enabled = not self.exit_b.enabled
+        self.ui_positioner.enabled = not self.ui_positioner.enabled
         
     def dev_cam(self):
         self.editor_camera.enabled = not self.editor_camera.enabled
@@ -76,3 +82,8 @@ class PauseMenu:
         
     def exit(self):
         application.quit()
+        
+if __name__ == '__main__':
+    app = Ursina()
+    PauseMenu()
+    app.run()

@@ -18,3 +18,28 @@ Support for handing off processes to non-primary cores are available in the Proc
 
 # ______________Controller(?)
 Each controller can be the base class for the player controller
+
+# Create Executable:
+import sys
+from cx_Freeze import setup, Executable
+
+# Dependencies are automatically detected, but it might need fine tuning.
+build_exe_options = {
+
+    "packages": ["ursina"], # Include Ursina package
+    "excludes": [], # Add packages you want to exclude
+    "include_files": ["assets/"] # Add files you want to include
+}
+
+#base="Win32GUI" should be used only for Windows GUI app
+
+#base = "Win32GUI" if sys.platform == "win32" else None
+
+setup(
+    
+    name="TheEnd_Invasion",
+    version="0.1",
+    description="The End: Invasion",
+    options={"build_exe": build_exe_options},
+    executables=[Executable("main.py", target_name='TheEnd_Invasion', base=base)], # Replace main.py with your main script
+)

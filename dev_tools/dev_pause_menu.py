@@ -31,9 +31,14 @@ class PauseMenu:
         self.ui_positioner = Draggable(
             scale=(self.exit_b.scale),
             position=Vec2(0,.225),
-            text="UI Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"UI_Positioner 1: {self.ui_positioner.position}"), z=-300, enabled=False, ignore_paused=True)
-
-
+            text="UI Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"UI Positioner: {self.ui_positioner.position}"), z=-300, enabled=False, ignore_paused=True)
+        self.scene_positioner = Draggable(
+            model='cube',
+            scale=(1,1,1),
+            position=Vec3(0,0,22),
+            text="Scene Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"Scene Positioner: pos = {self.ui_positioner.position}, world_pos = {self.ui_positioner.world_position}"), enabled=False, ignore_paused=True,
+            parent=scene)
+        
     def pause_input(self, key):
         if key == 'escape':
             self.pause_resume()
@@ -62,6 +67,7 @@ class PauseMenu:
         self.restart_b.enabled = not self.restart_b.enabled
         self.exit_b.enabled = not self.exit_b.enabled
         self.ui_positioner.enabled = not self.ui_positioner.enabled
+        self.scene_positioner.enabled = not self.scene_positioner.enabled 
         
     def dev_cam(self):
         self.editor_camera.enabled = not self.editor_camera.enabled

@@ -1,17 +1,26 @@
-
-
 import subprocess
 
 from ursina import *
 
-from print_tricks import pt
+from print_tricks import pt 
 
 class PauseMenu:
-    def __init__(self, player, **kwargs):
+    def __init__(self, player=None, **kwargs):
         # super().__init__(**kwargs)
         self.editor_camera = EditorCamera(enabled=False, ignore_paused=True)
         self.pause_handler = Entity(ignore_paused=True, input=self.pause_input)
         self.player = player
+        
+        ### Running a file up a level
+        # cwd = pt.l()
+        # last_backslash = cwd.rfind("\\")
+        # new_cwd = cwd[:last_backslash]
+        # file_name = 'main.py'
+        # self.file_path = f'{new_cwd}\\{file_name}'
+        
+        ### Running this file
+        self.file_path = pt.l(getFile=True)
+
         self.p_menu()
 
     def p_menu(self):
@@ -50,22 +59,20 @@ class PauseMenu:
         
     def dev_cam(self):
         self.editor_camera.enabled = not self.editor_camera.enabled
-        self.player.reticle.enabled = not self.editor_camera.enabled
-        self.player.visible_self = not self.editor_camera.enabled
-        mouse.locked = not self.editor_camera.enabled
         
-        sp = self.player.position
-        self.editor_camera.position = Vec3(sp.x, sp.y+3, sp.z)
-        self.editor_camera.rotation = self.player.rotation
+        if self.player is not None:
+            self.player.reticle.enabled = not self.editor_camera.enabled
+            self.player.visible_self = not self.editor_camera.enabled
+            mouse.locked = not self.editor_camera.enabled
+            
+            sp = self.player.position
+            self.editor_camera.position = Vec3(sp.x, sp.y+3, sp.z)
+            self.editor_camera.rotation = self.player.rotation
         
     def restart(self):
-        cwd = pt.l()
-        last_backslash = cwd.rfind("\\")
-        new_cwd = cwd[:last_backslash]
-        command = ['python', f'{new_cwd}\\main.py']
+        command = ['python', self.file_path]
         subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_CONSOLE)
         sys.exit()
         
     def exit(self):
         application.quit()
-        

@@ -3,6 +3,8 @@ from print_tricks import pt
 
 
 
+''' URSINA SPEED TEST '''
+
 from direct.showbase.ShowBaseGlobal import globalClock
 from ursina import *
 import time
@@ -31,7 +33,7 @@ app.run()
 
 
 
-
+''' PANDA3D SPEED TEST '''
 
 # from direct.showbase.ShowBase import ShowBase
 # from direct.showbase.ShowBaseGlobal import globalClock

@@ -1,5 +1,5 @@
+from print_tricks import pt
 from ursina import *
-
 
 class RotatingEntity(Entity):
     def __init__(self, **kwargs):
@@ -7,7 +7,8 @@ class RotatingEntity(Entity):
         self.mouse_sensitivity = 100
 
     def update(self):
-        if held_keys['right mouse down']:
+        pt()
+        if held_keys['right mouse']:
             self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity
             self.rotation_x += mouse.velocity[1] * self.mouse_sensitivity
 

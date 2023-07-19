@@ -49,8 +49,15 @@ class PauseMenu(Entity):
         self.p_menu()
         
     def update(self):
-        # if held_keys['right mouse down']:
-        #     self.scene_positioner.rotation_x += mouse.velocity[0]
+        if held_keys['right mouse']:
+            if held_keys['left mouse']:
+                self.scene_positioner.world_z += mouse.velocity[1] * 150
+            else:
+                self.scene_positioner.world_rotation_y -= mouse.velocity[0] * 150
+                self.scene_positioner.world_rotation_x += mouse.velocity[1] * 200
+        if held_keys['middle mouse']:
+            self.scene_positioner.world_rotation_z += mouse.velocity[0] * 150
+            
         if held_keys['w']:
             self.scene_positioner.rotation_x += time.dt * 100
         if held_keys['s']:
@@ -58,7 +65,7 @@ class PauseMenu(Entity):
         if held_keys['a']:
             self.scene_positioner.rotation_y += time.dt * 100
         if held_keys['d']:
-            self.scene_positioner.rotation_y-= time.dt * 100
+            self.scene_positioner.rotation_y -= time.dt * 100
         if held_keys['e']:
             self.scene_positioner.rotation_z += time.dt * 100
         if held_keys['q']:
@@ -71,7 +78,14 @@ class PauseMenu(Entity):
             self.scene_positioner.scale -= Vec3(time.dt, time.dt, time.dt)
         
         ## Texture Scale
-    
+        if held_keys['home']:
+            self.scene_positioner.texture_scale += Vec2(time.dt, 0)
+        if held_keys['end']:
+            self.scene_positioner.texture_scale -= Vec2(time.dt, 0)
+        if held_keys['page up']:
+            self.scene_positioner.texture_scale += Vec2(0, time.dt)
+        if held_keys['page down']:
+            self.scene_positioner.texture_scale -= Vec2(0, time.dt)
     def input(self, key):
         if key == 'o':
             self.scene_positioner.rotation_x += 22
@@ -91,11 +105,13 @@ class PauseMenu(Entity):
         
         Text.size = .010
         self.scene_positioner = Draggable(
-            parent=scene, 
-            model='cube',
+            parent=scene,
+            # model='cube',
+            model='..\\assets\\scene_positioner_cube.obj',
+            double_sided=True,
             text="Scene\nPositioner",
             scale=(1,1,1),
-            texture='..\\assets\\Square_Border',
+            texture='..\\assets\\colored_axis_cube',
             position=camera.ui.world_position + Vec3(4,3,10),
             rotation=(7,-13,22),
             # color=color.hsv(360,1,1,.05),
@@ -106,7 +122,8 @@ class PauseMenu(Entity):
                 f"    rot = {self.ui_positioner.rotation}, world_rot = {self.scene_positioner.world_rotation}"
                 )
             )
-        
+        # Text.size = .25
+        # text_sp = Text(text="Scene\nPositioner", position=(-.33,.1,0), parent=self.scene_positioner, billboard=True)
     def pause_input(self, key):
         if key == 'escape':
             self.pause_resume()
@@ -160,6 +177,6 @@ class PauseMenu(Entity):
     
 
 if __name__ == '__main__':
-    app = Ursina()
+    app = Ursina(size=(1920,1080))
     PauseMenu()
     app.run()

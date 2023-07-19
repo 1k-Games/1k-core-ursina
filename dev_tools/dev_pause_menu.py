@@ -4,47 +4,93 @@ from ursina import *
 
 from print_tricks import pt 
 
-class PauseMenu:
-    def __init__(self, player=None, **kwargs):
-        # super().__init__(**kwargs)
+class PauseMenu(Entity):
+    def __init__(self, player=None, ui_positioner=None, scene_positioner=None, **kwargs):
+        super().__init__(**kwargs)
+        self.ignore_paused = True
+        self.enabled=False
         self.editor_camera = EditorCamera(enabled=False, ignore_paused=True)
         self.pause_handler = Entity(ignore_paused=True, input=self.pause_input)
         self.player = player
         
-        ### Running a file up a level
+        self.quit_shortcut = 'x'
+        self.restart_shortcut = 'r'
+        
+        
+        ## Running a file up a level
         # cwd = pt.l()
         # last_backslash = cwd.rfind("\\")
-        # new_cwd = cwd[:last_backslash]
+        # new_cwd = cwd[:last_backslash]q
         # file_name = 'main.py'
-        # self.file_path = f'{new_cwd}\\{file_name}'
+        # self.file_path = f'{new_cwd}\\{file_name}'qq
         
-        ### Running this file
+        ## Running this file
         self.file_path = pt.l(getFile=True)
-
         self.p_menu()
+        
+    def update(self):
+        if held_keys['w']:
+            self.scene_positioner.rotation_x += time.dt * 100
+        if held_keys['s']:
+            self.scene_positioner.rotation_x -= time.dt * 100
+        if held_keys['a']:
+            self.scene_positioner.rotation_y += time.dt * 100
+        if held_keys['d']:
+            self.scene_positioner.rotation_y-= time.dt * 100
+        if held_keys['e']:
+            self.scene_positioner.rotation_z += time.dt * 100
+        if held_keys['q']:
+            self.scene_positioner.rotation_z -= time.dt * 100
+
+        ## Scale
+        if held_keys['up arrow']:
+            self.scene_positioner.scale += Vec3(time.dt, time.dt, time.dt)
+        if held_keys['down arrow']:
+            self.scene_positioner.scale -= Vec3(time.dt, time.dt, time.dt)
+        
+    ## Texture Scale
+    
+    def input(self, key):
+        if key == 'o':
+            self.scene_positioner.rotation_x += 22
 
     def p_menu(self):
-        self.paused_text = Text('Paused', y=.36, size=33, enabled=False)
-        self.resume_b = Button(y=.11,  scale=(.2, .1), text='Resume (esc)', on_click = self.pause_resume, enabled=False, ignore_paused=True)
-        self.restart_b = Button(y=-.11,  scale=(.2, .1), text='Restart (r)', on_click = self.restart, enabled=False, ignore_paused=True)
-        self.exit_b   = Button(y=-.22, scale=(.2, .1), text='Exit (q)', on_click = self.exit, enabled=False, ignore_paused=True)
+        self.paused_text = Text('Paused', x=0, y=.44,background=True, size=62, enabled=False)
+        self.resume_b = Button(y=.11,  scale=(.2, .1),      text=f'Resume (esc)', on_click = self.pause_resume, enabled=False, ignore_paused=True)
+        self.restart_b = Button(y=-.11,  scale=(.2, .1),    text=f'Restart ({self.restart_shortcut})', on_click = self.restart, enabled=False, ignore_paused=True)
+        self.exit_b   = Button(y=-.22, scale=(.2, .1),      text=f'Exit ({self.quit_shortcut})', on_click = self.exit, enabled=False, ignore_paused=True)
+        
+        Text.size = .020
         self.ui_positioner = Draggable(
             scale=(self.exit_b.scale),
-            position=Vec2(0,.225),
+            texture='..\\assets\\Square_Border',
+            position=Vec2(-.225,.225),
             text="UI Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"UI Positioner: {self.ui_positioner.position}"), z=-300, enabled=False, ignore_paused=True)
+        
+        Text.size = .005
         self.scene_positioner = Draggable(
+            parent=scene, 
             model='cube',
+            text="Scene\nPositioner",
             scale=(1,1,1),
-            position=Vec3(0,0,22),
-            text="Scene Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"Scene Positioner: pos = {self.ui_positioner.position}, world_pos = {self.ui_positioner.world_position}"), enabled=False, ignore_paused=True,
-            parent=scene)
+            texture='..\\assets\\Square_Border',
+            position=camera.ui.world_position + Vec3(2,2,22),
+            rotation=(7,-13,22),
+            # color=color.hsv(360,1,1,.05),
+            enabled=False, ignore_paused=True, 
+            on_click=lambda: print(
+                f"Scene Positioner:\n"
+                f"    pos = {self.ui_positioner.position}, world_pos = {self.ui_positioner.world_position}\n"
+                f"    rot = {self.ui_positioner.rotation}, world_rot = {self.scene_positioner.world_rotation}"
+                )
+            )
         
     def pause_input(self, key):
         if key == 'escape':
             self.pause_resume()
 
         if application.paused:
-            if key == 'q':
+            if key == 'x':
                 self.exit()
             if key == 'r':
                 self.restart()
@@ -55,6 +101,7 @@ class PauseMenu:
             
     def pause_resume(self):
         application.paused = not application.paused
+        self.enabled = not self.enabled
         mouse.locked = not application.paused
         
         if application.development_mode:
@@ -88,7 +135,8 @@ class PauseMenu:
         
     def exit(self):
         application.quit()
-        
+    
+
 if __name__ == '__main__':
     app = Ursina()
     PauseMenu()

@@ -20,7 +20,8 @@ from print_tricks import pt
 
 class PauseMenu(Entity):
     def __init__(self, 
-                 player=None, 
+                 player=None,
+                 file_path=None,
                  ui_positioner_ent=None, 
                  ui_p_parent=None, 
                  scene_positioner_ent=None,
@@ -28,7 +29,6 @@ class PauseMenu(Entity):
                  **kwargs):
         super().__init__(**kwargs)
         self.ignore_paused = True
-        self.enabled=False
         self.editor_camera = EditorCamera(enabled=False, ignore_paused=True)
         self.pause_handler = Entity(ignore_paused=True, input=self.pause_input)
         self.player = player
@@ -175,8 +175,18 @@ class PauseMenu(Entity):
     def exit(self):
         application.quit()
     
-
+class Dev_Pause_Menu(Entity):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.pause_menu = PauseMenu(
+            enabled=False, 
+            ignore_paused=True,
+            )
+    # def input(self, key):
+    #     if key == 'escape':
+    #         self.pause_menu.enabled = not self.pause_menu.enabled
+            
 if __name__ == '__main__':
     app = Ursina(size=(1920,1080))
-    PauseMenu()
+    Dev_Pause_Menu()
     app.run()

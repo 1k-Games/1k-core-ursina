@@ -1,3 +1,17 @@
+''' TODO
+
+- Pass a parent, so we can see what positions/rotations in regards to the parent
+- Pass a model to both the positioners so they look correct each time. 
+- Create a separate class called "Dev_Pause_Menu" and it's only functions are
+    to load an instance of PauseMenu and then accept "esc" input
+    which will enable/disable the entire PauseMenu without me needing to do it for
+    every single entity. 
+    
+    - After this is complete, re-write the code so individual buttons/text/draggables
+        aren't being enabled/disabled anymore. 
+
+'''
+
 import subprocess
 
 from ursina import *
@@ -5,7 +19,13 @@ from ursina import *
 from print_tricks import pt 
 
 class PauseMenu(Entity):
-    def __init__(self, player=None, ui_positioner=None, scene_positioner=None, **kwargs):
+    def __init__(self, 
+                 player=None, 
+                 ui_positioner_ent=None, 
+                 ui_p_parent=None, 
+                 scene_positioner_ent=None,
+                 scene_p_parent=None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.ignore_paused = True
         self.enabled=False
@@ -29,6 +49,8 @@ class PauseMenu(Entity):
         self.p_menu()
         
     def update(self):
+        # if held_keys['right mouse down']:
+        #     self.scene_positioner.rotation_x += mouse.velocity[0]
         if held_keys['w']:
             self.scene_positioner.rotation_x += time.dt * 100
         if held_keys['s']:
@@ -48,7 +70,7 @@ class PauseMenu(Entity):
         if held_keys['down arrow']:
             self.scene_positioner.scale -= Vec3(time.dt, time.dt, time.dt)
         
-    ## Texture Scale
+        ## Texture Scale
     
     def input(self, key):
         if key == 'o':
@@ -67,14 +89,14 @@ class PauseMenu(Entity):
             position=Vec2(-.225,.225),
             text="UI Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"UI Positioner: {self.ui_positioner.position}"), z=-300, enabled=False, ignore_paused=True)
         
-        Text.size = .005
+        Text.size = .010
         self.scene_positioner = Draggable(
             parent=scene, 
             model='cube',
             text="Scene\nPositioner",
             scale=(1,1,1),
             texture='..\\assets\\Square_Border',
-            position=camera.ui.world_position + Vec3(2,2,22),
+            position=camera.ui.world_position + Vec3(4,3,10),
             rotation=(7,-13,22),
             # color=color.hsv(360,1,1,.05),
             enabled=False, ignore_paused=True, 

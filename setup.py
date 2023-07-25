@@ -16,7 +16,7 @@ setup(
     author_email='1k.games.devs@gmail.com',
     license='MIT',
     keywords='game development',
-    packages=find_packages(include=['player_controllers.*']),
+    packages=find_packages(include=['player_controllers', 'player_controllers.*']),
     include_package_data=True,
     
     # TODO: Check Install

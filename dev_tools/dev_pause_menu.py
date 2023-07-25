@@ -3,8 +3,8 @@
 - Pass a parent, so we can see what positions/rotations in regards to the parent
 - Pass a model to both the positioners so they look correct each time. 
 - Create a separate class called "Dev_Pause_Menu" and it's only functions are
-    to load an instance of PauseMenu and then accept "esc" input
-    which will enable/disable the entire PauseMenu without me needing to do it for
+    to load an instance of Dev_Pause_Menu and then accept "esc" input
+    which will enable/disable the entire Dev_Pause_Menu without me needing to do it for
     every single entity. 
     
     - After this is complete, re-write the code so individual buttons/text/draggables
@@ -18,7 +18,7 @@ from ursina import *
 
 from print_tricks import pt 
 
-class PauseMenu(Entity):
+class Dev_Pause_Menu(Entity):
     def __init__(self, 
                  player=None,
                  file_path=None,
@@ -26,16 +26,16 @@ class PauseMenu(Entity):
                  ui_p_parent=None, 
                  scene_positioner_ent=None,
                  scene_p_parent=None,
+                 
                  **kwargs):
-        super().__init__(**kwargs)
-        self.ignore_paused = True
+        super().__init__(parent=camera.ui, ignore_paused=True, **kwargs)
+        
         self.editor_camera = EditorCamera(enabled=False, ignore_paused=True)
-        self.pause_handler = Entity(ignore_paused=True, input=self.pause_input)
+        
         self.player = player
         
-        self.quit_shortcut = 'x'
-        self.restart_shortcut = 'r'
-        
+        self.quit_key = 'x'
+        self.restart_key = 'r'
         
         ## Running a file up a level
         # cwd = pt.l()
@@ -48,6 +48,13 @@ class PauseMenu(Entity):
         self.file_path = pt.l(getFile=True)
         self.p_menu()
         
+        
+    # def on_enable(self):
+    #     pt('---on enable---')
+    #     self.pause_resume()
+    # def on_disable(self):
+    #     pt('--- on disable')
+    #     # self.pause_resume()
     def update(self):
         if held_keys['right mouse']:
             if held_keys['left mouse']:
@@ -86,22 +93,31 @@ class PauseMenu(Entity):
             self.scene_positioner.texture_scale += Vec2(0, time.dt)
         if held_keys['page down']:
             self.scene_positioner.texture_scale -= Vec2(0, time.dt)
-    def input(self, key):
-        if key == 'o':
-            self.scene_positioner.rotation_x += 22
 
+    def input(self, key):
+        if application.paused:
+            if key == self.quit_key:
+                self.exit()
+            if key == self.restart_key:
+                self.restart()
+        
     def p_menu(self):
-        self.paused_text = Text('Paused', x=0, y=.44,background=True, size=62, enabled=False)
-        self.resume_b = Button(y=.11,  scale=(.2, .1),      text=f'Resume (esc)', on_click = self.pause_resume, enabled=False, ignore_paused=True)
-        self.restart_b = Button(y=-.11,  scale=(.2, .1),    text=f'Restart ({self.restart_shortcut})', on_click = self.restart, enabled=False, ignore_paused=True)
-        self.exit_b   = Button(y=-.22, scale=(.2, .1),      text=f'Exit ({self.quit_shortcut})', on_click = self.exit, enabled=False, ignore_paused=True)
+        self.paused_text = Text('Paused', x=0, y=.44,background=True, size=62, parent=self)
+        self.resume_b = Button(y=.11,  scale=(.2, .1),      text=f'Resume (esc)', on_click = self.pause_resume,  ignore_paused=True, parent=self)
+        self.restart_b = Button(y=-.11,  scale=(.2, .1),    text=f'Restart ({self.restart_key})', on_click = self.restart,  ignore_paused=True, parent=self)
+        self.exit_b   = Button(y=-.22, scale=(.2, .1),      text=f'Exit ({self.quit_key})', on_click = self.exit,  ignore_paused=True, parent=self)
+        
+        Text.size = .012
+        self.reset_scene_p_b = Button(x=.44, y=.38, scale=(.1, .05), text=f'Reset Scene Positioner', on_click = self.reset_scene_positioner,  ignore_paused=True, parent=self)
+        self.default_scene_positioner_pos = camera.ui.world_position + Vec3(4,3,10)
+        self.default_scene_positioner_rot = (7,-13,22)
         
         Text.size = .020
         self.ui_positioner = Draggable(
             scale=(self.exit_b.scale),
             texture='..\\assets\\Square_Border',
             position=Vec2(-.225,.225),
-            text="UI Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"UI Positioner: {self.ui_positioner.position}"), z=-300, enabled=False, ignore_paused=True)
+            text="UI Positioner", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"UI Positioner: {self.ui_positioner.position}"), z=-300,  ignore_paused=True, parent=self)
         
         Text.size = .010
         self.scene_positioner = Draggable(
@@ -112,10 +128,11 @@ class PauseMenu(Entity):
             text="Scene\nPositioner",
             scale=(1,1,1),
             texture='..\\assets\\colored_axis_cube',
-            position=camera.ui.world_position + Vec3(4,3,10),
-            rotation=(7,-13,22),
+            position=self.default_scene_positioner_pos,
+            rotation=self.default_scene_positioner_rot,
             # color=color.hsv(360,1,1,.05),
-            enabled=False, ignore_paused=True, 
+            enabled=False,
+            ignore_paused=True, 
             on_click=lambda: print(
                 f"Scene Positioner:\n"
                 f"    pos = {self.ui_positioner.position}, world_pos = {self.ui_positioner.world_position}\n"
@@ -124,23 +141,12 @@ class PauseMenu(Entity):
             )
         # Text.size = .25
         # text_sp = Text(text="Scene\nPositioner", position=(-.33,.1,0), parent=self.scene_positioner, billboard=True)
-    def pause_input(self, key):
-        if key == 'escape':
-            self.pause_resume()
-
-        if application.paused:
-            if key == 'x':
-                self.exit()
-            if key == 'r':
-                self.restart()
-
-        if application.development_mode:
-            if key == 'tab': 
-                self.dev_cam()
-            
+    def reset_scene_positioner(self):
+        self.scene_positioner.position = self.default_scene_positioner_pos
+        self.scene_positioner.rotation = self.default_scene_positioner_rot
+        
     def pause_resume(self):
         application.paused = not application.paused
-        self.enabled = not self.enabled
         mouse.locked = not application.paused
         
         if application.development_mode:
@@ -148,15 +154,22 @@ class PauseMenu(Entity):
         else: 
             mouse.position = self.resume_b.position
         
-        self.paused_text.enabled = not self.paused_text.enabled
-        self.resume_b.enabled = not self.resume_b.enabled
-        self.restart_b.enabled = not self.restart_b.enabled
-        self.exit_b.enabled = not self.exit_b.enabled
-        self.ui_positioner.enabled = not self.ui_positioner.enabled
         self.scene_positioner.enabled = not self.scene_positioner.enabled 
+        
+        self.enabled = not self.enabled
         
     def dev_cam(self):
         self.editor_camera.enabled = not self.editor_camera.enabled
+        # mouse.locked = not application.paused
+        # pt(mouse.locked)
+        if self.enabled:
+            self.disable()
+            self.scene_positioner.disable()
+            self.reset_scene_positioner()
+        # else:
+        #     self.enable()
+        #     self.scene_positioner.enable()
+        #     self.reset_scene_positioner()
         
         if self.player is not None:
             self.player.reticle.enabled = not self.editor_camera.enabled
@@ -165,7 +178,7 @@ class PauseMenu(Entity):
             
             sp = self.player.position
             self.editor_camera.position = Vec3(sp.x, sp.y+3, sp.z)
-            self.editor_camera.rotation = self.player.rotation
+            self.editor_camera.world_rotation = self.player.world_rotation
         
     def restart(self):
         command = ['python', self.file_path]
@@ -175,18 +188,39 @@ class PauseMenu(Entity):
     def exit(self):
         application.quit()
     
-class Dev_Pause_Menu(Entity):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.pause_menu = PauseMenu(
-            enabled=False, 
-            ignore_paused=True,
+class Pause_Menu(Entity):
+    def __init__(self, *args, game_pause_menu=None ,**kwargs):
+        super().__init__(ignore_paused=True, **kwargs)
+        
+        ''' We have space here for an optional game_pause_menu. We can 
+        either instatiate it in game manager, and send it in here, or 
+        we can just import it in this file and then start it here. '''
+        self.game_pause_menu = game_pause_menu
+        if application.development_mode is True:
+            self.dev_pause_menu = Dev_Pause_Menu(
+                enabled=False,
             )
-    # def input(self, key):
-    #     if key == 'escape':
-    #         self.pause_menu.enabled = not self.pause_menu.enabled
+
+    def input(self, key):
+        pt(key)
+        if key == 'escape':
+            self.dev_pause_menu.pause_resume()
+        if key == '`':
+            self.game_pause_menu.enabled = not self.game_pause_menu.enabled
             
+        if application.development_mode:
+            if key == 'tab':
+                # self.dev_pause_menu.disable()
+                # self.dev_pause_menu.reset_scene_positioner()
+                # self.dev_pause_menu.scene_positioner.disable()
+                self.dev_pause_menu.dev_cam()
 if __name__ == '__main__':
+    from ursina.prefabs.first_person_controller import FirstPersonController
     app = Ursina(size=(1920,1080))
-    Dev_Pause_Menu()
+    
+    Pause_Menu()
+    
+    ground = Entity(model='plane', scale=(100,1,100), color=color.yellow.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
+    player = FirstPersonController(y=2, origin_y=-.5)
+
     app.run()

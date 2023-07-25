@@ -17,6 +17,7 @@ setup(
     license='MIT',
     keywords='game development',
     packages=find_packages('src'),
+    package_dir={'': 'src'},
     include_package_data=True,
     
     # TODO: Check Install

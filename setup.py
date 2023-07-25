@@ -6,7 +6,7 @@ with open("README.md", encoding="UTF-8") as f:
 version = '0.1.0'
 
 setup(
-    name='1k-ursina-core',
+    name='core1k',
     description='An easy to use extension module for Ursina.',
     long_description=long_desc,
     long_description_content_type="text/markdown",

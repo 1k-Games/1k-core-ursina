@@ -1,4 +1,4 @@
-# 1k-core-ursina
+# 1k-core-ursina (core1k)
 Core library for Ursina engine
 
 This code base is used to import core/common game systems that can be used as the base for any desired genre that is choosen

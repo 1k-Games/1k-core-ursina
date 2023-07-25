@@ -6,7 +6,7 @@ with open("README.md", encoding="UTF-8") as f:
 version = '0.1.0'
 
 setup(
-    name='core1k',
+    name='1k-core-ursina',
     description='An easy to use extension module for Ursina.',
     long_description=long_desc,
     long_description_content_type="text/markdown",
@@ -16,7 +16,7 @@ setup(
     author_email='1k.games.devs@gmail.com',
     license='MIT',
     keywords='game development',
-    packages=find_packages(include=['player_controllers', 'player_controllers.*']),
+    packages=find_packages('./src/core1k'),
     include_package_data=True,
     
     # TODO: Check Install

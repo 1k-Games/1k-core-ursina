@@ -16,7 +16,7 @@ setup(
     author_email='1k.games.devs@gmail.com',
     license='MIT',
     keywords='game development',
-    packages=find_packages('./src/core1k'),
+    packages=find_packages('src'),
     include_package_data=True,
     
     # TODO: Check Install

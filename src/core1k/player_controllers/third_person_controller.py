@@ -19,15 +19,17 @@ class ThirdPersonController(Entity):
         mouse.locked = True
 
     def update(self):
-        direction = ((held_keys['w'] - held_keys['s']) or held_keys['gamepad left stick y'])
-        rotation = ((held_keys['d'] - held_keys['a']) or held_keys['gamepad left stick x'])
-        
-        self.rotation_y += rotation
-        self.direction = Vec3(
-            self.forward * direction
+        direction = Vec3(
+            self.forward * ((held_keys['w'] - held_keys['s']) or held_keys['gamepad left stick y'])
+            + self.right * ((held_keys['q'] - held_keys['e']) or held_keys['gamepad right stick x'])
             ).normalized()
+        
+        self.direction = Vec3(direction).normalized()
         move_amount = self.direction * time.dt * self.speed
         self.position += move_amount
+
+        rotation = ((held_keys['d'] - held_keys['a']))
+        self.rotation_y += rotation
 
         if held_keys['right mouse']:
             camera.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]

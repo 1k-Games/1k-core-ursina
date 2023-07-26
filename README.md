@@ -3,7 +3,8 @@ Core library for Ursina engine
 
 This code base is used to import core/common game systems that can be used as the base for any desired genre that is choosen
 
-
+<!-- pip install git+https://github.com/tangentlabs/django-oscar-paypal.git@issue/34/oscar-0.6 -->
+pip install git+https://github.com/1k-Games/1k-core-ursina.git
 # Game Manager
 The "game_manager" class can be used for managing game state and other game entities, scenes, menus, etc.
 

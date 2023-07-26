@@ -21,7 +21,7 @@ class ThirdPersonController(Entity):
     def update(self):
         direction = Vec3(
             self.forward * ((held_keys['w'] - held_keys['s']) or held_keys['gamepad left stick y'])
-            + self.right * ((held_keys['q'] - held_keys['e']) or held_keys['gamepad right stick x'])
+            + self.right * ((held_keys['e'] - held_keys['q']) or held_keys['gamepad right stick x'])
             ).normalized()
         
         self.direction = Vec3(direction).normalized()

@@ -4,7 +4,7 @@ from direct.actor.Actor import Actor
 from print_tricks import pt
 
 class ThirdPersonController(Entity):
-    def __init__(self, height=1, speed=2, **kwargs):
+    def __init__(self, actor_model, height=1, speed=2, **kwargs):
         super().__init__(**kwargs)
         
         self.height = height
@@ -24,7 +24,11 @@ class ThirdPersonController(Entity):
 
         mouse.locked = True
         
-        self.actor = Actor()
+        self.actor = Actor(actor_model)
+        self.actor.reparent_to(self)  ## NOTE: Should the actor be reparented to the 
+                                        ## ThirdPersonController, or the Player class from 
+                                        ## each game project? 
+        # pt(self.actor)
         
         self.direction = (1,1,1) ## setting this with initial starting point so code in update can work right. 
         self.last_direction = (0,0,0)
@@ -49,7 +53,6 @@ class ThirdPersonController(Entity):
 
         if not held_keys['right mouse'] and self.direction != self.forward:
             camera.rotation = lerp(camera.rotation, self.forward, 1 * time.dt)
-
 
 
     def blend_anim(actor, animation, duration = .75, loop = True):

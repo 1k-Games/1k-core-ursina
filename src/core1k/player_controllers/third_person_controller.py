@@ -4,7 +4,7 @@ from direct.actor.Actor import Actor
 from print_tricks import pt
 
 class ThirdPersonController(Entity):
-    def __init__(self, actor_model, height=1, speed=2, **kwargs):
+    def __init__(self, actor_model=None, height=1, speed=2, **kwargs):
         super().__init__(**kwargs)
         
         self.height = height
@@ -24,14 +24,26 @@ class ThirdPersonController(Entity):
 
         mouse.locked = True
         
-        self.actor = Actor(actor_model)
-        self.actor.reparent_to(self)  ## NOTE: Should the actor be reparented to the 
-                                        ## ThirdPersonController, or the Player class from 
-                                        ## each game project? 
-        # pt(self.actor)
+        if actor_model == None:
+            this_dir = Path(pt.l())
+            parent = this_dir.parent
+            cube = parent / 'assets' / 'cube.glb'
+            # pt(cube)
+            self.actor = Actor(cube)
+            self.actor.setScale(.33,.33,.33)
+            self.actor.reparent_to(self)  ## NOTE: Should the actor be reparented to the 
+                                    ## ThirdPersonController, or the Player class from 
+                                    ## each game project?
+            self.color = color.red
+        else:
+            self.actor = Actor(actor_model)
+            self.actor.reparent_to(self)
+            # pt(self.actor)
         
-        self.direction = (1,1,1) ## setting this with initial starting point so code in update can work right. 
-        self.last_direction = (0,0,0)
+        self.direction = (0,0,0) ## setting this with initial starting point so code in update can work right. 
+        self.last_direction = (1,1,1)
+        self.rotation = (0,0,0)
+        self.last_rotation = (0,0,0)
         
     def update(self):
         # self.last_direction = self.direction
@@ -55,7 +67,8 @@ class ThirdPersonController(Entity):
             camera.rotation = lerp(camera.rotation, self.forward, 1 * time.dt)
 
 
-    def blend_anim(actor, animation, duration = .75, loop = True):
+    def blend_anim(self, actor, animation, duration = .75, loop = True):
+        
         actor.enableBlend()
         if loop:
             actor.loop(animation)

@@ -11,7 +11,9 @@ class ThirdPersonController(Entity):
 
         self.mouse_sensitivity = Vec2(40, 40)
 
-        camera.parent = self
+        self.camera_boom = Entity(parent=self)
+        
+        camera.parent = self.camera_boom
         camera.fov = 90
         camera.y = 1.25
         camera.z = -3.25
@@ -32,10 +34,10 @@ class ThirdPersonController(Entity):
         self.rotation_y += rotation
 
         if held_keys['right mouse']:
-            camera.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
+            self.camera_boom.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
 
-        if not held_keys['right mouse'] and self.direction != self.forward:
-            camera.rotation = lerp(camera.rotation, self.forward, 1 * time.dt)
+        if not held_keys['right mouse'] and self.camera_boom != self.forward:
+            self.camera_boom.rotation = lerp(self.camera_boom.rotation, self.forward, 1.25 * time.dt)
 
     def input(self, key):
         ...

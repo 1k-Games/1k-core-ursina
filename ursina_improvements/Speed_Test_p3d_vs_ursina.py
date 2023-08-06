@@ -8,7 +8,7 @@ from print_tricks import pt
 from direct.showbase.ShowBaseGlobal import globalClock
 from ursina import *
 import time
-   
+
 app = Ursina(development_mode=False)
 cube = Entity(model='cube', color=color.gray)
 

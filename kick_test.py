@@ -9,6 +9,7 @@ class KickManager(Entity):
         super().__init__(**kwargs)
 
         self.kick = kick
+        self.kick.channel()
 
         self.players = []
 
@@ -22,9 +23,9 @@ class KickManager(Entity):
 
     def update(self):
         self.check_timer += time.dt
+
         if self.check_timer >= self.check_every:
             for message in self.kick.messages():
-                
                 message_created = isoparse(message['created_at'])
                 message_created.replace(tzinfo=timezone.utc)
 
@@ -51,6 +52,7 @@ app = Ursina(
     vsync=False
 )
 
-KickManager(Kick(8040048, 'konvay'))
+kick = Kick('konvay')
+KickManager(kick)
 
 app.run()

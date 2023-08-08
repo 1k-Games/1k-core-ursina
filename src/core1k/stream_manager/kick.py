@@ -8,7 +8,7 @@ import json
 
 class HeadlessChrome():
     def __init__(self):
-        url = "https://google.com/"
+        url = "https://kick.com/"
         chrome_options = Options()
         chrome_options.add_argument('--headless')
 

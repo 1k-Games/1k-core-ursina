@@ -13,7 +13,7 @@ import json
 
 class HeadlessChrome():
     def __init__(self):
-        url = "https://nowsecure.nl/"
+        url = "https://kick.com/"
         chrome_options = Options()
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
@@ -50,7 +50,7 @@ class HeadlessChrome():
             fix_hairline=True,
         )
 
-        self.driver.get(url)
+        # self.driver.get(url)
 
 class Kick():
     def __init__(self, channel_name):
@@ -58,18 +58,8 @@ class Kick():
 
         self.browser = HeadlessChrome()
 
-        self.channel_data = self.channel()
+        self.channel_data = self.channel_raw()
         self.channel_id = self.channel_data['id']
-
-    def channel(self):
-        self.browser.driver.get(f'https://kick.com/api/v1/channels/{self.channel_name}')
-        
-        while self.browser.driver.execute_script("return document.readyState") != "complete":
-            pass
-        
-        content = self.browser.driver.find_element(By.TAG_NAME, 'body')
-        j = json.loads(content.text)
-        return j
         
     def new_messages(self, message_id=None, message_timestamp=None):
         if message_id == None and message_timestamp == None:
@@ -100,6 +90,16 @@ class Kick():
 #                  RAW REQUESTS                   #
 #                                                 #
 ###################################################
+    def channel_raw(self):
+        self.browser.driver.get(f'https://kick.com/api/v1/channels/{self.channel_name}')
+        
+        while self.browser.driver.execute_script("return document.readyState") != "complete":
+            pass
+        
+        content = self.browser.driver.find_element(By.TAG_NAME, 'body')
+        j = json.loads(content.text)
+        return j
+    
     def messages_raw(self):
         self.browser.driver.get(f'https://kick.com/api/v2/channels/{self.channel_id}/messages')
         while self.browser.driver.execute_script("return document.readyState") != "complete":

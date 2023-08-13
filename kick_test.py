@@ -43,8 +43,8 @@ class KickManager(Entity):
         c = color.rgb(random.randint(0, 225), random.randint(0, 225), random.randint(0, 225))
         x = random.randint(-5, 5)
 
-        new_player = Entity(model='sphere', color=c, x=x, y=0)
-        Text(parent=new_player, text=name, scale_x=1, scale_y=1, y=2)
+        new_player = Entity(model='sphere', color=c, x=x, y=0, scale_x=0.2, scale_y=0.2)
+        Text(parent=new_player, text=name, scale_x=10, scale_y=10, y=0.5)
 
 
 app = Ursina( 

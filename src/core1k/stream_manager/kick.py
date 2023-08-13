@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -70,7 +71,36 @@ class Kick():
         j = json.loads(content.text)
         return j
         
-    def messages(self):
+    def new_messages(self, message_id=None, message_timestamp=None):
+        if message_id == None and message_timestamp == None:
+            raise 'No message id or message timestamp'
+
+        new_messages = []
+
+        for message in self.messages_raw():
+            created_at = datetime.fromisoformat(message['created_at'])
+            id = int(message['id'])
+
+            if(
+                (message_id != None and id > message_id) or 
+                (message_timestamp != None and created_at > message_timestamp)
+            ):
+                # TODO: Parse this out from within messages_raw?
+                new_messages.append({
+                    'id': int(message['id']),
+                    'username': message['sender']['username'],
+                    'message': message['content'],
+                    'timestamp': datetime.fromisoformat(message['created_at'])
+                })
+
+        return new_messages
+
+###################################################
+#                                                 #
+#                  RAW REQUESTS                   #
+#                                                 #
+###################################################
+    def messages_raw(self):
         self.browser.driver.get(f'https://kick.com/api/v2/channels/{self.channel_id}/messages')
         while self.browser.driver.execute_script("return document.readyState") != "complete":
             pass
@@ -82,7 +112,6 @@ class Kick():
         
 
 
-
 if __name__ == '__main__':
     stream_http = Kick('konvay')
-    print(stream_http.messages())
+    print(stream_http.new_messages(message_timestamp=datetime.fromisoformat('2023-08-12T01:50Z')))

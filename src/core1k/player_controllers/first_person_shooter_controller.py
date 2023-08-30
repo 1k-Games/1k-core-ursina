@@ -1,5 +1,5 @@
 from ursina import *
-from src.core1k.base_entities.trigger_base_entity import TriggerBaseEntity
+from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
     def __init__(self, level, **kwargs):

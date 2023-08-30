@@ -4,7 +4,7 @@ Core library for Ursina engine
 This code base is used to import core/common game systems that can be used as the base for any desired genre that is choosen
 
 pip uninstall 1k-core-ursina
-pip install --upgrade --no-cache-dir git+https://github.com/1k-Games/1k-core-ursina.git@[branch]
+pip install --upgrade --no-cache-dir --force-reinstall git+https://github.com/1k-Games/1k-core-ursina.git@[branch]
 # Game Manager
 The "game_manager" class can be used for managing game state and other game entities, scenes, menus, etc.
 

@@ -1,4 +1,5 @@
 from ursina import *
+from src.core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
     def __init__(self, level, **kwargs):
@@ -26,7 +27,7 @@ class FirstPersonShooterController(Entity):
         self.air_time = 0
 
         self.traverse_target = scene     # by default, it will collide with everything. change this to change the raycasts' traverse targets.
-        self.ignore_list = [self]
+        self.ignore_list = [self, TriggerBaseEntity]
 
         for key, value in kwargs.items():
             setattr(self, key ,value)

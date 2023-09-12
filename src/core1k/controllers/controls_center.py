@@ -7,29 +7,58 @@ class ControlsCenter(Entity):
     def __init__(self, speed=25, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.orbit_camera = OrbitalCamera(developer_camera=self, speed=speed)
-        self.editor_camera = FreeCamera()
-        self.orbit_camera.enabled = False
+        self.free_target_base_pos = self.forward * 11
+        self.free_target = Entity(
+            name='free_target',
+            model='cube',
+            position=self.free_target_base_pos,
+            rotation=(90,0,0),
+            color=color.red,
+            scale=.03,
+            # billboard=True,
+            # double_sided=True,
+            collider='box',
+        )
+        
+        self.orbital_camera = OrbitalCamera(
+            controls_center=self,
+            free_target=self.free_target, 
+            speed=speed, 
+        )
+        self.free_camera = FreeCamera(
+            free_target=self.free_target
+        )
+        self.orbital_camera.enabled = False
 
+        # self.free_target.parent = self.free_camera
+        self.free_target.parent = camera
     def change_cameras(self):
+        pt('---------- change cameras - -----------')
         info = mouse.hovered_entity
         if info:
-            self.orbit_camera.enabled = True
-            self.orbit_camera.target = info
+            if info.name == self.free_target.name:
+                pt.t()
+                # self.free_target.parent = None 
+                self.free_target.parent = self.free_camera
+            self.orbital_camera.enabled = True
+            self.orbital_camera.target = info
 
-            self.orbit_camera.position = self.editor_camera.position
-            self.orbit_camera.rotation = self.editor_camera.rotation
-            self.editor_camera.enabled = False
+            self.orbital_camera.position = self.free_camera.position
+            self.orbital_camera.rotation = self.free_camera.rotation
+            self.free_camera.enabled = False
         else: 
-            self.orbit_camera.target = None
-            self.orbit_camera.enabled = False
+            if self.orbital_camera.enabled:
+                self.free_camera.position = self.orbital_camera.position
+                self.free_camera.rotation = self.orbital_camera.rotation
+                
+            self.orbital_camera.target = None
+            self.orbital_camera.enabled = False
 
-            self.editor_camera.position = self.orbit_camera.position
-            self.editor_camera.rotation = self.orbit_camera.rotation
-            self.editor_camera.enabled = True
+            self.free_target.parent = camera
+            self.free_camera.enabled = True
 
     def input(self, key):
-        if self.orbit_camera.enabled:
+        if self.orbital_camera.enabled:
             return
         if key == 'left mouse down':
             self.change_cameras()
@@ -38,9 +67,9 @@ class ControlsCenter(Entity):
 if __name__ == "__main__":
     app = Ursina(size=(1920,1080))
     
-    ball = Entity(model='sphere', collider='sphere', position=(-2, 0, 0))
-    cyl = Entity(model='sphere', collider='box', scale=(1,3,1))
-    box = Entity(model='cube', collider='box', position=(2, 0, 0))
+    ball = Entity(name='ball', model='sphere', collider='sphere', position=(-2, 0, 0))
+    cyl = Entity(name='cyl', model='sphere', collider='box', scale=(1,3,1))
+    box = Entity(name='box', model='cube', collider='box', position=(2, 0, 0))
     
     # cam = FreeCamera()
     # cam = OrbitalCamera()

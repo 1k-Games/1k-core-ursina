@@ -2,23 +2,20 @@ from print_tricks import pt
 from ursina import *
 
 class OrbitalCamera(Entity):
-    def __init__(self, developer_camera=None, speed=25, *args, **kwargs):
+    def __init__(self, 
+            controls_center=None, 
+            free_target=None, 
+            speed=25, 
+            *args, **kwargs
+        ):
+        self.target = free_target
         super().__init__(*args, **kwargs)
         
-        self.developer_camera = developer_camera
+        self.controls_center = controls_center
         camera.parent = self 
         # self.target = None
         self.distance = 3
-        initial_target = Entity(
-            # parent=self, 
-            model='cube', 
-            position=self.forward * 11, 
-            rotation=(90,0,0),
-            color=color.red,
-            scale=.1,
-            # parent=self, 
-            )
-        self.target = initial_target
+
         # initial_target.enabled=False
         
         self.speed = speed
@@ -38,9 +35,10 @@ class OrbitalCamera(Entity):
     #         self.position = self.target.world_position + self.forward * -self.distance
             self.distance = (self.position - info.position).length()
         else: 
+            
             self.target = None
-            if self.developer_camera is not None:
-                self.developer_camera.change_cameras()
+            if self.controls_center is not None:
+                self.controls_center.change_cameras()
 
     def input(self, key):
         if key == 'left mouse down':
@@ -72,15 +70,15 @@ class OrbitalCamera(Entity):
             if held_keys['right mouse']:
                 self.rotation_y += mouse.velocity[0] * self.rotation_speed
                 self.rotation_x -= mouse.velocity[1] * self.rotation_speed
-            else:
-                if held_keys['e']:
-                    self.rotation_x -= self.rotation_speed * time.dt * 2
-                if held_keys['q']:
-                    self.rotation_x += self.rotation_speed * time.dt * 2
-                if held_keys['a']:
-                    self.rotation_y += self.rotation_speed * time.dt * 2
-                if held_keys['d']:
-                    self.rotation_y -= self.rotation_speed * time.dt * 2
+
+            if held_keys['e']:
+                self.rotation_x -= self.rotation_speed * time.dt * 2
+            if held_keys['q']:
+                self.rotation_x += self.rotation_speed * time.dt * 2
+            if held_keys['a']:
+                self.rotation_y += self.rotation_speed * time.dt * 2
+            if held_keys['d']:
+                self.rotation_y -= self.rotation_speed * time.dt * 2
             
             self.position = self.target.world_position + self.forward * -self.distance
             
@@ -103,6 +101,8 @@ if __name__ == "__main__":
     box = Entity(model='cube', collider='box', position=(2, 0, 0))
     
     # cam = EditorCamera()
-    cam = OrbitCamera()
+    cam = OrbitalCamera(
+        free_target=Entity(),
+        )
     
     app.run()

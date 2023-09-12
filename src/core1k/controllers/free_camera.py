@@ -1,12 +1,18 @@
+from print_tricks import pt
 # from ursina import Entity, camera, destroy, held_keys, mouse, curve, lerp, clamp, time, Vec2, Vec3, slerp
 from ursina import *
-
+EditorCamera
 class FreeCamera(Entity):
 
-    def __init__(self, **kwargs):
-        camera.editor_position = camera.position
-        super().__init__(name='editor_camera', eternal=False)
-
+    def __init__(self, 
+            free_target=None,
+            free_target_offset = (0,0,10),
+            **kwargs
+        ):
+        camera.free_cam_pos = camera.position
+        self.free_target = free_target
+        self.free_target_offset = free_target_offset
+        super().__init__(name='free_camera', eternal=False)
         # self.gizmo = Entity(parent=self, model='sphere', color=color.orange, scale=.025, add_to_scene_entities=False, enabled=False)
 
         self.rotation_speed = 200
@@ -31,28 +37,31 @@ class FreeCamera(Entity):
         self.on_destroy = self.on_disable
         self.hotkeys = {'toggle_orthographic':'shift+p', 'focus':'f', 'reset_center':'shift+f'}
 
-
     def on_enable(self):
+        # if self.free_target:
+            # self.free_target.parent = self
+            
         camera.org_parent = camera.parent
         camera.org_position = camera.position
         camera.org_rotation = camera.rotation
         camera.parent = self
-        camera.position = camera.editor_position
+        camera.position = camera.free_cam_pos
         camera.rotation = (0,0,0)
-        self.target_z = camera.z
-        self.target_fov = camera.fov
-
+        self.goal_z = camera.z
+        self.goal_fov = camera.fov
 
     def on_disable(self):
-        camera.editor_position = camera.position
+        # if self.free_target:
+        #     self.free_target.position = self.position
+            # self.free_target.parent = 
+            
+        camera.free_cam_pos = camera.position
         camera.parent = camera.org_parent
         camera.position = camera.org_position
         camera.rotation = camera.org_rotation
 
-
     def on_destroy(self):
         destroy(self.smoothing_helper)
-
 
     def input(self, key):
         combined_key = ''.join(e+'+' for e in ('control', 'shift', 'alt') if held_keys[e] and not e == key) + key
@@ -77,23 +86,23 @@ class FreeCamera(Entity):
 
         elif key == 'scroll up':
             if not camera.orthographic:
-                target_position = self.world_position
+                goal_position = self.world_position
                 # if mouse.hovered_entity and not mouse.hovered_entity.has_ancestor(camera):
-                #     target_position = mouse.world_point
+                #     goal_position = mouse.world_point
 
-                self.world_position = lerp(self.world_position, target_position, self.zoom_speed * time.dt * 10)
-                self.target_z += self.zoom_speed * (abs(self.target_z)*.1)
+                self.world_position = lerp(self.world_position, goal_position, self.zoom_speed * time.dt * 10)
+                self.goal_z += self.zoom_speed * (abs(self.goal_z)*.1)
             else:
-                self.target_fov -= self.zoom_speed * (abs(self.target_fov)*.1)
-                self.target_fov = clamp(self.target_fov, 1, 200)
+                self.goal_fov -= self.zoom_speed * (abs(self.goal_fov)*.1)
+                self.goal_fov = clamp(self.goal_fov, 1, 200)
 
         elif key == 'scroll down':
             if not camera.orthographic:
                 # camera.world_position += camera.back * self.zoom_speed * 100 * time.dt * (abs(camera.z)*.1)
-                self.target_z -= self.zoom_speed * (abs(self.target_z)*.1)
+                self.goal_z -= self.zoom_speed * (abs(self.goal_z)*.1)
             else:
-                self.target_fov += self.zoom_speed * (abs(self.target_fov)*.1)
-                self.target_fov = clamp(self.target_fov, 1, 200)
+                self.goal_fov += self.zoom_speed * (abs(self.goal_fov)*.1)
+                self.goal_fov = clamp(self.goal_fov, 1, 200)
 
         elif key == 'right mouse down' or key == 'middle mouse down':
             if mouse.hovered_entity and self.rotate_around_mouse_hit:
@@ -101,9 +110,11 @@ class FreeCamera(Entity):
                 self.world_position = mouse.world_point
                 camera.world_position = org_pos
 
-
-
     def update(self):
+        # self.free_target.position = camera.position * self.forward *-2
+        # offset = self.forward * self.free_target_offset
+        # self.free_target.position = self.position + offset
+    
         if held_keys['gamepad right stick y'] or held_keys['gamepad right stick x']:
             self.smoothing_helper.rotation_x -= held_keys['gamepad right stick y'] * self.rotation_speed / 100
             self.smoothing_helper.rotation_y += held_keys['gamepad right stick x'] * self.rotation_speed / 100
@@ -120,16 +131,16 @@ class FreeCamera(Entity):
 
             self.position += self.direction * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
 
-            if self.target_z < 0:
-                self.target_z += held_keys['w'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
+            if self.goal_z < 0:
+                self.goal_z += held_keys['w'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
             else:
                 self.position += camera.forward * held_keys['w'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
 
-            self.target_z -= held_keys['s'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
+            self.goal_z -= held_keys['s'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
 
         if mouse.middle:
             if not camera.orthographic:
-                zoom_compensation = -self.target_z * .1
+                zoom_compensation = -self.goal_z * .1
             else:
                 zoom_compensation = camera.orthographic * camera.fov * .2
 
@@ -137,9 +148,9 @@ class FreeCamera(Entity):
             self.position -= camera.up * mouse.velocity[1] * self.pan_speed[1] * zoom_compensation
 
         if not camera.orthographic:
-            camera.z = lerp(camera.z, self.target_z, time.dt*self.zoom_smoothing)
+            camera.z = lerp(camera.z, self.goal_z, time.dt*self.zoom_smoothing)
         else:
-            camera.fov = lerp(camera.fov, self.target_fov, time.dt*self.zoom_smoothing)
+            camera.fov = lerp(camera.fov, self.goal_fov, time.dt*self.zoom_smoothing)
 
         if self.rotation_smoothing == 0:
             self.rotation = self.smoothing_helper.rotation
@@ -147,13 +158,10 @@ class FreeCamera(Entity):
             self.quaternion = slerp(self.quaternion, self.smoothing_helper.quaternion, time.dt*self.rotation_smoothing)
             camera.world_rotation_z = 0
 
-
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
         if hasattr(self, 'smoothing_helper') and name in ('rotation', 'rotation_x', 'rotation_y', 'rotation_z'):
             setattr(self.smoothing_helper, name, value)
-
-
 
 if __name__ == '__main__':
     # window.vsync = False

@@ -182,17 +182,17 @@ if __name__ == '__main__':
     box = Entity(model='cube', collider='box', texture='white_cube', scale=(10,2,2), position=(2,1,5), color=color.light_gray)
     player = FirstPersonController(y=1, enabled=True)
 
-    ec = EditorCamera()
-    ec.enabled = False
+    fc = FreeCamera()
+    fc.enabled = False
     rotation_info = Text(position=window.top_left)
 
     def update():
-        rotation_info.text = str(int(ec.rotation_y)) + '\n' + str(int(ec.rotation_x))
+        rotation_info.text = str(int(fc.rotation_y)) + '\n' + str(int(fc.rotation_x))
 
 
     def input(key):
         if key == 'tab':    # press tab to toggle edit/play mode
-            ec.enabled = not ec.enabled
+            fc.enabled = not fc.enabled
             player.enabled = not player.enabled
 
 

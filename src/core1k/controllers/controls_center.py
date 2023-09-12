@@ -1,7 +1,10 @@
-from print_tricks import pt 
+from print_tricks import pt
+# pt.easy_imports()
+
 from ursina import *
-from orbital_camera import OrbitalCamera
-from free_camera import FreeCamera
+
+from core1k.controllers.orbital_camera import OrbitalCamera
+from core1k.controllers.free_camera import FreeCamera
 
 class ControlsCenter(Entity):
     def __init__(self, speed=25, *args, **kwargs):

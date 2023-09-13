@@ -11,23 +11,22 @@
         aren't being enabled/disabled anymore. 
 
 '''
+from print_tricks import pt 
 
 import subprocess
 
 from ursina import *
 
-from print_tricks import pt 
 
 class Dev_Pause_Menu(Entity):
     def __init__(self, 
-                 player=None,
-                 file_path=None,
-                 ui_positioner_ent=None, 
-                 ui_p_parent=None, 
-                 scene_positioner_ent=None,
-                 scene_p_parent=None,
-                 
-                 **kwargs):
+        player=None,
+        file_path=None,
+        ui_positioner_ent=None, 
+        ui_p_parent=None, 
+        scene_positioner_ent=None,
+        scene_p_parent=None,
+        **kwargs):
         super().__init__(parent=camera.ui, ignore_paused=True, **kwargs)
         
         self.editor_camera = EditorCamera(enabled=False, ignore_paused=True)
@@ -214,6 +213,7 @@ class Pause_Menu(Entity):
                 # self.dev_pause_menu.reset_scene_positioner()
                 # self.dev_pause_menu.scene_positioner.disable()
                 self.dev_pause_menu.dev_cam()
+
 if __name__ == '__main__':
     from ursina.prefabs.first_person_controller import FirstPersonController
     app = Ursina(size=(1920,1080))

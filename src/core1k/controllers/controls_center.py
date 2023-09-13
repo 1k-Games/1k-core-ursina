@@ -36,7 +36,7 @@ class ControlsCenter(Entity):
         # self.free_target.parent = self.free_camera
         self.free_target.parent = camera
     def change_cameras(self):
-        pt('---------- change cameras - -----------')
+        # pt('---------- change cameras - -----------')
         info = mouse.hovered_entity
         if info:
             if info.name == self.free_target.name:

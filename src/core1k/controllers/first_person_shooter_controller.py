@@ -4,6 +4,7 @@ from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
     def __init__(self, level, enabled=True, **kwargs):
+        pt.c('FirstPersonShooterController')
         self.level = level
         self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png', enabled=enabled)
         super().__init__()
@@ -164,11 +165,11 @@ class FirstPersonShooterController(Entity):
         self.reticle.enabled = True
 
 
-    def on_disable(self):
-        mouse.locked = False
-        self.reticle.enabled = False
+    # def on_disable(self):
+    #     mouse.locked = False
+    #     self.reticle.enabled = False
         
-        pt(mouse.locked, self.reticle.enabled)
+    #     pt(mouse.locked, self.reticle.enabled)
 
 
 

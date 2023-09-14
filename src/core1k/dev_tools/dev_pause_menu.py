@@ -119,8 +119,8 @@ class DevPauseMenu(Entity):
     def on_enable(self):
         mouse.locked = False
         
-    def on_disable(self):
-        ...
+    # def on_disable(self):
+    #     ...
         
     def p_menu(self):
         self.paused_text = Text('Paused', x=0, y=.44,background=True, size=62, parent=self)

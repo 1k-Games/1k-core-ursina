@@ -41,8 +41,8 @@ class OrbitalCamera(Entity):
         camera.parent = self
         mouse.locked = False
 
-    def on_disable(self):
-        ...
+    # def on_disable(self):
+    #     ...
         # camera.parent = camera.org_parent
         # camera.position = camera.org_position
         # camera.rotation = camera.org_rotation

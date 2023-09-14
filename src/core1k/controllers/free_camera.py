@@ -36,23 +36,24 @@ class FreeCamera(Entity):
         self.start_position = self.position
         self.perspective_fov = camera.fov
         self.orthographic_fov = camera.fov
-        self.on_destroy = self.on_disable
+        # self.on_destroy = self.on_disable
         self.hotkeys = {'toggle_orthographic':'shift+p', 'focus':'f', 'reset_center':'shift+f'}
 
     def on_enable(self):
         # if self.free_target:
             # self.free_target.parent = self
             
-        camera.org_parent = camera.parent
-        camera.org_position = camera.position
-        camera.org_rotation = camera.rotation
+        # camera.org_parent = camera.parent
+        # camera.org_position = camera.position
+        # camera.org_rotation = camera.rotation
         camera.parent = self
-        camera.position = camera.free_cam_pos
-        camera.rotation = (0,0,0)
+        # camera.position = camera.free_cam_pos
+        # camera.rotation = (0,0,0)
         self.goal_z = camera.z
         self.goal_fov = camera.fov
 
     def on_disable(self):
+        ...
         # if self.free_target:
         #     self.free_target.position = self.position
             # self.free_target.parent = 
@@ -62,8 +63,8 @@ class FreeCamera(Entity):
         camera.position = camera.org_position
         camera.rotation = camera.org_rotation
 
-    def on_destroy(self):
-        destroy(self.smoothing_helper)
+    # def on_destroy(self):
+    #     destroy(self.smoothing_helper)
 
     def input(self, key):
         combined_key = ''.join(e+'+' for e in ('control', 'shift', 'alt') if held_keys[e] and not e == key) + key
@@ -121,9 +122,9 @@ class FreeCamera(Entity):
             self.smoothing_helper.rotation_x -= held_keys['gamepad right stick y'] * self.rotation_speed / 100
             self.smoothing_helper.rotation_y += held_keys['gamepad right stick x'] * self.rotation_speed / 100
 
-        # elif held_keys[self.rotate_key]:
-        self.smoothing_helper.rotation_x -= mouse.velocity[1] * self.rotation_speed
-        self.smoothing_helper.rotation_y += mouse.velocity[0] * self.rotation_speed
+        elif held_keys[self.rotate_key]:
+            self.smoothing_helper.rotation_x -= mouse.velocity[1] * self.rotation_speed
+            self.smoothing_helper.rotation_y += mouse.velocity[0] * self.rotation_speed
 
         self.direction = Vec3(
             self.forward * (held_keys['w'] - held_keys['s'])
@@ -168,7 +169,7 @@ class FreeCamera(Entity):
 if __name__ == '__main__':
     # window.vsync = False
     from ursina import Ursina, Sky, load_model, color, Text, window
-    app = Ursina(vsync=False)
+    app = Ursina(size=(1920,1080), vsync=False)
     '''
     Simple camera for debugging.
     Hold right click and move the mouse to rotate around point.
@@ -182,8 +183,8 @@ if __name__ == '__main__':
 
     ground = Entity(model='plane', scale=32, texture='white_cube', texture_scale=(32,32), collider='box')
     box = Entity(model='cube', collider='box', texture='white_cube', scale=(10,2,2), position=(2,1,5), color=color.light_gray)
+    
     player = FirstPersonController(y=1, enabled=True)
-
     fc = FreeCamera()
     fc.enabled = False
     rotation_info = Text(position=window.top_left)

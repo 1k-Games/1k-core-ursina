@@ -52,42 +52,69 @@ class ControlsCenter(Entity):
         self.game_pause_menu = (game_pause_menu if game_pause_menu is not None 
             else GamePauseMenuTemplate())
         
-        self.saved_states = {}
         
         if application.development_mode:
             self.free_camera, self.orbital_camera = self.setup_editor_cameras(speed, self.position, self.rotation)
             
-
+        self.saved_states = {}
+        self.main_items = [        
+            self.player, 
+            self.dev_pause_menu, 
+            self.game_pause_menu, 
+            self.free_camera,
+            self.orbital_camera
+        ]
         
-            
         if player_was_passed:
+            pt('if')
             self.disable_all_but_passed(self.player)
         else:
+            pt('else')
             self.disable_all_but_passed(self.free_camera)
             
         pt(self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, self.game_pause_menu.enabled, self.player.enabled)
         
-    def disable_all_but_passed(self, passed_controller):
-        for item in [self.player, self.dev_pause_menu, self.game_pause_menu, self.orbital_camera, self.free_camera]:
-            if item != passed_controller:
+    def disable_all_but_passed(self, passed_controllers):
+        if not isinstance(passed_controllers, (list, tuple)):
+            passed_controllers = (passed_controllers,)
+        
+        for item in self.main_items:
+            if item not in passed_controllers:
                 item.enabled = False
-                
+        pt(
+        self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
+        self.game_pause_menu.enabled, self.player.enabled)    
+        
+    def save_current_states(self):
+        self.saved_states = {
+            'player': self.player.enabled, 
+            'dev_pause_menu': self.dev_pause_menu.enabled, 
+            'game_pause_menu': self.game_pause_menu.enabled, 
+            'free_camera': self.free_camera.enabled, 
+            'orbital_camera': self.orbital_camera.enabled
+        }
+        
+    def restore_saved_states(self):
+        for entity_name, initial_state in self.saved_states.items():
+            entity = getattr(self, entity_name)
+            if entity is not None:
+                entity.enabled = initial_state
+                        
     def input(self, key):
         if key =='f1':
-            if self.dev_pause_menu.enabled:
-                self.saved_states = {
-                    'game_pause_menu': self.game_pause_menu.enabled,
-                    'player': self.player.enabled
-                }
-                self.dev_pause_menu.enabled = False
-            else:
-                for entity_name, initial_state in self.saved_states.items():
-                    entity = getattr(self, entity_name)
-                    if entity is not None:
-                        entity.enabled = initial_state
+            if not self.dev_pause_menu.enabled:
+                ## enable
+                self.save_current_states()
+                self.disable_all_but_passed(self.dev_pause_menu)
                 self.dev_pause_menu.enabled = True
+            else:
+                ## disable
+                self.restore_saved_states()
+                self.dev_pause_menu.enabled = False
                 
-            pt(key, self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, self.game_pause_menu.enabled, self.player.enabled)
+            pt(key, mouse.locked,
+            self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
+            self.game_pause_menu.enabled, self.player.enabled)
             # application.paused = not application.paused
             # self.dev_pause_menu.enabled = not self.dev_pause_menu.enabled
             
@@ -113,12 +140,10 @@ class ControlsCenter(Entity):
         orbital_camera = OrbitalCamera(
             controls_center=self,
             free_target=self.free_target, 
-            speed=speed, 
-            enabled=False,
+            speed=speed
         )
         free_camera = FreeCamera(position=position, rotation=rotation,
             free_target=self.free_target,
-            enabled=False,
         )
         
         
@@ -126,7 +151,7 @@ class ControlsCenter(Entity):
         self.free_target.parent = camera
         
         return free_camera, orbital_camera
-        
+
     def change_editor_cameras(self):
         # pt('---------- change cameras - -----------')
         info = mouse.hovered_entity
@@ -170,8 +195,10 @@ if __name__ == "__main__":
     box = Entity(name='box', model='cube', collider='box', position=(2, 0, 0))
     
     cc = ControlsCenter(
+        position=(0,4,-22), rotation=(11,0,0),
         dev_pause_menu = DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
         game_pause_menu = GamePauseMenuTemplate(),
+        # player = FirstPersonShooterController(position=(0,6,-11), level=Entity()),
     )
     
     app.run()

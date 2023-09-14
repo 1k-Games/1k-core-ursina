@@ -1,4 +1,6 @@
 from print_tricks import pt
+pt.easy_imports()
+pt.easy_testing(__name__)
 # from ursina import Entity, camera, destroy, held_keys, mouse, curve, lerp, clamp, time, Vec2, Vec3, slerp
 from ursina import *
 EditorCamera
@@ -58,10 +60,10 @@ class FreeCamera(Entity):
         #     self.free_target.position = self.position
             # self.free_target.parent = 
             
-        camera.free_cam_pos = camera.position
-        camera.parent = camera.org_parent
-        camera.position = camera.org_position
-        camera.rotation = camera.org_rotation
+        # camera.free_cam_pos = camera.position
+        # camera.parent = camera.org_parent
+        # camera.position = camera.org_position
+        # camera.rotation = camera.org_rotation
 
     # def on_destroy(self):
     #     destroy(self.smoothing_helper)
@@ -169,6 +171,7 @@ class FreeCamera(Entity):
 if __name__ == '__main__':
     # window.vsync = False
     from ursina import Ursina, Sky, load_model, color, Text, window
+    from src.core1k.controllers.first_person_shooter_controller import FirstPersonShooterController
     app = Ursina(size=(1920,1080), vsync=False)
     '''
     Simple camera for debugging.
@@ -179,14 +182,13 @@ if __name__ == '__main__':
     e = Entity(model=load_model('cube', use_deepcopy=True), color=color.white, collider='box')
     e.model.colorize()
 
-    from ursina.prefabs.first_person_controller import FirstPersonController
 
     ground = Entity(model='plane', scale=32, texture='white_cube', texture_scale=(32,32), collider='box')
     box = Entity(model='cube', collider='box', texture='white_cube', scale=(10,2,2), position=(2,1,5), color=color.light_gray)
     
-    player = FirstPersonController(y=1, enabled=True)
-    fc = FreeCamera()
-    fc.enabled = False
+    player = FirstPersonShooterController(model='cube', y=1, enabled=False, level=ground)
+    fc = FreeCamera(y=2)
+    # fc.enabled = False
     rotation_info = Text(position=window.top_left)
 
     def update():

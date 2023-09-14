@@ -123,6 +123,7 @@ class FirstPersonShooterController(Entity):
 
         if pt.r(seconds=2):
             pt.ex()
+
     def input(self, key):
         if key == 'space':
             self.jump()
@@ -160,8 +161,11 @@ class FirstPersonShooterController(Entity):
 
 
     def on_enable(self):
+        pt('FPS enabled')
         mouse.locked = True
         camera.parent = self
+        camera.position = self.position 
+        camera.rotation = self.rotation
         self.reticle.enabled = True
 
 

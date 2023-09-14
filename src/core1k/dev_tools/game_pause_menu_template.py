@@ -1,12 +1,14 @@
+from print_tricks import pt
 from ursina import *
 from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
 
 
-class PauseMenu(Entity):
-    def __init__(self, **kwargs):
-        super().__init__(parent=camera.ui, enabled=False)
+class GamePauseMenuTemplate(Entity):
+    def __init__(self, *args, enabled=False, **kwargs):
+        
+        super().__init__(*args, parent=camera.ui, enabled=enabled, **kwargs)
 
-        self.title = Text(text='Game Pause Menu Template', scale=2, y=0.4, origin=(0,0))        
+        self.title = Text(text='Game Pause Menu Template', scale=2, y=0.4, origin=(0,0), parent=self)        
         self.menu_items = [
             'Social', 
             'Challenges/Achievements', 
@@ -23,7 +25,7 @@ class PauseMenu(Entity):
         self.buttons = []
 
         for i, item in enumerate(self.menu_items):
-            button = Button(text=item, y=0.3 - 0.05 * i, scale_y=0.04, color=color.azure)
+            button = Button(text=item, y=0.3 - 0.05 * i, scale_y=0.04, color=color.azure, parent=self)
             if item:  # Only add click function if item is not an empty string
                 button.on_click = self.button_clicked(item)
             self.buttons.append(button)
@@ -58,13 +60,6 @@ class PauseMenu(Entity):
             self.enabled = False
             self.submenus[item].enabled = True
         return inner
-    
-    def input(self, key):
-        if key == 'escape':
-            if self.submenu.enabled:
-                self.submenu.enabled = False
-            else:
-                self.enabled = not self.enabled
 
     def social_clicked(self):
         print("Social clicked")
@@ -107,10 +102,15 @@ class PauseMenu(Entity):
 
     def controls_tab_clicked(self):
         print("Controls tab clicked")
-        
-app = Ursina()
-pause_menu = PauseMenu()
-app.run()
+
+if __name__ == '__main__':
+    app = Ursina(size=(1920,1080))
+    # pause_menu = GamePauseMenuTemplate(enabled=True)
+    pause_menu = GamePauseMenuTemplate()
+    def input(key):
+        if key == 'escape':
+            pause_menu.enabled = not pause_menu.enabled
+    app.run()
 
 
 

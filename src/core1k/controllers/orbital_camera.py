@@ -38,7 +38,7 @@ class OrbitalCamera(Entity):
             
             self.target = None
             if self.controls_center is not None:
-                self.controls_center.change_cameras()
+                self.controls_center.change_editor_cameras()
 
     def input(self, key):
         if key == 'left mouse down':

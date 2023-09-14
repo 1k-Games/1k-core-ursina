@@ -15,6 +15,8 @@ class FreeCamera(Entity):
         super().__init__(name='free_camera', eternal=False)
         # self.gizmo = Entity(parent=self, model='sphere', color=color.orange, scale=.025, add_to_scene_entities=False, enabled=False)
 
+        pt.c('------- FreeCamera --------')
+        
         self.rotation_speed = 200
         self.pan_speed = Vec2(5, 5)
         self.move_speed = 10

@@ -10,9 +10,8 @@ class OrbitalCamera(Entity):
         ):
         self.target = free_target
         super().__init__(*args, **kwargs)
-        
         self.controls_center = controls_center
-        camera.parent = self 
+        # camera.parent = self 
         # self.target = None
         self.distance = 3
 
@@ -22,11 +21,8 @@ class OrbitalCamera(Entity):
         self.base_speed = speed  # Save the base speed for resetting
         self.shift_hold_time = 0  # Variable to keep track of how long shift has been held
         
-        
         self.rotation_speed = 88
         self.mouse_sensitivity = Vec2(40, 40)
-        
-        
         
     def change_targets(self):
         info = mouse.hovered_entity
@@ -34,15 +30,26 @@ class OrbitalCamera(Entity):
             self.target = info
     #         self.position = self.target.world_position + self.forward * -self.distance
             self.distance = (self.position - info.position).length()
+            
         else: 
             
             self.target = None
             if self.controls_center is not None:
                 self.controls_center.change_editor_cameras()
+                
+    def on_enable(self):
+        camera.parent = self
+        mouse.locked = False
+
+    def on_disable(self):
+        ...
+        # camera.parent = camera.org_parent
+        # camera.position = camera.org_position
+        # camera.rotation = camera.org_rotation
 
     def input(self, key):
         if key == 'left mouse down':
-            self.change_targets()                
+            self.change_targets()
             
         if key == 'right mouse down':
             ## right click can select a target if target is still none. 
@@ -55,8 +62,7 @@ class OrbitalCamera(Entity):
             self.distance += self.speed * 1.5
             
         if key == 'f' and self.target:            
-            self.distance = 1           
-            
+            self.distance = 1
 
     def update(self):
         if self.target:

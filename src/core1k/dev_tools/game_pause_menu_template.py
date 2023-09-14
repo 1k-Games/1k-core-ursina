@@ -7,28 +7,30 @@ class GamePauseMenuTemplate(Entity):
     def __init__(self, *args, enabled=False, **kwargs):
         
         super().__init__(*args, parent=camera.ui, enabled=enabled, **kwargs)
-
+        pt.c('---- Game Pause Menu ----')
         self.title = Text(text='Game Pause Menu Template', scale=2, y=0.4, origin=(0,0), parent=self)        
         self.menu_items = [
-            'Social', 
-            'Challenges/Achievements', 
-            'History', 
-            'Career Profile', 
-            'Options', 
-            'Readme', 
-            'FAQ', 
-            'Patch Notes', 
-            'Credits', 
-            '', 
-            'Exit']
+            'Resume',
+            'Social',
+            'Challenges/Achievements',
+            'History',
+            'Career Profile',
+            'Options',
+            'Readme',
+            'FAQ',
+            'Patch Notes',
+            'Credits',
+            '',
+            'Exit'
+        ]
 
-        self.buttons = []
+        self.buttons = {}
 
         for i, item in enumerate(self.menu_items):
             button = Button(text=item, y=0.3 - 0.05 * i, scale_y=0.04, color=color.azure, parent=self)
             if item:  # Only add click function if item is not an empty string
                 button.on_click = self.button_clicked(item)
-            self.buttons.append(button)
+            self.buttons[item] = button
 
         self.submenus = {item: Entity(parent=self, enabled=False) for item in self.menu_items if item}
 
@@ -55,6 +57,14 @@ class GamePauseMenuTemplate(Entity):
         # self.checkbox = CheckBox(parent=self.submenus['Options'], text='', y=0.1)
         self.slider = Slider(parent=self.submenus['Options'], min=0, max=100, default=50, y=0)
 
+    def on_enable(self):
+        resume_button = self.buttons['Resume']
+        mouse.position = resume_button.position
+        
+    def resume_clicked(self):
+        ...
+        # self.disable()
+        
     def button_clicked(self, item):
         def inner():
             self.enabled = False

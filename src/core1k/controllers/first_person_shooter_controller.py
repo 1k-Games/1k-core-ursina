@@ -3,9 +3,9 @@ from ursina import *
 from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
-    def __init__(self, level, **kwargs):
+    def __init__(self, level, enabled=True, **kwargs):
         self.level = level
-        self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png')
+        self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png', enabled=enabled)
         super().__init__()
         self.speed = 11
         self.sprint_speed = self.speed * 1.6
@@ -160,12 +160,15 @@ class FirstPersonShooterController(Entity):
 
     def on_enable(self):
         mouse.locked = True
+        camera.parent = self
         self.reticle.enabled = True
 
 
     def on_disable(self):
         mouse.locked = False
         self.reticle.enabled = False
+        
+        pt(mouse.locked, self.reticle.enabled)
 
 
 
@@ -180,7 +183,7 @@ if __name__ == '__main__':
     e = Entity(model='cube', scale=(1,5,10), x=-2, y=.01, collider='box', texture='white_cube')
     e.texture_scale = (e.scale_z, e.scale_y)
 
-    player = FirstPersonShooterController(y=2, origin_y=-.5)
+    player = FirstPersonShooterController(y=2, origin_y=-.5, level=Entity())
     player.gun = None
 
 

@@ -119,24 +119,24 @@ class FreeCamera(Entity):
             self.smoothing_helper.rotation_x -= held_keys['gamepad right stick y'] * self.rotation_speed / 100
             self.smoothing_helper.rotation_y += held_keys['gamepad right stick x'] * self.rotation_speed / 100
 
-        elif held_keys[self.rotate_key]:
-            self.smoothing_helper.rotation_x -= mouse.velocity[1] * self.rotation_speed
-            self.smoothing_helper.rotation_y += mouse.velocity[0] * self.rotation_speed
+        # elif held_keys[self.rotate_key]:
+        self.smoothing_helper.rotation_x -= mouse.velocity[1] * self.rotation_speed
+        self.smoothing_helper.rotation_y += mouse.velocity[0] * self.rotation_speed
 
-            self.direction = Vec3(
-                self.forward * (held_keys['w'] - held_keys['s'])
-                + self.right * (held_keys['d'] - held_keys['a'])
-                + self.up    * (held_keys['e'] - held_keys['q'])
-                ).normalized()
+        self.direction = Vec3(
+            self.forward * (held_keys['w'] - held_keys['s'])
+            + self.right * (held_keys['d'] - held_keys['a'])
+            + self.up    * (held_keys['e'] - held_keys['q'])
+            ).normalized()
 
-            self.position += self.direction * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
+        self.position += self.direction * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
 
-            if self.goal_z < 0:
-                self.goal_z += held_keys['w'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
-            else:
-                self.position += camera.forward * held_keys['w'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
+        if self.goal_z < 0:
+            self.goal_z += held_keys['w'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
+        else:
+            self.position += camera.forward * held_keys['w'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
 
-            self.goal_z -= held_keys['s'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
+        self.goal_z -= held_keys['s'] * (self.move_speed + (self.move_speed * held_keys['shift']) - (self.move_speed*.9 * held_keys['alt'])) * time.dt
 
         if mouse.middle:
             if not camera.orthographic:

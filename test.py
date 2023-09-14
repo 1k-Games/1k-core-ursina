@@ -21,7 +21,8 @@ class First(Entity):
         self.second = Second(
             enabled=False
         )
-        
+
+
 app=Ursina(size=(1920,1080))
 
 First()

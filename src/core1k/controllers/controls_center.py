@@ -69,6 +69,7 @@ class ControlsCenter(Entity):
         #     self.cur_player_controller = FirstPersonShooterController(level=Entity())        
         # # self.cur_player_controller.enable()
         self.key_actions = {
+            'escape': self.toggle_game_pause_menu,
             'f1': self.toggle_dev_pause_menu,
             'f2': self.switch_controllers,
             'f3': self.switch_controllers_with_position,
@@ -114,7 +115,17 @@ class ControlsCenter(Entity):
         # pt('__init__', self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, self.game_pause_menu.enabled, self.cur_player_controller.enabled)
     
         self.counter = 0
-
+        
+    def toggle_game_pause_menu(self):
+        if not self.game_pause_menu.enabled:
+            ## enable
+            self.save_current_states()
+            self.disable_all_but_passed(self.game_pause_menu)
+            self.game_pause_menu.enabled = True
+        else:
+            ## disable
+            self.restore_saved_states()
+            self.game_pause_menu.enabled = False
     def toggle_dev_pause_menu(self):
         if not self.dev_pause_menu.enabled:
             ## enable

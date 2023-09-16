@@ -4,7 +4,11 @@ from ursina import *
 
 app=Ursina(size=(1920,1080))
 
-# print(scene.entities)
+for i in scene.entities: ## prints fine
+    print(i)
+    
+print(scene.entities)  ## crashes
+
 app.run()
 
 

@@ -24,7 +24,18 @@ class ControlsCenter(Entity):
                 - For example: controls_center.py would need these args
             - Do not need it when running main app (main.py)
             - Do not need it when testing dev_pause_menu (this file).
-            
+    Controls:
+        - esc: game pause menu. 
+        - f1: Dev Pause Menu
+        - f2 up: Swap between player & editor cameras from their own last positions
+        - f3 up: swap between player & editor cameras from the current camera position.
+        - f4: Swap between all of the available player controllers if you are on them, 
+            or dev controllers if you are on those)
+        
+        f2/f3 down: display a tiny menu that shows alternative player
+            controllers/dev controllers and the hotkey for it. 
+            - Hotkey example: f2+2 (swap to the second controller on that list)
+            - So you can swap between a 3rd person, first person, new fps, 6dof etc. 
             
         '''
     def __init__(self, 
@@ -41,7 +52,7 @@ class ControlsCenter(Entity):
         
         ### If player is passed, we will mark it, and have him be the default controller
         ### Else, we import from the example controllers, and set
-        ### the free_cam as the default controller.
+        ### the free_cam as the default controller.s
         
 
         if isinstance(player_controllers, list):
@@ -50,7 +61,7 @@ class ControlsCenter(Entity):
             self.player = player_controllers
         else:
             self.player = FirstPersonShooterController(level=Entity())        
-        self.player.enable()
+        # self.player.enable()
         
         self.dev_pause_menu = (dev_pause_menu if dev_pause_menu is not None 
             else DevPauseMenu(incoming_name=incoming_name, incoming_filename=incoming_filename))
@@ -60,7 +71,7 @@ class ControlsCenter(Entity):
         
         
         if application.development_mode:
-            self.free_camera, self.orbital_camera = self.setup_editor_cameras(speed, self.position, self.rotation)
+            self.free_camera, self.orbital_camera = self.dev_cameras = self.setup_editor_cameras(speed, self.position, self.rotation)
             
         self.saved_states = {}
         self.main_items = [        
@@ -113,7 +124,7 @@ class ControlsCenter(Entity):
                 entity.enabled = initial_state
         
     def input(self, key):
-        if key =='f1':
+        if key == 'f1':
             if not self.dev_pause_menu.enabled:
                 ## enable
                 self.save_current_states()
@@ -127,6 +138,13 @@ class ControlsCenter(Entity):
             pt(key, mouse.locked, camera.parent,
             self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
             self.game_pause_menu.enabled, self.player.enabled)
+            
+        if key == 'f2':
+            self.disable_all_but_passed()
+            
+        if key == 'f3': 
+            self.disable_all_but_passed()
+            
             # application.paused = not application.paused
             # self.dev_pause_menu.enabled = not self.dev_pause_menu.enabled
             
@@ -171,7 +189,6 @@ class ControlsCenter(Entity):
         
         orbital_camera = OrbitalCamera(
             controls_center=self,
-            free_target=self.free_target, 
             speed=speed
         )
         free_camera = FreeCamera(position=position, rotation=rotation,
@@ -185,7 +202,8 @@ class ControlsCenter(Entity):
         return free_camera, orbital_camera
 
     def change_editor_cameras(self):
-        # pt('---------- change cameras - -----------')
+        pt('---------- change cameras - -----------')
+        pt.ex()
         info = mouse.hovered_entity
         if info:
             if info.name == self.free_target.name:
@@ -232,23 +250,14 @@ if __name__ == "__main__":
         position=(0,4,-22), rotation=(11,0,0),
         dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
         game_pause_menu=GamePauseMenuTemplate(),
-        # player_controllers=ThirdPersonController(use_actor=False, z=-12)
+        player_controllers=ThirdPersonController(use_actor=False, z=-12)
         # player = FirstPersonShooterController(position=(0,6,-11), level=Entity()),
     )
     
     app.run()
     
     '''
-    - esc: game pause menu. 
-    - f1: Dev Pause Menu
-    - f2 up: Swap between player & editor cameras from their own last positions
-    - f3 up: swap between player & editor cameras from the current camera position.
-    - f4: Swap between various player controllers or dev_controllers
-    
-    f2/f3 down: display a tiny menu that shows alternative player
-        controllers/dev controllers and the hotkey for it. 
-        - Hotkey example: f2+2 (swap to the second controller on that list)
-        - So you can swap between a 3rd person, first person, new fps, 6dof etc. 
+
     
     
     

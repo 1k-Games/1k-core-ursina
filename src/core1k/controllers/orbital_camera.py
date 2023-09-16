@@ -4,18 +4,16 @@ from ursina import *
 class OrbitalCamera(Entity):
     def __init__(self, 
             controls_center=None, 
-            free_target=None, 
             speed=25, 
             *args, **kwargs
         ):
-        self.target = free_target
         super().__init__(*args, **kwargs)
         self.controls_center = controls_center
-        # camera.parent = self 
-        # self.target = None
+        self.target = camera.ui ##NOTE Setting this to something that I know will always be
+                                #### 000. This is for the initial target when you load up the 
+                                #### camera with no target yet selected. This saves creating/destroying
+                                #### another entity or various other methods. 
         self.distance = 3
-
-        # initial_target.enabled=False
         
         self.speed = speed
         self.base_speed = speed  # Save the base speed for resetting
@@ -66,42 +64,41 @@ class OrbitalCamera(Entity):
 
     def update(self):
         # pt.t('orbital camera')
-        if pt.r(loops=350):
-            pt(self.position, self.world_position, camera.position, camera.world_position, camera.parent)
-            if pt.r(loops=351):
-                application.quit()
+        # if pt.r(loops=350):
+        #     pt(self.position, self.world_position, camera.position, camera.world_position, camera.parent)
+        
+        # if self.target:
+        if held_keys['shift']:
+            self.shift_hold_time += time.dt * 11
+            self.speed += self.shift_hold_time  # Increase speed based on how long shift has been held
+        else:
+            self.shift_hold_time = 0  # Reset shift hold time
+            self.speed = self.base_speed  # Reset speed to base speed
             
-        if self.target:
-            if held_keys['shift']:
-                self.shift_hold_time += time.dt * 11
-                self.speed += self.shift_hold_time  # Increase speed based on how long shift has been held
-            else:
-                self.shift_hold_time = 0  # Reset shift hold time
-                self.speed = self.base_speed  # Reset speed to base speed
-                
-            if held_keys['right mouse']:
-                self.rotation_y += mouse.velocity[0] * self.rotation_speed
-                self.rotation_x -= mouse.velocity[1] * self.rotation_speed
-                
-            if held_keys['e']:
-                self.rotation_x -= self.rotation_speed * time.dt * 2
-            if held_keys['q']:
-                self.rotation_x += self.rotation_speed * time.dt * 2
-            if held_keys['a']:
-                self.rotation_y += self.rotation_speed * time.dt * 2
-            if held_keys['d']:
-                self.rotation_y -= self.rotation_speed * time.dt * 2
-                
-            self.position = self.target.world_position + self.forward * -self.distance
+        if held_keys['right mouse']:
+            self.rotation_y += mouse.velocity[0] * self.rotation_speed
+            self.rotation_x -= mouse.velocity[1] * self.rotation_speed
             
-            if held_keys['w']:
-                self.distance -= time.dt * self.speed
-            if held_keys['s']:
-                self.distance += time.dt * self.speed
+        if held_keys['e']:
+            self.rotation_x -= self.rotation_speed * time.dt * 2
+        if held_keys['q']:
+            self.rotation_x += self.rotation_speed * time.dt * 2
+        if held_keys['a']:
+            self.rotation_y += self.rotation_speed * time.dt * 2
+        if held_keys['d']:
+            self.rotation_y -= self.rotation_speed * time.dt * 2
+            
+        # self.position = target_position + self.forward * -self.distance
+        self.position = self.target.world_position + self.forward * -self.distance
+        
+        if held_keys['w']:
+            self.distance -= time.dt * self.speed
+        if held_keys['s']:
+            self.distance += time.dt * self.speed
 
-            # Prevent the camera from going past the target
-            if self.distance <= 0:
-                self.distance = 0.025
+        # Prevent the camera from going past the target
+        if self.distance <= 0:
+            self.distance = 0.025
 
 
 

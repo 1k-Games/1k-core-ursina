@@ -30,7 +30,7 @@ class ControlsCenter(Entity):
     def __init__(self, 
         dev_pause_menu=None, 
         game_pause_menu=None,
-        player=None, 
+        player_controllers=None, 
         speed=25,
         incoming_name=__name__,
         incoming_filename=__file__,
@@ -41,10 +41,17 @@ class ControlsCenter(Entity):
         
         ### If player is passed, we will mark it, and have him be the default controller
         ### Else, we import from the example controllers, and set
-        ### the free_cam as the default controller. 
-        player_was_passed = True if player is not None else False 
-        self.player = (player if player is not None 
-            else FirstPersonShooterController(level=Entity()))
+        ### the free_cam as the default controller.
+        
+        player_was_passed = True if player_controllers is not None else False 
+
+        if isinstance(player_controllers, list):
+            self.player = player_controllers[0]
+        elif player_controllers is not None:
+            self.player = player_controllers
+        else:
+            self.player = FirstPersonShooterController(level=Entity())        
+        self.player.enable()
         
         self.dev_pause_menu = (dev_pause_menu if dev_pause_menu is not None 
             else DevPauseMenu(incoming_name=incoming_name, incoming_filename=incoming_filename))
@@ -70,20 +77,27 @@ class ControlsCenter(Entity):
             self.disable_all_but_passed(self.player)
         else:
             pt('else')
-            self.disable_all_but_passed(self.free_camera)
+            # self.disable_all_but_passed(self.free_camera)
+            self.disable_all_but_passed(self.orbital_camera)
             
-        pt(self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, self.game_pause_menu.enabled, self.player.enabled)
-        
+        # pt('__init__', self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, self.game_pause_menu.enabled, self.player.enabled)
+    
+        self.counter = 0
+
     def disable_all_but_passed(self, passed_controllers):
         if not isinstance(passed_controllers, (list, tuple)):
             passed_controllers = (passed_controllers,)
         
         for item in self.main_items:
-            if item not in passed_controllers:
-                item.enabled = False
-        pt(
-        self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
-        self.game_pause_menu.enabled, self.player.enabled)    
+            item.disable()
+
+        for item in passed_controllers:
+            item.enable()
+            pt(self.position, self.world_position, item.position, item.world_position,
+            item.camera_boom.position, item.camera_boom.world_position)
+        # pt('diable all but passed: ', 
+        # self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
+        # self.game_pause_menu.enabled, self.player.enabled)    
         
     def save_current_states(self):
         self.saved_states = {
@@ -99,7 +113,7 @@ class ControlsCenter(Entity):
             entity = getattr(self, entity_name)
             if entity is not None:
                 entity.enabled = initial_state
-                        
+        
     def input(self, key):
         if key =='f1':
             if not self.dev_pause_menu.enabled:
@@ -112,7 +126,7 @@ class ControlsCenter(Entity):
                 self.restore_saved_states()
                 self.dev_pause_menu.enabled = False
                 
-            pt(key, mouse.locked,
+            pt(key, mouse.locked, camera.parent,
             self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
             self.game_pause_menu.enabled, self.player.enabled)
             # application.paused = not application.paused
@@ -123,7 +137,27 @@ class ControlsCenter(Entity):
         
         # if key == 'left mouse down':
         #     self.change_editor_cameras()
-        
+    
+    
+    def update(self):
+        ...
+        # Other update code...
+        # self.player.enabled=True
+        # Increment the counter
+        # self.counter += 1
+
+        # # Check if the counter is odd or even
+        # if self.counter % 2 == 0:
+        #     # If the counter is even, disable the player
+        #     self.player.enabled = False
+        # else:
+        #     # If the counter is odd, enable the player
+        #     self.player.enabled = True
+        # camera.parent = self.player.camera_boom 
+        # if pt.r(seconds=1.9):
+            # pt(self.free_camera.enabled, camera.parent)
+        # pt.t(self.player.enabled)
+    
     def setup_editor_cameras(self, speed, position, rotation):
         
         self.free_target_base_pos = self.forward * 11
@@ -182,6 +216,8 @@ if __name__ == "__main__":
     from src.core1k.controllers.orbital_camera import OrbitalCamera
     from src.core1k.controllers.free_camera import FreeCamera
     from src.core1k.controllers.first_person_shooter_controller import FirstPersonShooterController
+    from src.core1k.controllers.third_person_controller import ThirdPersonController
+    
     from src.core1k.dev_tools.dev_pause_menu import DevPauseMenu
     from src.core1k.dev_tools.game_pause_menu_template import GamePauseMenuTemplate
     
@@ -196,23 +232,26 @@ if __name__ == "__main__":
     
     cc = ControlsCenter(
         position=(0,4,-22), rotation=(11,0,0),
-        dev_pause_menu = DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
-        game_pause_menu = GamePauseMenuTemplate(),
+        dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
+        game_pause_menu=GamePauseMenuTemplate(),
+        player_controllers=ThirdPersonController(use_actor=False, z=-3)
         # player = FirstPersonShooterController(position=(0,6,-11), level=Entity()),
     )
     
     app.run()
     
     '''
+    - esc: game pause menu. 
     - f1: Dev Pause Menu
     - f2 up: Swap between player & editor cameras from their own last positions
     - f3 up: swap between player & editor cameras from the current camera position.
+    - f4: Swap between various player controllers or dev_controllers
     
-    f2/f3 down: display a tiny menu that shows altnertavite player controllers/camera names
-    and the number you can press to activate that one instead. 
+    f2/f3 down: display a tiny menu that shows alternative player
+        controllers/dev controllers and the hotkey for it. 
+        - Hotkey example: f2+2 (swap to the second controller on that list)
         - So you can swap between a 3rd person, first person, new fps, 6dof etc. 
     
-    - escape: game pause menu. 
     
     
     

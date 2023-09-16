@@ -1,6 +1,9 @@
-from print_tricks import pt 
+from print_tricks import pt
+pt.easy_imports()
+pt.easy_testing(__name__)
+
 from ursina import *
-from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
+## FIXME TODO TEMPORARY REMOVAL: from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
     def __init__(self, level, enabled=True, **kwargs):
@@ -29,8 +32,9 @@ class FirstPersonShooterController(Entity):
         self.air_time = 0
 
         self.traverse_target = scene     # by default, it will collide with everything. change this to change the raycasts' traverse targets.
-        self.ignore_list = [self, TriggerBaseEntity]
-
+        ## FIXME TODO TEMPORARY REMOVAL: self.ignore_list = [self, TriggerBaseEntity]
+        self.ignore_list = [self,]
+        
         for key, value in kwargs.items():
             setattr(self, key ,value)
 

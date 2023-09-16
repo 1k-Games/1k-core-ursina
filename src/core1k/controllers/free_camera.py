@@ -42,6 +42,7 @@ class FreeCamera(Entity):
         self.hotkeys = {'toggle_orthographic':'shift+p', 'focus':'f', 'reset_center':'shift+f'}
 
     def on_enable(self):
+        pt('free cam ENABLE')
         # if self.free_target:
             # self.free_target.parent = self
             
@@ -116,6 +117,7 @@ class FreeCamera(Entity):
                 camera.world_position = org_pos
 
     def update(self):
+        pt.t('free camera')
         # self.free_target.position = camera.position * self.forward *-2
         # offset = self.forward * self.free_target_offset
         # self.free_target.position = self.position + offset

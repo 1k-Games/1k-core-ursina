@@ -65,6 +65,7 @@ class OrbitalCamera(Entity):
             self.distance = 1
 
     def update(self):
+        pt.t('orbital camera')
         if self.target:
             if held_keys['shift']:
                 self.shift_hold_time += time.dt * 11

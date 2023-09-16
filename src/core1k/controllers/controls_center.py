@@ -58,8 +58,8 @@ class ControlsCenter(Entity):
         
         
         # self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else [player_controllers]
-        # self.current_player_index = 0
-        # self.cur_player_controller = self.player_controllers[self.current_player_index]
+        # self.cur_player_index = 0
+        # self.cur_player_controller = self.player_controllers[self.cur_player_index]
         
         # if isinstance(player_controllers, (list, tuple)):
         #     self.cur_player_controller = player_controllers[0]
@@ -69,12 +69,12 @@ class ControlsCenter(Entity):
         #     self.cur_player_controller = FirstPersonShooterController(level=Entity())        
         # # self.cur_player_controller.enable()
         
-        self.current_player_index = 0
+        self.cur_player_index = 0
         self.cur_dev_controller_index = 0
         
         if player_controllers is not None:
             self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else (player_controllers)
-            self.cur_player_controller = self.player_controllers[self.current_player_index]
+            self.cur_player_controller = self.player_controllers[self.cur_player_index]
         else:
             self.player_controllers = (
                 FirstPersonShooterController(level=Entity()), 
@@ -153,7 +153,8 @@ class ControlsCenter(Entity):
             pt(key, mouse.locked, camera.parent,
             self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled,
             self.game_pause_menu.enabled, self.cur_player_controller.enabled)
-            
+
+                        
         if key == 'f2':
             if self.cur_player_controller.enabled:
                 self.cur_player_controller.enabled = False
@@ -161,13 +162,33 @@ class ControlsCenter(Entity):
             else:
                 self.cur_dev_controller.enabled = False
                 self.cur_player_controller.enabled = True
-            
+                
         if key == 'f3':
-            ...
+            if self.cur_player_controller.enabled:
+                
+                new_pos = self.cur_player_controller.world_position
+                new_rot = self.cur_player_controller.world_rotation
+                
+                self.cur_player_controller.enabled = False
+                self.cur_dev_controller.enabled = True
+                
+                self.cur_dev_controller.position = new_pos
+                self.cur_dev_controller.rotation = new_rot
+                
+            else:
+                new_pos = self.cur_dev_controller.world_position
+                new_rot = self.cur_dev_controller.world_rotation
+                
+                self.cur_dev_controller.enabled = False
+                self.cur_player_controller.enabled = True
+                
+                self.cur_player_controller.position = new_pos
+                self.cur_player_controller.rotation = new_rot
+
         if key == 'f4':
-            self.current_player_index = (self.current_player_index + 1) % len(self.player_controllers)
-            self.cur_player_controller = self.player_controllers[self.current_player_index]
-            pt(self.current_player_index, self.cur_player_controller)
+            self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
+            self.cur_player_controller = self.player_controllers[self.cur_player_index]
+            pt(self.cur_player_index, self.cur_player_controller)
             self.disable_all_but_passed(self.cur_player_controller)
             
             # application.paused = not application.paused

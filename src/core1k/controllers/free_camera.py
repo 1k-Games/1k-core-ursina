@@ -117,7 +117,8 @@ class FreeCamera(Entity):
                 camera.world_position = org_pos
 
     def update(self):
-        pt.t('free camera')
+        # pt.t('free camera')
+        
         # self.free_target.position = camera.position * self.forward *-2
         # offset = self.forward * self.free_target_offset
         # self.free_target.position = self.position + offset

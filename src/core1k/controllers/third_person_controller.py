@@ -83,9 +83,9 @@ class ThirdPersonController(Entity):
         else:
             self.set_model()
             
-        def set_model(self):
-            self.model = 'cube'
-            self.color = color.rgba(.2,.2,1,1)
+    def set_model(self):
+        self.model = 'cube'
+        self.color = color.rgba(.2,.2,1,1)
 
         
     def update(self):

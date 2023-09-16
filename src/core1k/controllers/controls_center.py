@@ -43,7 +43,6 @@ class ControlsCenter(Entity):
         ### Else, we import from the example controllers, and set
         ### the free_cam as the default controller.
         
-        player_was_passed = True if player_controllers is not None else False 
 
         if isinstance(player_controllers, list):
             self.player = player_controllers[0]
@@ -72,7 +71,7 @@ class ControlsCenter(Entity):
             self.orbital_camera
         ]
         
-        if player_was_passed:
+        if player_controllers:
             pt('if')
             self.disable_all_but_passed(self.player)
         else:
@@ -94,9 +93,9 @@ class ControlsCenter(Entity):
         for item in passed_controllers:
             item.enable()
 
-        # pt('diable all but passed: ', 
-        # self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
-        # self.game_pause_menu.enabled, self.player.enabled)    
+        pt('disable all but passed:',
+        self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
+        self.game_pause_menu.enabled, self.player.enabled)
         
     def save_current_states(self):
         self.saved_states = {

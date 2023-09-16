@@ -66,8 +66,11 @@ class OrbitalCamera(Entity):
 
     def update(self):
         # pt.t('orbital camera')
-        if pt.r(seconds=2):
-            pt(self.position, self.world_position)
+        if pt.r(loops=350):
+            pt(self.position, self.world_position, camera.position, camera.world_position, camera.parent)
+            if pt.r(loops=351):
+                application.quit()
+            
         if self.target:
             if held_keys['shift']:
                 self.shift_hold_time += time.dt * 11
@@ -79,7 +82,7 @@ class OrbitalCamera(Entity):
             if held_keys['right mouse']:
                 self.rotation_y += mouse.velocity[0] * self.rotation_speed
                 self.rotation_x -= mouse.velocity[1] * self.rotation_speed
-
+                
             if held_keys['e']:
                 self.rotation_x -= self.rotation_speed * time.dt * 2
             if held_keys['q']:
@@ -88,7 +91,7 @@ class OrbitalCamera(Entity):
                 self.rotation_y += self.rotation_speed * time.dt * 2
             if held_keys['d']:
                 self.rotation_y -= self.rotation_speed * time.dt * 2
-            
+                
             self.position = self.target.world_position + self.forward * -self.distance
             
             if held_keys['w']:

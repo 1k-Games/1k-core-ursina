@@ -1,3 +1,18 @@
+'''TODO
+
+    - refactor the disable_all stuff. I don't think that is necessary to do.
+        - maybe just disable all once in the very beginning. 
+    - f4 should swaps cams to same position
+    - f4/f3 code are basically identical (I think). combine if possible. 
+    - orbital cam shouldn't set itself to 000 every time. 
+        - 000 at the beginning
+        - last pos/rot he was in if using f2. 
+        - last pos/rot of last_controller if using f3/f4. But how?
+            - He gets them as the target first. 
+            - then He gets their pos and their rotation.
+    
+    '''
+
 from print_tricks import pt
 pt.easy_imports()
 pt.easy_testing(__name__)
@@ -169,10 +184,9 @@ class ControlsCenter(Entity):
     def save_current_states(self):
         self.saved_states = {
             'cur_player_controller': self.cur_player_controller.enabled,
+            'cur_dev_controller': self.cur_dev_controller.enabled,
             'dev_pause_menu': self.dev_pause_menu.enabled,
             'game_pause_menu': self.game_pause_menu.enabled,
-            'free_camera': self.free_camera.enabled,
-            'orbital_camera': self.orbital_camera.enabled
         }
         
     def restore_saved_states(self):
@@ -187,11 +201,10 @@ class ControlsCenter(Entity):
             
     def input(self, key):
         if key in self.key_actions:
-            if key == 'f2' or key == 'f3':
-                if self.cur_player_controller.enabled:
-                    self.key_actions[key](self.cur_player_controller, self.cur_dev_controller)
-                else:
-                    self.key_actions[key](self.cur_dev_controller, self.cur_player_controller)
+            if key in ['f2', 'f3']:
+                active_controller = self.cur_player_controller if self.cur_player_controller.enabled else self.cur_dev_controller
+                inactive_controller = self.cur_dev_controller if self.cur_player_controller.enabled else self.cur_player_controller
+                self.key_actions[key](active_controller, inactive_controller)
             else:
                 self.key_actions[key]()
             

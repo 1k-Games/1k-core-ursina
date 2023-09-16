@@ -1,16 +1,32 @@
 '''TODO
 
     - refactor the disable_all stuff. I don't think that is necessary to do.
-        - maybe just disable all once in the very beginning. 
+        - maybe just disable all once in the very beginning.
+        - Actually, there is a bug with the way I want to do it (some of the functions
+        use my new way and some use disable all.) 
+            - Bug: if not all are disabled then sometimes a menu button is currently 
+            active while a new controller is being used. 
+            - Fix: Either, everything uses the disable all, or I also get a list of the 
+            menus, like I have a list of the dev_controllers and player controllers. And then
+            disable those in the other functions. 
+            
     - f4 should swaps cams to same position
+    
     - f4/f3 code are basically identical (I think). combine if possible. 
+    
     - orbital cam shouldn't set itself to 000 every time. 
         - 000 at the beginning
         - last pos/rot he was in if using f2. 
         - last pos/rot of last_controller if using f3/f4. But how?
             - He gets them as the target first. 
             - then He gets their pos and their rotation.
-    
+            
+    - free+orbital cams:
+        - Cams should switch between each other when clicked/unclicked. 
+        
+    - Text size bug:
+        - When running each menu on their own, I get one text, but when running from 
+        controls_center, I get a different sized text. 
     '''
 
 from print_tricks import pt
@@ -48,10 +64,11 @@ class ControlsCenter(Entity):
         - f4: Swap between all of the available player controllers if you are on them, 
             or dev controllers if you are on those)
         
-        f2/f3 down: display a tiny menu that shows alternative player
-            controllers/dev controllers and the hotkey for it. 
-            - Hotkey example: f2+2 (swap to the second controller on that list)
-            - So you can swap between a 3rd person, first person, new fps, 6dof etc. 
+        Not yet implemented:
+            - f2/f3 down: display a tiny menu that shows alternative player
+                controllers/dev controllers and the hotkey for it. 
+                - Hotkey example: f2+2 (swap to the second controller on that list)
+                - So you can swap between a 3rd person, first person, new fps, 6dof etc. 
             
             
             '''
@@ -76,7 +93,7 @@ class ControlsCenter(Entity):
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
         self.counter = 0
-
+        
     def setup_key_actions(self):
         self.key_actions = {
             'escape': self.toggle_game_pause_menu,
@@ -85,11 +102,11 @@ class ControlsCenter(Entity):
             'f3': self.switch_controllers_with_position,
             'f4': self.switch_active_controller
         }
-
+        
     def setup_controller_indices(self):
         self.cur_player_index = 0
         self.cur_dev_controller_index = 0
-
+        
     def setup_player_controllers(self, player_controllers):
         if player_controllers is not None:
             self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else (player_controllers,)
@@ -100,20 +117,20 @@ class ControlsCenter(Entity):
                 ThirdPersonController(use_actor=False) 
             )
             self.cur_player_controller = self.player_controllers[0]
-
+            
     def setup_pause_menus(self, dev_pause_menu, game_pause_menu, incoming_name, incoming_filename):
         self.dev_pause_menu = dev_pause_menu if dev_pause_menu is not None else DevPauseMenu(incoming_name=incoming_name, incoming_filename=incoming_filename)
         self.game_pause_menu = game_pause_menu if game_pause_menu is not None else GamePauseMenuTemplate()
-
+        
     def setup_dev_controllers(self, speed):
         if application.development_mode:
             self.free_camera, self.orbital_camera = self.dev_controllers = self.setup_editor_cameras(speed, self.position, self.rotation)
         self.cur_dev_controller = self.dev_controllers[0]
-
+        
     def setup_main_items(self):
         self.saved_states = {}
         self.main_items = tuple([self.game_pause_menu, self.dev_pause_menu] + list(self.dev_controllers) + list(self.player_controllers))
-
+        
     def setup_initial_controller(self, player_controllers):
         if player_controllers:
             pt('if')
@@ -121,7 +138,7 @@ class ControlsCenter(Entity):
         else:
             pt('else')
             self.disable_all_but_passed(self.orbital_camera)
-        
+            
     def toggle_game_pause_menu(self):
         if not self.game_pause_menu.enabled:
             ## enable
@@ -132,6 +149,7 @@ class ControlsCenter(Entity):
             ## disable
             self.restore_saved_states()
             self.game_pause_menu.enabled = False
+            
     def toggle_dev_pause_menu(self):
         if not self.dev_pause_menu.enabled:
             ## enable
@@ -142,7 +160,7 @@ class ControlsCenter(Entity):
             ## disable
             self.restore_saved_states()
             self.dev_pause_menu.enabled = False
-
+            
     def switch_active_controller(self):
         if self.cur_player_controller.enabled:
             self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
@@ -153,17 +171,47 @@ class ControlsCenter(Entity):
             self.cur_dev_controller = self.dev_controllers[self.cur_dev_controller_index]
             self.disable_all_but_passed(self.cur_dev_controller)
 
-
+def switch_active_controller(self):
+    if self.cur_player_controller.enabled:
+        self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
+        self.cur_player_controller = self.player_controllers[self.cur_player_index]
+        self.disable_all_but_passed(self.cur_player_controller)
+        
+        # Save the position and rotation of the current controller
+        new_pos = self.cur_player_controller.world_position
+        new_rot = self.cur_player_controller.world_rotation
+        
+        # Switch to the next controller
+        self.switch_controllers(self.cur_player_controller, self.cur_dev_controller)
+        
+        # Set the position and rotation of the new controller
+        self.cur_dev_controller.position = new_pos
+        self.cur_dev_controller.rotation = new_rot
+    else:
+        self.cur_dev_controller_index = (self.cur_dev_controller_index + 1) % len(self.dev_controllers)
+        self.cur_dev_controller = self.dev_controllers[self.cur_dev_controller_index]
+        self.disable_all_but_passed(self.cur_dev_controller)
+        
+        # Save the position and rotation of the current controller
+        new_pos = self.cur_dev_controller.world_position
+        new_rot = self.cur_dev_controller.world_rotation
+        
+        # Set the position and rotation of the new controller
+        self.cur_player_controller.position = new_pos
+        self.cur_player_controller.rotation = new_rot
+        
+        
+        
     def switch_controllers(self, controller1, controller2):
         controller1.enabled = False
         controller2.enabled = True
-
+        
     def switch_controllers_with_position(self, controller1, controller2):
         new_pos = controller1.world_position
         new_rot = controller1.world_rotation
-
+        
         self.switch_controllers(controller1, controller2)
-
+        
         controller2.position = new_pos
         controller2.rotation = new_rot
         
@@ -173,10 +221,10 @@ class ControlsCenter(Entity):
         
         for item in self.main_items:
             item.disable()
-
+            
         for item in passed_controllers:
             item.enable()
-
+            
         pt('disable all but passed:',
         self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
         self.game_pause_menu.enabled, self.cur_player_controller.enabled)

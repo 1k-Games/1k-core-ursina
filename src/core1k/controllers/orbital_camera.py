@@ -38,13 +38,7 @@ class OrbitalCamera(Entity):
     def on_enable(self):
         camera.parent = self
         mouse.locked = False
-
-    # def on_disable(self):
-    #     ...
-        # camera.parent = camera.org_parent
-        # camera.position = camera.org_position
-        # camera.rotation = camera.org_rotation
-
+        
     def input(self, key):
         if key == 'left mouse down':
             self.change_targets()
@@ -63,7 +57,7 @@ class OrbitalCamera(Entity):
             self.distance = 1
 
     def update(self):
-        pt.t('orbital camera')
+        # pt.t('orbital camera')
         # if pt.r(loops=350):
         #     pt(self.position, self.world_position, camera.position, camera.world_position, camera.parent)
         

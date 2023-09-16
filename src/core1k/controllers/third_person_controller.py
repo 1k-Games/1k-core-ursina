@@ -59,29 +59,33 @@ class ThirdPersonController(Entity):
         
     def setup_actor_or_model(self, actor_model, use_actor):
         if use_actor:
-            if actor_model == None:
-                pt.ci('no actor model')
-                this_dir = Path(pt.l())
-                parent = this_dir.parent
-                pt(this_dir, parent)
-                cube = parent / 'assets' / 'cube.glb'
-                # pt(cube)
-                pt(1)
-                self.actor = Actor(fr'cube')
-                pt(2)
-                self.actor.setScale(.33,.33,.33)
-                self.actor.reparent_to(self)  ## NOTE: Should the actor be reparented to the 
-                                        ## ThirdPersonController, or the Player class from 
-                                        ## each game project?
-                self.color = color.red
-            else:
-                self.actor = Actor(actor_model)
-                self.actor.reparent_to(self)
+            try:
+                if actor_model == None:
+                    pt.ci('no actor model')
+                    this_dir = Path(pt.l())
+                    parent = this_dir.parent
+                    pt(this_dir, parent)
+                    cube = parent / 'assets' / 'cube.glb'
+                    # pt(cube)
+                    pt(1)
+                    self.actor = Actor(cube)
+                    pt(2)
+                    self.actor.setScale(.33,.33,.33)
+                    self.actor.reparent_to(self)  ## NOTE: Should the actor be reparented to the 
+                                            ## ThirdPersonController, or the Player class from 
+                                            ## each game project?
+                    self.color = color.red
+                else:
+                    self.actor = Actor(actor_model)
+                    self.actor.reparent_to(self)
+            except:
+                self.set_model()
         else:
+            self.set_model()
+            
+        def set_model(self):
             self.model = 'cube'
             self.color = color.rgba(.2,.2,1,1)
-            # pt(self.actor)
-        
 
         
     def update(self):

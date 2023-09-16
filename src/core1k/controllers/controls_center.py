@@ -93,8 +93,7 @@ class ControlsCenter(Entity):
 
         for item in passed_controllers:
             item.enable()
-            pt(self.position, self.world_position, item.position, item.world_position,
-            item.camera_boom.position, item.camera_boom.world_position)
+
         # pt('diable all but passed: ', 
         # self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
         # self.game_pause_menu.enabled, self.player.enabled)    
@@ -234,7 +233,7 @@ if __name__ == "__main__":
         position=(0,4,-22), rotation=(11,0,0),
         dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
         game_pause_menu=GamePauseMenuTemplate(),
-        player_controllers=ThirdPersonController(use_actor=False, z=-3)
+        # player_controllers=ThirdPersonController(use_actor=False, z=-12)
         # player = FirstPersonShooterController(position=(0,6,-11), level=Entity()),
     )
     

@@ -68,6 +68,12 @@ class ControlsCenter(Entity):
         # else:
         #     self.cur_player_controller = FirstPersonShooterController(level=Entity())        
         # # self.cur_player_controller.enable()
+        self.key_actions = {
+            'f1': self.toggle_dev_pause_menu,
+            'f2': self.switch_controllers,
+            'f3': self.switch_controllers_with_position,
+            'f4': self.switch_active_controller
+        }
         
         self.cur_player_index = 0
         self.cur_dev_controller_index = 0
@@ -109,6 +115,41 @@ class ControlsCenter(Entity):
     
         self.counter = 0
 
+    def toggle_dev_pause_menu(self):
+        if not self.dev_pause_menu.enabled:
+            ## enable
+            self.save_current_states()
+            self.disable_all_but_passed(self.dev_pause_menu)
+            self.dev_pause_menu.enabled = True
+        else:
+            ## disable
+            self.restore_saved_states()
+            self.dev_pause_menu.enabled = False
+
+    def switch_active_controller(self):
+        if self.cur_player_controller.enabled:
+            self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
+            self.cur_player_controller = self.player_controllers[self.cur_player_index]
+            self.disable_all_but_passed(self.cur_player_controller)
+        else:
+            self.cur_dev_controller_index = (self.cur_dev_controller_index + 1) % len(self.dev_controllers)
+            self.cur_dev_controller = self.dev_controllers[self.cur_dev_controller_index]
+            self.disable_all_but_passed(self.cur_dev_controller)
+
+
+    def switch_controllers(self, controller1, controller2):
+        controller1.enabled = False
+        controller2.enabled = True
+
+    def switch_controllers_with_position(self, controller1, controller2):
+        new_pos = controller1.world_position
+        new_rot = controller1.world_rotation
+
+        self.switch_controllers(controller1, controller2)
+
+        controller2.position = new_pos
+        controller2.rotation = new_rot
+        
     def disable_all_but_passed(self, passed_controllers):
         if not isinstance(passed_controllers, (list, tuple)):
             passed_controllers = (passed_controllers,)
@@ -125,7 +166,7 @@ class ControlsCenter(Entity):
         
     def save_current_states(self):
         self.saved_states = {
-            'player': self.cur_player_controller.enabled,
+            'cur_player_controller': self.cur_player_controller.enabled,
             'dev_pause_menu': self.dev_pause_menu.enabled,
             'game_pause_menu': self.game_pause_menu.enabled,
             'free_camera': self.free_camera.enabled,
@@ -138,58 +179,19 @@ class ControlsCenter(Entity):
             if entity is not None:
                 entity.enabled = initial_state
         
+    # def input(self, key):
+    #     if key in self.key_actions:
+    #         self.key_actions[key]()
+            
     def input(self, key):
-        if key == 'f1':
-            if not self.dev_pause_menu.enabled:
-                ## enable
-                self.save_current_states()
-                self.disable_all_but_passed(self.dev_pause_menu)
-                self.dev_pause_menu.enabled = True
+        if key in self.key_actions:
+            if key == 'f2' or key == 'f3':
+                if self.cur_player_controller.enabled:
+                    self.key_actions[key](self.cur_player_controller, self.cur_dev_controller)
+                else:
+                    self.key_actions[key](self.cur_dev_controller, self.cur_player_controller)
             else:
-                ## disable
-                self.restore_saved_states()
-                self.dev_pause_menu.enabled = False
-                
-            pt(key, mouse.locked, camera.parent,
-            self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled,
-            self.game_pause_menu.enabled, self.cur_player_controller.enabled)
-
-                        
-        if key == 'f2':
-            if self.cur_player_controller.enabled:
-                self.cur_player_controller.enabled = False
-                self.cur_dev_controller.enabled = True
-            else:
-                self.cur_dev_controller.enabled = False
-                self.cur_player_controller.enabled = True
-                
-        if key == 'f3':
-            if self.cur_player_controller.enabled:
-                
-                new_pos = self.cur_player_controller.world_position
-                new_rot = self.cur_player_controller.world_rotation
-                
-                self.cur_player_controller.enabled = False
-                self.cur_dev_controller.enabled = True
-                
-                self.cur_dev_controller.position = new_pos
-                self.cur_dev_controller.rotation = new_rot
-                
-            else:
-                new_pos = self.cur_dev_controller.world_position
-                new_rot = self.cur_dev_controller.world_rotation
-                
-                self.cur_dev_controller.enabled = False
-                self.cur_player_controller.enabled = True
-                
-                self.cur_player_controller.position = new_pos
-                self.cur_player_controller.rotation = new_rot
-
-        if key == 'f4':
-            self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
-            self.cur_player_controller = self.player_controllers[self.cur_player_index]
-            pt(self.cur_player_index, self.cur_player_controller)
-            self.disable_all_but_passed(self.cur_player_controller)
+                self.key_actions[key]()
             
             # application.paused = not application.paused
             # self.dev_pause_menu.enabled = not self.dev_pause_menu.enabled

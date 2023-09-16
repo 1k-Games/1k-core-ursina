@@ -73,6 +73,8 @@ class FirstPersonShooterController(Entity):
         # pt(self.camera_boom.parent, camera.parent, 
         #     camera.world_position, self.camera_boom.world_position)
     def update(self):
+        pt('-------------- third person controller ---------')
+
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
 
         self.camera_pivot.rotation_x -= mouse.velocity[1] * self.mouse_sensitivity[0]

@@ -9,8 +9,9 @@ if __name__ != '__main__':
     from core1k.controllers.free_camera import FreeCamera
     
     ## These are the default controllers to be used ONLY if you don't pass your own
-    #### controllers to this:
+    
     from core1k.controllers.first_person_shooter_controller import FirstPersonShooterController
+    from core1k.controllers.third_person_controller import ThirdPersonController
     from core1k.dev_tools.dev_pause_menu import DevPauseMenu
     from core1k.dev_tools.game_pause_menu_template import GamePauseMenuTemplate
 
@@ -37,7 +38,8 @@ class ControlsCenter(Entity):
             - Hotkey example: f2+2 (swap to the second controller on that list)
             - So you can swap between a 3rd person, first person, new fps, 6dof etc. 
             
-        '''
+            
+            '''
     def __init__(self, 
         dev_pause_menu=None, 
         game_pause_menu=None,
@@ -54,17 +56,31 @@ class ControlsCenter(Entity):
         ### Else, we import from the example controllers, and set
         ### the free_cam as the default controller.s
         
-        # self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else [player_controllers]
-        # self.current_controller_index = 0
-        # self.player = self.player_controllers[self.current_controller_index]
         
-        if isinstance(player_controllers, (list, tuple)):
-            self.player = player_controllers[0]
-        elif player_controllers is not None:
-            self.player = player_controllers
+        # self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else [player_controllers]
+        # self.current_player_index = 0
+        # self.cur_player_controller = self.player_controllers[self.current_player_index]
+        
+        # if isinstance(player_controllers, (list, tuple)):
+        #     self.cur_player_controller = player_controllers[0]
+        # elif player_controllers is not None:
+        #     self.cur_player_controller = [player_controllers]
+        # else:
+        #     self.cur_player_controller = FirstPersonShooterController(level=Entity())        
+        # # self.cur_player_controller.enable()
+        
+        self.current_player_index = 0
+        self.cur_dev_controller_index = 0
+        
+        if player_controllers is not None:
+            self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else (player_controllers)
+            self.cur_player_controller = self.player_controllers[self.current_player_index]
         else:
-            self.player = FirstPersonShooterController(level=Entity())        
-        # self.player.enable()
+            self.player_controllers = (
+                FirstPersonShooterController(level=Entity()), 
+                ThirdPersonController(use_actor=False) 
+            )
+            self.cur_player_controller = self.player_controllers[0]
         
         self.dev_pause_menu = (dev_pause_menu if dev_pause_menu is not None 
             else DevPauseMenu(incoming_name=incoming_name, incoming_filename=incoming_filename))
@@ -74,26 +90,22 @@ class ControlsCenter(Entity):
         
         
         if application.development_mode:
-            self.free_camera, self.orbital_camera = self.dev_cameras = self.setup_editor_cameras(speed, self.position, self.rotation)
-            
+            self.free_camera, self.orbital_camera = self.dev_controllers = self.setup_editor_cameras(speed, self.position, self.rotation)
+        self.cur_dev_controller = self.dev_controllers[0]
+        
         self.saved_states = {}
-        self.main_items = [        
-            self.player, 
-            self.dev_pause_menu, 
-            self.game_pause_menu, 
-            self.free_camera,
-            self.orbital_camera
-        ]
+        self.main_items = tuple([self.game_pause_menu, self.dev_pause_menu] + list(self.dev_controllers) + list(self.player_controllers))
+        # pt(self.main_items)
         
         if player_controllers:
             pt('if')
-            self.disable_all_but_passed(self.player)
+            self.disable_all_but_passed(self.cur_player_controller)
         else:
             pt('else')
             # self.disable_all_but_passed(self.free_camera)
             self.disable_all_but_passed(self.orbital_camera)
             
-        # pt('__init__', self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, self.game_pause_menu.enabled, self.player.enabled)
+        # pt('__init__', self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, self.game_pause_menu.enabled, self.cur_player_controller.enabled)
     
         self.counter = 0
 
@@ -109,14 +121,14 @@ class ControlsCenter(Entity):
 
         pt('disable all but passed:',
         self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
-        self.game_pause_menu.enabled, self.player.enabled)
+        self.game_pause_menu.enabled, self.cur_player_controller.enabled)
         
     def save_current_states(self):
         self.saved_states = {
-            'player': self.player.enabled, 
-            'dev_pause_menu': self.dev_pause_menu.enabled, 
-            'game_pause_menu': self.game_pause_menu.enabled, 
-            'free_camera': self.free_camera.enabled, 
+            'player': self.cur_player_controller.enabled,
+            'dev_pause_menu': self.dev_pause_menu.enabled,
+            'game_pause_menu': self.game_pause_menu.enabled,
+            'free_camera': self.free_camera.enabled,
             'orbital_camera': self.orbital_camera.enabled
         }
         
@@ -139,17 +151,24 @@ class ControlsCenter(Entity):
                 self.dev_pause_menu.enabled = False
                 
             pt(key, mouse.locked, camera.parent,
-            self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
-            self.game_pause_menu.enabled, self.player.enabled)
+            self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled,
+            self.game_pause_menu.enabled, self.cur_player_controller.enabled)
             
         if key == 'f2':
-            self.disable_all_but_passed()
+            if self.cur_player_controller.enabled:
+                self.cur_player_controller.enabled = False
+                self.cur_dev_controller.enabled = True
+            else:
+                self.cur_dev_controller.enabled = False
+                self.cur_player_controller.enabled = True
             
-        if key == 'f3': 
-            self.disable_all_but_passed()
-            
+        if key == 'f3':
+            ...
         if key == 'f4':
-            self.disable_all_but_passed()
+            self.current_player_index = (self.current_player_index + 1) % len(self.player_controllers)
+            self.cur_player_controller = self.player_controllers[self.current_player_index]
+            pt(self.current_player_index, self.cur_player_controller)
+            self.disable_all_but_passed(self.cur_player_controller)
             
             # application.paused = not application.paused
             # self.dev_pause_menu.enabled = not self.dev_pause_menu.enabled
@@ -164,21 +183,21 @@ class ControlsCenter(Entity):
     def update(self):
         ...
         # Other update code...
-        # self.player.enabled=True
+        # self.cur_player_controller.enabled=True
         # Increment the counter
         # self.counter += 1
 
         # # Check if the counter is odd or even
         # if self.counter % 2 == 0:
         #     # If the counter is even, disable the player
-        #     self.player.enabled = False
+        #     self.cur_player_controller.enabled = False
         # else:
         #     # If the counter is odd, enable the player
-        #     self.player.enabled = True
-        # camera.parent = self.player.camera_boom 
+        #     self.cur_player_controller.enabled = True
+        # camera.parent = self.cur_player_controller.camera_boom 
         # if pt.r(seconds=1.9):
             # pt(self.free_camera.enabled, camera.parent)
-        # pt.t(self.player.enabled)
+        # pt.t(self.cur_player_controller.enabled)
     
     def setup_editor_cameras(self, speed, position, rotation):
         
@@ -255,16 +274,15 @@ if __name__ == "__main__":
     cc = ControlsCenter(
         position=(0,4,-22), rotation=(11,0,0),
         dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
-        game_pause_menu=GamePauseMenuTemplate(),
-        # player_controllers=ThirdPersonController(use_actor=False, z=-12)
-        # player_controllers=FirstPersonShooterController(
-        #     position=(0,6,-11), 
-        #     # origin_y=-.5, 
-        #     level=Entity()),
-        
-        player_controllers=(ThirdPersonController(use_actor=False, z=-12),
-        FirstPersonShooterController(position=(0,6,-11), level=Entity()))
-    )
+        game_pause_menu=GamePauseMenuTemplate(),      
+        player_controllers=(
+            ThirdPersonController(
+                use_actor=False, 
+                z=-12),
+            FirstPersonShooterController(
+                position=(0,6,-11), 
+                level=Entity()))
+        )
     
     app.run()
     

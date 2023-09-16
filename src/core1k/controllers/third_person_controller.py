@@ -89,6 +89,7 @@ class ThirdPersonController(Entity):
 
         
     def update(self):
+        pt('-------------- third person controller ---------')
         # if pt.r(seconds=5):
         #     pt(camera.parent, self.camera_boom.parent, camera.world_position, camera.position, self.world_position, self.position, self.camera_boom.world_position, self.camera_boom.position)
         #     pt.ex()

@@ -54,8 +54,11 @@ class ControlsCenter(Entity):
         ### Else, we import from the example controllers, and set
         ### the free_cam as the default controller.s
         
-
-        if isinstance(player_controllers, list):
+        # self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else [player_controllers]
+        # self.current_controller_index = 0
+        # self.player = self.player_controllers[self.current_controller_index]
+        
+        if isinstance(player_controllers, (list, tuple)):
             self.player = player_controllers[0]
         elif player_controllers is not None:
             self.player = player_controllers
@@ -143,6 +146,9 @@ class ControlsCenter(Entity):
             self.disable_all_but_passed()
             
         if key == 'f3': 
+            self.disable_all_but_passed()
+            
+        if key == 'f4':
             self.disable_all_but_passed()
             
             # application.paused = not application.paused
@@ -240,18 +246,24 @@ if __name__ == "__main__":
     app = Ursina(size=(1920,1080))
     
 
-    ground = Entity(model='plane', position=(0,-5,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
-    e = Entity(parent=ground, model='cube', world_position=(0,-2.5,0), world_scale=(1,3,10), rotation_y=45, collider='box', texture='white_cube')
-    ball = Entity(name='ball', model='sphere', collider='sphere', position=(-2, 0, 0))
-    cyl = Entity(name='cyl', model='sphere', collider='box', scale=(1,3,1))
-    box = Entity(name='box', model='cube', collider='box', position=(2, 0, 0))
+    ground = Entity(model='plane', position=(0,0,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
+    e = Entity(parent=ground, model='cube', world_position=(0,2.5,0), world_scale=(1,3,10), rotation_y=45, collider='box', texture='white_cube')
+    ball = Entity(name='ball', model='sphere', collider='sphere', position=(-2, 5, 0))
+    cyl = Entity(name='cyl', model='sphere', collider='box', scale=(1,3,1), position=(0,5,0))
+    box = Entity(name='box', model='cube', collider='box', position=(2, 5, 0))
     
     cc = ControlsCenter(
         position=(0,4,-22), rotation=(11,0,0),
         dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
         game_pause_menu=GamePauseMenuTemplate(),
-        player_controllers=ThirdPersonController(use_actor=False, z=-12)
-        # player = FirstPersonShooterController(position=(0,6,-11), level=Entity()),
+        # player_controllers=ThirdPersonController(use_actor=False, z=-12)
+        # player_controllers=FirstPersonShooterController(
+        #     position=(0,6,-11), 
+        #     # origin_y=-.5, 
+        #     level=Entity()),
+        
+        player_controllers=(ThirdPersonController(use_actor=False, z=-12),
+        FirstPersonShooterController(position=(0,6,-11), level=Entity()))
     )
     
     app.run()

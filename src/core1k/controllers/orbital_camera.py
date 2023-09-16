@@ -63,7 +63,7 @@ class OrbitalCamera(Entity):
             self.distance = 1
 
     def update(self):
-        # pt.t('orbital camera')
+        pt.t('orbital camera')
         # if pt.r(loops=350):
         #     pt(self.position, self.world_position, camera.position, camera.world_position, camera.parent)
         

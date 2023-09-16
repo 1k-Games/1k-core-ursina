@@ -6,20 +6,25 @@ from ursina import *
 ## FIXME TODO TEMPORARY REMOVAL: from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
-    def __init__(self, level, enabled=True, **kwargs):
+    def __init__(self, level, fov=90, enabled=True, **kwargs):
         pt.c('FirstPersonShooterController')
         self.level = level
         self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png', enabled=enabled)
+        self.camera_pivot = Entity()
+        self.camera_fov = fov
         super().__init__()
         self.speed = 11
         self.sprint_speed = self.speed * 1.6
         self.height = 2
-        self.camera_pivot = Entity(parent=self, y=self.height)
+        
+        self.camera_pivot.parent = self
+        self.camera_pivot.y = self.height
 
         camera.parent = self.camera_pivot
         camera.position = (0,0,0)
         camera.rotation = (0,0,0)
-        camera.fov = 90
+        camera.fov = self.camera_fov
+
         mouse.locked = True
         self.mouse_sensitivity = Vec2(40, 40)
 
@@ -44,7 +49,29 @@ class FirstPersonShooterController(Entity):
             if ray.hit:
                 self.y = ray.world_point.y
 
-
+    def on_enable(self):
+        pt('FPS ENABLED')
+        mouse.locked = True
+        self.reticle.enabled = True
+        self.setup_camera()
+        
+    def on_disable(self):
+        pt('FPS DISABLED')
+        self.reticle.enabled = False
+        pt(mouse.locked, self.reticle.enabled)
+        
+    def setup_camera(self):
+        
+        # pt(camera.parent, camera.world_position, camera.position)
+        # camera.world_position = self.camera_boom.world_position
+        
+        camera.fov = self.camera_fov
+        camera.position = self.camera_pivot.position 
+        camera.rotation = self.camera_pivot.rotation
+        camera.parent = self.camera_pivot
+        
+        # pt(self.camera_boom.parent, camera.parent, 
+        #     camera.world_position, self.camera_boom.world_position)
     def update(self):
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
 
@@ -104,8 +131,7 @@ class FirstPersonShooterController(Entity):
         # pt('_______', self.y)
         # self.y = terraincast(self.world_position, self.level.terrain, hv)
         # pt(self.y)
-
-
+        
     def true_y(self, p_pos, level):
         terrain = level.terrain
         w = level.w 
@@ -163,21 +189,6 @@ class FirstPersonShooterController(Entity):
         self.air_time = 0
         self.grounded = True
 
-
-    def on_enable(self):
-        pt('FPS enabled')
-        mouse.locked = True
-        camera.parent = self
-        camera.position = self.position 
-        camera.rotation = self.rotation
-        self.reticle.enabled = True
-
-
-    # def on_disable(self):
-    #     mouse.locked = False
-    #     self.reticle.enabled = False
-        
-    #     pt(mouse.locked, self.reticle.enabled)
 
 
 

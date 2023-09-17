@@ -98,9 +98,9 @@ class ControlsCenter(Entity):
         self.key_actions = {
             'escape': self.toggle_game_pause_menu,
             'f1': self.toggle_dev_pause_menu,
-            'f2': self.switch_controllers,
-            'f3': self.switch_controllers,
-            'f4': self.switch_active_controller
+            'f2': self.cycle_and_switch_to_next_controllers,
+            'f3': self.cycle_and_switch_to_next_controllers,
+            'f4': self.cycle_through_active_controllers
         }
         
     def setup_controller_indices(self):
@@ -134,16 +134,16 @@ class ControlsCenter(Entity):
     def setup_initial_controller(self, player_controllers):
         if player_controllers:
             pt('if')
-            self.disable_all_but_passed(self.cur_player_controller)
+            self.disable_all_controllers_except_given(self.cur_player_controller)
         else:
             pt('else')
-            self.disable_all_but_passed(self.orbital_camera)
+            self.disable_all_controllers_except_given(self.orbital_camera)
             
     def toggle_game_pause_menu(self):
         if not self.game_pause_menu.enabled:
             ## enable
             self.save_current_states()
-            self.disable_all_but_passed(self.game_pause_menu)
+            self.disable_all_controllers_except_given(self.game_pause_menu)
             self.game_pause_menu.enabled = True
         else:
             ## disable
@@ -154,48 +154,48 @@ class ControlsCenter(Entity):
         if not self.dev_pause_menu.enabled:
             ## enable
             self.save_current_states()
-            self.disable_all_but_passed(self.dev_pause_menu)
+            self.disable_all_controllers_except_given(self.dev_pause_menu)
             self.dev_pause_menu.enabled = True
         else:
             ## disable
             self.restore_saved_states()
             self.dev_pause_menu.enabled = False
             
-    # def switch_active_controller(self):
+    # def cycle_through_active_controllers(self):
     #     if self.cur_player_controller.enabled:
     #         self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
     #         self.cur_player_controller = self.player_controllers[self.cur_player_index]
-    #         self.disable_all_but_passed(self.cur_player_controller)
+    #         self.disable_all_controllers_except_given(self.cur_player_controller)
     #     else:
     #         self.cur_dev_controller_index = (self.cur_dev_controller_index + 1) % len(self.dev_controllers)
     #         self.cur_dev_controller = self.dev_controllers[self.cur_dev_controller_index]
-    #         self.disable_all_but_passed(self.cur_dev_controller)
+    #         self.disable_all_controllers_except_given(self.cur_dev_controller)
 
-    def switch_active_controller(self):
+    def cycle_through_active_controllers(self):
         if self.cur_player_controller.enabled:
             self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
             new_controller = self.player_controllers[self.cur_player_index]
-            self.switch_controllers(self.cur_player_controller, new_controller, switch_position=True)
+            self.cycle_and_switch_to_next_controllers(self.cur_player_controller, new_controller, switch_position=True)
             self.cur_player_controller = new_controller
         else:
             self.cur_dev_controller_index = (self.cur_dev_controller_index + 1) % len(self.dev_controllers)
             new_controller = self.dev_controllers[self.cur_dev_controller_index]
-            self.switch_controllers(self.cur_dev_controller, new_controller, switch_position=True)
+            self.cycle_and_switch_to_next_controllers(self.cur_dev_controller, new_controller, switch_position=True)
             self.cur_dev_controller = new_controller
         
-    def switch_controller(self, controllers, controller_index, other_controller):
+    def cycle_and_switch_to_next_controller(self, controllers, controller_index, other_controller):
         controller_index = (controller_index + 1) % len(controllers)
         current_controller = controllers[controller_index]
-        self.disable_all_but_passed(current_controller)
+        self.disable_all_controllers_except_given(current_controller)
 
         # Save the position and rotation of the current controller
         new_pos = current_controller.world_position
         new_rot = current_controller.world_rotation
 
         # Switch to the next controller
-        self.switch_controllers(current_controller, other_controller, switch_position=True)
+        self.cycle_and_switch_to_next_controllers(current_controller, other_controller, switch_position=True)
 
-    def switch_controllers(self, controller1, controller2, switch_position=False):
+    def cycle_and_switch_to_next_controllers(self, controller1, controller2, switch_position=False):
         controller1.enabled = False
         controller2.enabled = True
 
@@ -206,7 +206,7 @@ class ControlsCenter(Entity):
             controller2.position = new_pos
             controller2.rotation = new_rot
         
-    def disable_all_but_passed(self, passed_controllers):
+    def disable_all_controllers_except_given(self, passed_controllers):
         if not isinstance(passed_controllers, (list, tuple)):
             passed_controllers = (passed_controllers,)
         

@@ -26,7 +26,7 @@ class OrbitalCamera(Entity):
         info = mouse.hovered_entity
         if info:
             self.target = info
-    #         self.position = self.target.world_position + self.forward * -self.distance
+            # self.position = self.target.world_position + self.forward * -self.distance
             self.distance = (self.position - info.position).length()
             
         else: 
@@ -55,13 +55,10 @@ class OrbitalCamera(Entity):
             
         if key == 'f' and self.target:            
             self.distance = 1
-
+            
     def update(self):
         # pt.t('orbital camera')
-        # if pt.r(loops=350):
-        #     pt(self.position, self.world_position, camera.position, camera.world_position, camera.parent)
-        
-        # if self.target:
+
         if held_keys['shift']:
             self.shift_hold_time += time.dt * 11
             self.speed += self.shift_hold_time  # Increase speed based on how long shift has been held
@@ -89,7 +86,7 @@ class OrbitalCamera(Entity):
             self.distance -= time.dt * self.speed
         if held_keys['s']:
             self.distance += time.dt * self.speed
-
+            
         # Prevent the camera from going past the target
         if self.distance <= 0:
             self.distance = 0.025

@@ -3,30 +3,52 @@
     - refactor the disable_all stuff. I don't think that is necessary to do.
         - maybe just disable all once in the very beginning.
         - Actually, there is a bug with the way I want to do it (some of the functions
-        use my new way and some use disable all.) 
+            use my new way and some use disable all.) 
             - Bug: if not all are disabled then sometimes a menu button is currently 
             active while a new controller is being used. 
             - Fix: Either, everything uses the disable all, or I also get a list of the 
             menus, like I have a list of the dev_controllers and player controllers. And then
             disable those in the other functions. 
             
-    - f4 should swaps cams to same position
-    
-    - f4/f3 code are basically identical (I think). combine if possible. 
-    
     - orbital cam shouldn't set itself to 000 every time. 
         - 000 at the beginning
         - last pos/rot he was in if using f2. 
-        - last pos/rot of last_controller if using f3/f4. But how?
+        - last pos/rot of last_controller if using f3/f4.
             - He gets them as the target first. 
             - then He gets their pos and their rotation.
+            
+        - Seems to focus below his 000 view. Meaning, He is focusing on the center
+            of the object with the almost bottom of his screen.
             
     - free+orbital cams:
         - Cams should switch between each other when clicked/unclicked. 
         
     - Text size bug:
         - When running each menu on their own, I get one text, but when running from 
-        controls_center, I get a different sized text. 
+        controls_center, I get a different sized text.
+        
+    - Reticle/targets/positioner:
+        - FPS:      I think need to get rid of FPS reticle when switching off
+        - Free_cam: Need to get rid of free_cam target when switching off. 
+        - Dev Menu: 3d positioner in Dev Pause Menu, is mostly disappeared...
+        
+    - Third person controller:
+        - spawns inside of ground by default when in controls_center at least
+        
+    - Dev Menu 
+        - positioners - information gathering
+            - Can drag them over an object to change into the shape/size of that object. 
+            - How to:
+                - Have center of it marked somehow
+                - drag so center is over your target. 
+                - Click a button or hotkey like "r"
+        - Pressing Resume button should do the same thing as pressing the 'f1' key again (disable dev menu)
+            - Perhaps just need to take any logit out of resume function, and redirect it to the 
+            controls_controlle if it exists. 
+    - Print out The Name, attributes, (including model path, texture path etc) of 
+        anything I click on. Possibly in another thread because entities seem to 
+        cause a large amount of lag/stutter. 
+                
     '''
 
 from print_tricks import pt
@@ -45,13 +67,18 @@ if __name__ != '__main__':
     from core1k.controllers.third_person_controller import ThirdPersonController
     from core1k.dev_tools.dev_pause_menu import DevPauseMenu
     from core1k.dev_tools.game_pause_menu_template import GamePauseMenuTemplate
-
+    
 class ControlsCenter(Entity):
     '''
     Params:
-        incoming_name=__name__
-        incoming_filename=__file__
+        dev_pause_menu=None (optional)
+        game_pause_menu=None (optional)
+        player_controllers=None (optional)
+        incoming_name=__name__ (optional)
+        incoming_filename=__file__ (optional)
         - incoming_name & incoming_filename:
+            - Purpose
+                - To track down which .py file actually needs to be restarted 
             - Only need to pass this if you are testing a file that is not main.py
                 - For example: controls_center.py would need these args
             - Do not need it when running main app (main.py)
@@ -77,7 +104,6 @@ class ControlsCenter(Entity):
         dev_pause_menu=None, 
         game_pause_menu=None,
         player_controllers=None, 
-        speed=25,
         incoming_name=__name__,
         incoming_filename=__file__,
         *args,
@@ -89,11 +115,10 @@ class ControlsCenter(Entity):
         self.setup_controller_indices()
         self.setup_player_controllers(player_controllers)
         self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
-        self.setup_dev_controllers(speed)
+        self.setup_dev_controllers()
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
-        self.counter = 0
-        
+                
     def setup_key_actions(self):
         self.key_actions = {
             'escape': self.toggle_game_pause_menu,
@@ -122,9 +147,9 @@ class ControlsCenter(Entity):
         self.dev_pause_menu = dev_pause_menu if dev_pause_menu is not None else DevPauseMenu(incoming_name=incoming_name, incoming_filename=incoming_filename)
         self.game_pause_menu = game_pause_menu if game_pause_menu is not None else GamePauseMenuTemplate()
         
-    def setup_dev_controllers(self, speed):
+    def setup_dev_controllers(self):
         if application.development_mode:
-            self.free_camera, self.orbital_camera = self.dev_controllers = self.setup_editor_cameras(speed, self.position, self.rotation)
+            self.free_camera, self.orbital_camera = self.dev_controllers = self.setup_editor_cameras(self.position, self.rotation)
         self.cur_dev_controller = self.dev_controllers[0]
         
     def setup_main_items(self):
@@ -161,16 +186,6 @@ class ControlsCenter(Entity):
             self.restore_saved_states()
             self.dev_pause_menu.enabled = False
             
-    # def cycle_through_active_controllers(self):
-    #     if self.cur_player_controller.enabled:
-    #         self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
-    #         self.cur_player_controller = self.player_controllers[self.cur_player_index]
-    #         self.disable_all_controllers_except_given(self.cur_player_controller)
-    #     else:
-    #         self.cur_dev_controller_index = (self.cur_dev_controller_index + 1) % len(self.dev_controllers)
-    #         self.cur_dev_controller = self.dev_controllers[self.cur_dev_controller_index]
-    #         self.disable_all_controllers_except_given(self.cur_dev_controller)
-
     def cycle_through_active_controllers(self):
         if self.cur_player_controller.enabled:
             self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
@@ -187,22 +202,20 @@ class ControlsCenter(Entity):
         controller_index = (controller_index + 1) % len(controllers)
         current_controller = controllers[controller_index]
         self.disable_all_controllers_except_given(current_controller)
-
-        # Save the position and rotation of the current controller
+        
         new_pos = current_controller.world_position
         new_rot = current_controller.world_rotation
-
-        # Switch to the next controller
+        
         self.cycle_and_switch_to_next_controllers(current_controller, other_controller, switch_position=True)
-
+        
     def cycle_and_switch_to_next_controllers(self, controller1, controller2, switch_position=False):
         controller1.enabled = False
         controller2.enabled = True
-
+        
         if switch_position:
             new_pos = controller1.world_position
             new_rot = controller1.world_rotation
-
+            
             controller2.position = new_pos
             controller2.rotation = new_rot
         
@@ -216,9 +229,9 @@ class ControlsCenter(Entity):
         for item in passed_controllers:
             item.enable()
             
-        pt('disable all but passed:',
-        self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
-        self.game_pause_menu.enabled, self.cur_player_controller.enabled)
+        # pt('disable all but passed:',
+        # self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
+        # self.game_pause_menu.enabled, self.cur_player_controller.enabled)
         
     def save_current_states(self):
         self.saved_states = {
@@ -233,10 +246,6 @@ class ControlsCenter(Entity):
             entity = getattr(self, entity_name)
             if entity is not None:
                 entity.enabled = initial_state
-        
-    # def input(self, key):
-    #     if key in self.key_actions:
-    #         self.key_actions[key]()
             
     def input(self, key):
         if key in self.key_actions:
@@ -248,36 +257,10 @@ class ControlsCenter(Entity):
             else:
                 self.key_actions[key]()
             
-            # application.paused = not application.paused
-            # self.dev_pause_menu.enabled = not self.dev_pause_menu.enabled
-            
-        # if self.orbital_camera.enabled:
-        #     return
-        
-        # if key == 'left mouse down':
-        #     self.change_editor_cameras()
-    
-    
     def update(self):
         ...
-        # Other update code...
-        # self.cur_player_controller.enabled=True
-        # Increment the counter
-        # self.counter += 1
-
-        # # Check if the counter is odd or even
-        # if self.counter % 2 == 0:
-        #     # If the counter is even, disable the player
-        #     self.cur_player_controller.enabled = False
-        # else:
-        #     # If the counter is odd, enable the player
-        #     self.cur_player_controller.enabled = True
-        # camera.parent = self.cur_player_controller.camera_boom 
-        # if pt.r(seconds=1.9):
-            # pt(self.free_camera.enabled, camera.parent)
-        # pt.t(self.cur_player_controller.enabled)
     
-    def setup_editor_cameras(self, speed, position, rotation):
+    def setup_editor_cameras(self, position, rotation):
         
         self.free_target_base_pos = self.forward * 11
         self.free_target = Entity(
@@ -292,18 +275,16 @@ class ControlsCenter(Entity):
         
         orbital_camera = OrbitalCamera(
             controls_center=self,
-            speed=speed
         )
         free_camera = FreeCamera(position=position, rotation=rotation,
             free_target=self.free_target,
         )
         
-        
         # self.free_target.parent = self.free_camera
         self.free_target.parent = camera
         
         return free_camera, orbital_camera
-
+    
     def change_editor_cameras(self):
         pt('---------- change cameras - -----------')
         pt.ex()
@@ -315,7 +296,7 @@ class ControlsCenter(Entity):
                 self.free_target.parent = self.free_camera
             self.orbital_camera.enabled = True
             self.orbital_camera.target = info
-
+            
             self.orbital_camera.position = self.free_camera.position
             self.orbital_camera.rotation = self.free_camera.rotation
             self.free_camera.enabled = False
@@ -342,7 +323,7 @@ if __name__ == "__main__":
     
     app = Ursina(size=(1920,1080))
     
-
+    
     ground = Entity(model='plane', position=(0,0,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
     e = Entity(parent=ground, model='cube', world_position=(0,2.5,0), world_scale=(1,3,10), rotation_y=45, collider='box', texture='white_cube')
     ball = Entity(name='ball', model='sphere', collider='sphere', position=(-2, 5, 0))
@@ -365,7 +346,27 @@ if __name__ == "__main__":
     app.run()
     
     '''
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

@@ -42,7 +42,8 @@ class OrbitalCamera(Entity):
         camera.world_position = self.world_position
         camera.parent = self
         mouse.locked = False
-        
+        # camera.fov = 90
+        # pt(camera.fov)
     def input(self, key):
         import math
         if key == 'left mouse down':
@@ -59,28 +60,19 @@ class OrbitalCamera(Entity):
             self.distance += self.speed * 1.5
 
         if key == 'f' and self.target:
-            bounding_box = self.target.bounds.size
-            x, y, z = bounding_box
-            orig_window_x, orig_window_y = window.size
-            window_aspect_ratio = orig_window_x / orig_window_y
-            bounding_box_aspect_ratio = max(x, y, z)
-            self.distance = bounding_box_aspect_ratio * window_aspect_ratio**2
-            pt(x,y,z, orig_window_x, orig_window_y, window_aspect_ratio, bounding_box_aspect_ratio, self.distance)
-        
-        # if key == 'f' and self.target:
-        #     bounding_box = self.target.bounds.size
-        #     x, y, z = bounding_box
-        #     pt(x,y,z,window.aspect_ratio)
-        #     orig_window_x, orig_window_y = window.size
-        #     pt(orig_window_x, orig_window_y)
-        #     window_x = orig_window_y/orig_window_x
-        #     window_y = orig_window_x/orig_window_y
-        #     pt(window_x, window_y)
-        #     aspect_ratio_x = window_x / max(x, y, z)
-        #     aspect_ratio_y = window_y / max(x, y, z)
-            
-        #     self.distance = max(x * aspect_ratio_x, y * aspect_ratio_y, z)
-        #     pt(aspect_ratio_x, aspect_ratio_y, self.distance)        
+            if self.target.model:
+                bounding_box = self.target.bounds.size
+                x, y, z = bounding_box
+                orig_window_x, orig_window_y = window.size
+                window_aspect_ratio = orig_window_x / orig_window_y
+                bounding_box_aspect_ratio = max(x, y, z)
+                
+                # Adjust for FOV
+                fov_adjustment = 40.0 / camera.fov # Adjust this constant as needed
+                
+                self.distance = bounding_box_aspect_ratio * window_aspect_ratio **2 * fov_adjustment
+                pt(camera.fov, x,y,z, orig_window_x, orig_window_y, window_aspect_ratio, bounding_box_aspect_ratio, self.distance)
+                
     def update(self):
         # pt.t('orbital camera')
         if self.target:

@@ -19,18 +19,13 @@ class ThirdPersonController(Entity):
         self.speed = speed
         self.rotation_speed = 88
         self.default_y = position[1]
-
+        
         super().__init__(*args, **kwargs)
-
+        
         # Set position after calling super().__init__()
         self.position = position
-
+        
         pt.ci('---------- third person controller --------')
-        pt(self.position, self.world_position)
-        
-        print(f"Position after super().__init__: {self.position}")
-        
-        pt(self.world_position, self.position)
         
         self.mouse_sensitivity = Vec2(40, 40)
         
@@ -48,20 +43,20 @@ class ThirdPersonController(Entity):
     def on_enable(self):
         mouse.locked = True
         self.setup_camera()
-        self.y = self.default_y
+        self.y += self.default_y
     
     def on_disable(self):
         ...
         
     def setup_camera(self):
-
+        
         # pt(camera.parent, camera.world_position, camera.position)
         # camera.world_position = self.camera_boom.world_position
         
         camera.fov = 90
         self.camera_boom.parent = self
         self.camera_boom.position=(0,1.25,-3.25)
-
+        
         camera.position = self.camera_boom.position
         camera.parent = self.camera_boom
         

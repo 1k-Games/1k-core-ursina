@@ -36,9 +36,6 @@
         - FPS:      I think need to get rid of FPS reticle when switching off
         - Free_cam: Need to get rid of free_cam target when switching off. 
         
-    - Third person controller:
-        - spawns inside of ground by default when in controls_center at least
-        
     - Dev Menu 
         - positioners - information gathering
             - Can drag them over an object to change into the shape/size of that object. 

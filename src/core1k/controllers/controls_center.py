@@ -10,6 +10,15 @@
             menus, like I have a list of the dev_controllers and player controllers. And then
             disable those in the other functions. 
             
+    positioner_3d - cube/uv's are wrong
+        - In blender, I have the UV's or something wrong. 
+        - by default, it shows me y as forward instead of z. 
+        
+        - While I am fixing the cube in blender, I need to remove these lines
+        in dev_pause_menu:
+            self.positioner_3d.rotation_y += 180
+            self.positioner_3d.rotation_z += 33
+        
     - orbital cam shouldn't set itself to 000 every time. 
         - 000 at the beginning
         - last pos/rot he was in if using f2. 
@@ -26,7 +35,6 @@
     - Reticle/targets/positioner:
         - FPS:      I think need to get rid of FPS reticle when switching off
         - Free_cam: Need to get rid of free_cam target when switching off. 
-        - Dev Menu: 3d positioner in Dev Pause Menu, is mostly disappeared...
         
     - Third person controller:
         - spawns inside of ground by default when in controls_center at least
@@ -44,7 +52,11 @@
     - Print out The Name, attributes, (including model path, texture path etc) of 
         anything I click on. Possibly in another thread because entities seem to 
         cause a large amount of lag/stutter. 
-                
+        
+    - Menus:
+        - neither menu is pausing (i must have deleted that code)
+            - figure out the best approach for them to do it themselves and
+            for them to do it if they are being controlled by a 3rd party controller. 
     '''
 
 from print_tricks import pt
@@ -89,7 +101,7 @@ class ControlsCenter(Entity):
         
         Not yet implemented:
             - f2/f3 down: display a tiny menu that shows alternative player
-                controllers/dev controllers and the hotkey for it. 
+                controllers/dev controllers and the hotkey for each one. 
                 - Hotkey example: f2+2 (swap to the second controller on that list)
                 - So you can swap between a 3rd person, first person, new fps, 6dof etc. 
             

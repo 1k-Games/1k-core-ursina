@@ -124,10 +124,10 @@ class ControlsCenter(Entity):
         self.setup_dev_controllers()
         self.setup_player_controllers(player_controllers)
         self.all_controllers = self.dev_controllers + self.player_controllers
+        self.set_controls_center_for_controllers()
         self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
-        self.set_controls_center_for_controllers()
 
     def set_controls_center_for_controllers(self):
         for controller in self.all_controllers:
@@ -226,13 +226,13 @@ class ControlsCenter(Entity):
         if switch_positions:
             new_pos = controller1.world_position
             new_rot = controller1.world_rotation
+            controller2.position = new_pos
+            controller2.rotation = new_rot
 
         controller1.enabled = False
         controller2.enabled = True
 
-        if switch_positions:
-            controller2.position = new_pos
-            controller2.rotation = new_rot
+        # if switch_positions:
         
     def disable_all_controllers_except_given(self, passed_controllers):
         if not isinstance(passed_controllers, (list, tuple)):
@@ -350,7 +350,7 @@ if __name__ == "__main__":
                 ),
             ThirdPersonController(
                 use_actor=False, 
-                # position=(0,.5,-12),
+                # position=(0,2,-12),
                 ),
         )
     )

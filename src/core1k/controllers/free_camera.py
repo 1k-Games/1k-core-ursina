@@ -69,7 +69,15 @@ class FreeCamera(Entity):
 
     # def on_destroy(self):
     #     destroy(self.smoothing_helper)
-
+    def change_targets(self):
+        if self.controls_center:
+            hit_info = mouse.hovered_entity if not mouse.locked else raycast(
+                camera.position, camera.forward).entity
+            
+            if hit_info:
+                self.controls_center.cycle_through_active_controllers()
+    ...
+        
     def input(self, key):
         combined_key = ''.join(e+'+' for e in ('control', 'shift', 'alt') if held_keys[e] and not e == key) + key
 
@@ -83,13 +91,11 @@ class FreeCamera(Entity):
 
             camera.orthographic = not camera.orthographic
 
-
         elif combined_key == self.hotkeys['reset_center']:
             self.animate_position(self.start_position, duration=.1, curve=curve.linear)
 
         elif combined_key == self.hotkeys['focus'] and mouse.world_point:
             self.animate_position(mouse.world_point, duration=.1, curve=curve.linear)
-
 
         elif key == 'scroll up':
             if not camera.orthographic:
@@ -117,6 +123,9 @@ class FreeCamera(Entity):
                 self.world_position = mouse.world_point
                 camera.world_position = org_pos
 
+        
+        if key == 'left mouse down':
+            self.change_targets()
     def update(self):
         # pt.t('free camera')
         

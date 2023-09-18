@@ -14,26 +14,12 @@
         - In blender, I have the UV's or something wrong. 
         - by default, it shows me y as forward instead of z. 
         
-        - While I am fixing the cube in blender, I need to remove these lines
-        in dev_pause_menu:
-            self.positioner_3d.rotation_y += 180
-            self.positioner_3d.rotation_z += 33
-        
-    - orbital cam shouldn't set itself to 000 every time. 
-        - 000 at the beginning
-        - last pos/rot he was in if using f2. 
-        - last pos/rot of last_controller if using f3/f4.
-            - He gets them as the target first. 
-            - then He gets their pos and their rotation.
-            
-        - Seems to focus below his 000 view. Meaning, He is focusing on the center
-            of the object with the almost bottom of his screen.
-            
-    - free+orbital cams:
-        - Cams should switch between each other when clicked/unclicked. 
-        
+        - While I am fixing the cube in blender, I need to remove these lines to test properly
+            in dev_pause_menu:
+                self.positioner_3d.rotation_y += 180
+                self.positioner_3d.rotation_z += 33
+                
     - Reticle/targets/positioner:
-        - FPS:      I think need to get rid of FPS reticle when switching off
         - Free_cam: Need to get rid of free_cam target when switching off. 
         
     - Dev Menu 
@@ -129,6 +115,7 @@ class ControlsCenter(Entity):
     def set_controls_center_for_controllers(self):
         for controller in self.all_controllers:
             controller.controls_center = self
+            pt(controller, controller.controls_center)
             
     def setup_key_actions(self):
         self.key_actions = {
@@ -291,31 +278,18 @@ class ControlsCenter(Entity):
         
         return free_camera, orbital_camera
     
-    def change_editor_cameras(self):
+    def change_editor_cameras(self, hit_info=None):
         pt('---------- change cameras - -----------')
-        pt.ex()
-        info = mouse.hovered_entity
-        if info:
-            if info.name == self.free_target.name:
-                pt.t()
-                # self.free_target.parent = None 
-                self.free_target.parent = self.free_camera
-            self.orbital_camera.enabled = True
-            self.orbital_camera.target = info
+        
+        # if self.orbital_camera.enabled:
+        #     self.free_camera.position = self.orbital_camera.position
+        #     self.free_camera.rotation = self.orbital_camera.rotation
             
-            self.orbital_camera.position = self.free_camera.position
-            self.orbital_camera.rotation = self.free_camera.rotation
-            self.free_camera.enabled = False
-        else: 
-            if self.orbital_camera.enabled:
-                self.free_camera.position = self.orbital_camera.position
-                self.free_camera.rotation = self.orbital_camera.rotation
-                
-            self.orbital_camera.target = None
-            self.orbital_camera.enabled = False
-            
-            self.free_target.parent = camera
-            self.free_camera.enabled = True
+        # self.orbital_camera.target = None
+        # self.orbital_camera.enabled = False
+        
+        # self.free_target.parent = camera
+        # self.free_camera.enabled = True
             
             
 if __name__ == "__main__":

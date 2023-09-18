@@ -23,24 +23,28 @@ class OrbitalCamera(Entity):
         self.mouse_sensitivity = Vec2(40, 40)
         
     def change_targets(self):
-        info = mouse.hovered_entity
-        if info:
-            self.target = info
+        hit_info = mouse.hovered_entity
+        if hit_info:
+            self.target = hit_info
             # self.position = self.target.world_position + self.forward * -self.distance
-            self.distance = (self.position - info.position).length()
+            self.distance = (self.world_position - hit_info.world_position).length()
             
         else: 
             
             self.target = None
+            pt.ci('else')
             if self.controls_center is not None:
-                pt('-------------------')
-                self.controls_center.change_editor_cameras()
+                pt.ci('-------------------')
+                self.controls_center.cycle_through_active_controllers()
                 
     def on_enable(self):
+        camera.position = self.position
+        camera.world_position = self.world_position
         camera.parent = self
         mouse.locked = False
         
     def input(self, key):
+        import math
         if key == 'left mouse down':
             self.change_targets()
             
@@ -53,10 +57,30 @@ class OrbitalCamera(Entity):
             self.distance -= self.speed * 1.5
         if key == 'scroll down':
             self.distance += self.speed * 1.5
+
+        if key == 'f' and self.target:
+            bounding_box = self.target.bounds.size
+            x, y, z = bounding_box
+            orig_window_x, orig_window_y = window.size
+            window_aspect_ratio = orig_window_x / orig_window_y
+            bounding_box_aspect_ratio = max(x, y, z)
+            self.distance = bounding_box_aspect_ratio * window_aspect_ratio**2
+            pt(x,y,z, orig_window_x, orig_window_y, window_aspect_ratio, bounding_box_aspect_ratio, self.distance)
+        
+        # if key == 'f' and self.target:
+        #     bounding_box = self.target.bounds.size
+        #     x, y, z = bounding_box
+        #     pt(x,y,z,window.aspect_ratio)
+        #     orig_window_x, orig_window_y = window.size
+        #     pt(orig_window_x, orig_window_y)
+        #     window_x = orig_window_y/orig_window_x
+        #     window_y = orig_window_x/orig_window_y
+        #     pt(window_x, window_y)
+        #     aspect_ratio_x = window_x / max(x, y, z)
+        #     aspect_ratio_y = window_y / max(x, y, z)
             
-        if key == 'f' and self.target:            
-            self.distance = 1
-            
+        #     self.distance = max(x * aspect_ratio_x, y * aspect_ratio_y, z)
+        #     pt(aspect_ratio_x, aspect_ratio_y, self.distance)        
     def update(self):
         # pt.t('orbital camera')
         if self.target:
@@ -81,7 +105,7 @@ class OrbitalCamera(Entity):
                 self.rotation_y -= self.rotation_speed * time.dt * 2
                 
             # self.position = target_position + self.forward * -self.distance
-            self.position = self.target.world_position + self.forward * -self.distance
+            self.world_position = self.target.world_position + self.forward * -self.distance
             
             if held_keys['w']:
                 self.distance -= time.dt * self.speed

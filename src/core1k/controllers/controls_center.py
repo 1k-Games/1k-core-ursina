@@ -23,10 +23,6 @@
     - free+orbital cams:
         - Cams should switch between each other when clicked/unclicked. 
         
-    - Text size bug:
-        - When running each menu on their own, I get one text, but when running from 
-        controls_center, I get a different sized text.
-        
     - Reticle/targets/positioner:
         - FPS:      I think need to get rid of FPS reticle when switching off
         - Free_cam: Need to get rid of free_cam target when switching off. 
@@ -307,11 +303,11 @@ class ControlsCenter(Entity):
                 
             self.orbital_camera.target = None
             self.orbital_camera.enabled = False
-
+            
             self.free_target.parent = camera
             self.free_camera.enabled = True
-
-
+            
+            
 if __name__ == "__main__":
     from src.core1k.controllers.orbital_camera import OrbitalCamera
     from src.core1k.controllers.free_camera import FreeCamera
@@ -337,11 +333,12 @@ if __name__ == "__main__":
         player_controllers=(
             ThirdPersonController(
                 use_actor=False, 
-                z=-12),
+                position=(0,0,-12)),
             FirstPersonShooterController(
                 position=(0,6,-11), 
-                level=Entity()))
+                level=Entity())
         )
+    )
     
     app.run()
     

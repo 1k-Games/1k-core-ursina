@@ -69,13 +69,13 @@ class DevPauseMenu(Entity):
                 f"    rot = {self.ui_positioner.rotation}, world_rot = {self.scene_3d_positioner.world_rotation}"
                 )
         )
-                
+        
         super().__init__(parent=camera.ui, ignore_paused=True, enabled=enabled, **kwargs)
         pt.c('---- Dev Pause Menu ----')
         self.quit_key = 'x'
         self.restart_key = 'r'
         self.dev_menu_key = 'f1'
-        self.menu_shown = True  ## Enable the ability to press button to hide, the menu while remaining paused. 
+        self.menu_shown = True  ## Enable the ability to press button to hide the menu while remaining paused. 
         self.menu_visual_items = Entity()
         
         
@@ -144,6 +144,7 @@ class DevPauseMenu(Entity):
     def on_enable(self):
         self.reset_scene_3d_positioner()
         mouse.locked = False
+        mouse.position = restart_button.position
         # self.scene_3d_positioner.enabled=True
         
     # def on_disable(self):
@@ -177,9 +178,7 @@ class DevPauseMenu(Entity):
     def pause_resume(self):
         # application.paused = not application.paused
         # mouse.locked = not application.paused
-        
-        mouse.position = self.restart_b.position
-        
+                
         self.scene_3d_positioner.enabled = not self.scene_3d_positioner.enabled 
         
         self.enabled = not self.enabled
@@ -187,7 +186,6 @@ class DevPauseMenu(Entity):
     def dev_cam(self):
         pt('dev cam')
         self.editor_camera.enabled = not self.editor_camera.enabled
-        # mouse.locked = not application.paused
         # pt(mouse.locked)
         if self.enabled:
             self.disable()

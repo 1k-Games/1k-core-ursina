@@ -1,9 +1,8 @@
 '''TODO
 
-    - refactor the disable_all stuff. I don't think that is necessary to do.
+    - Possibly: refactor the disable_all stuff. I don't think that is necessary to do.
         - maybe just disable all once in the very beginning.
-        - Actually, there is a bug with the way I want to do it (some of the functions
-            use my new way and some use disable all.) 
+        - Actually, there is a bug that will happen if I switch to not using this: 
             - Bug: if not all are disabled then sometimes a menu button is currently 
             active while a new controller is being used. 
             - Fix: Either, everything uses the disable all, or I also get a list of the 
@@ -26,12 +25,12 @@
         - positioners - information gathering
             - Can drag them over an object to change into the shape/size of that object. 
             - How to:
-                - Have center of it marked somehow
-                - drag so center is over your target. 
+                - drag so mouse is over your target. 
                 - Click a button or hotkey like "r"
         - Pressing Resume button should do the same thing as pressing the 'f1' key again (disable dev menu)
             - Perhaps just need to take any logit out of resume function, and redirect it to the 
-            controls_controlle if it exists. 
+            controls_controlle if it exists.
+            
     - Print out The Name, attributes, (including model path, texture path etc) of 
         anything I click on. Possibly in another thread because entities seem to 
         cause a large amount of lag/stutter. 
@@ -115,7 +114,7 @@ class ControlsCenter(Entity):
     def set_controls_center_for_controllers(self):
         for controller in self.all_controllers:
             controller.controls_center = self
-            pt(controller, controller.controls_center)
+            # pt(controller, controller.controls_center)
             
     def setup_key_actions(self):
         self.key_actions = {
@@ -166,10 +165,10 @@ class ControlsCenter(Entity):
         
     def setup_initial_controller(self, player_controllers):
         if player_controllers:
-            pt('if')
+            # pt('if')
             self.disable_all_controllers_except_given(self.cur_player_controller)
         else:
-            pt('else')
+            # pt('else')
             self.disable_all_controllers_except_given(self.orbital_camera)
             
     def toggle_game_pause_menu(self):

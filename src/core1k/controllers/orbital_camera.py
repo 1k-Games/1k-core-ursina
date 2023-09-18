@@ -58,7 +58,7 @@ class OrbitalCamera(Entity):
             self.distance -= self.speed * 1.5
         if key == 'scroll down':
             self.distance += self.speed * 1.5
-
+            
         if key == 'f' and self.target:
             if self.target.model:
                 bounding_box = self.target.bounds.size
@@ -67,11 +67,10 @@ class OrbitalCamera(Entity):
                 window_aspect_ratio = orig_window_x / orig_window_y
                 bounding_box_aspect_ratio = max(x, y, z)
                 
-                # Adjust for FOV
                 fov_adjustment = 40.0 / camera.fov # Adjust this constant as needed
                 
                 self.distance = bounding_box_aspect_ratio * window_aspect_ratio **2 * fov_adjustment
-                pt(camera.fov, x,y,z, orig_window_x, orig_window_y, window_aspect_ratio, bounding_box_aspect_ratio, self.distance)
+                # pt(camera.fov, x,y,z, orig_window_x, orig_window_y, window_aspect_ratio, bounding_box_aspect_ratio, self.distance)
                 
     def update(self):
         # pt.t('orbital camera')

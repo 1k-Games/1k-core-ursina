@@ -9,20 +9,25 @@ class ThirdPersonController(Entity):
     def __init__(self, 
                 actor_model=None, 
                 use_actor=True, 
-                height=1, 
+                height=1,
+                position=(0,.5,0),
                 speed=2, 
                 *args, **kwargs):
         self.camera_boom = Entity(name='camera_boom')
         
-        super().__init__(*args, **kwargs)
-        
         self.height = height
-        self.y = 0
         self.speed = speed
         self.rotation_speed = 88
         
+        super().__init__(*args, **kwargs)
+        self.position = position
+        
+        print(f"Position after super().__init__: {self.position}")
+        
+        pt(self.world_position, self.position)
+        
         self.mouse_sensitivity = Vec2(40, 40)
-                
+        
         self.setup_actor_or_model(actor_model, use_actor)
         
         
@@ -41,7 +46,7 @@ class ThirdPersonController(Entity):
     
     def on_disable(self):
         ...
-                
+        
     def setup_camera(self):
 
         # pt(camera.parent, camera.world_position, camera.position)
@@ -86,7 +91,6 @@ class ThirdPersonController(Entity):
     def set_model(self):
         self.model = 'cube'
         self.color = color.rgba(.2,.2,1,1)
-
         
     def update(self):
         # pt('-------------- third person controller ---------')
@@ -112,8 +116,7 @@ class ThirdPersonController(Entity):
 
         if not held_keys['right mouse'] and self.camera_boom != self.forward:
             self.camera_boom.rotation = lerp(self.camera_boom.rotation, self.forward, 1.25 * time.dt)
-
-
+            
     def blend_anim(self, actor, animation, duration = .75, loop = True):
         
         actor.enableBlend()
@@ -132,11 +135,11 @@ class ThirdPersonController(Entity):
 #             self.actor.stop()
 #             pt('stop')
 
-
 if __name__ == '__main__':
     app = Ursina(size=(1920,1080))
-    ThirdPersonController(use_actor=False, z=0)
+    ground = Entity(model='plane', position=(0,0,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
+    ThirdPersonController(use_actor=False)
     Entity(model='cube', x=3, z=2)
     Sky()
-
+    
     app.run()

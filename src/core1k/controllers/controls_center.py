@@ -116,23 +116,37 @@ class ControlsCenter(Entity):
         incoming_filename=__file__,
         *args,
         **kwargs):
-        
+                
         super().__init__(*args, ignore_paused=True, **kwargs)
         
         self.setup_key_actions()
         self.setup_controller_indices()
-        self.setup_player_controllers(player_controllers)
-        self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
         self.setup_dev_controllers()
+        self.setup_player_controllers(player_controllers)
+        self.all_controllers = self.dev_controllers + self.player_controllers
+        self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
-                
+        self.set_controls_center_for_controllers()
+
+    def set_controls_center_for_controllers(self):
+        for controller in self.all_controllers:
+            controller.controls_center = self
+            
     def setup_key_actions(self):
         self.key_actions = {
             'escape': self.toggle_game_pause_menu,
             'f1': self.toggle_dev_pause_menu,
-            'f2': self.cycle_and_switch_to_next_controllers,
-            'f3': self.cycle_and_switch_to_next_controllers,
+            'f2': lambda: self.cycle_and_switch_to_next_controllers(
+                self.cur_player_controller if self.cur_player_controller.enabled else self.cur_dev_controller,
+                self.cur_dev_controller if self.cur_player_controller.enabled else self.cur_player_controller,
+                switch_positions=False
+            ),
+            'f3': lambda: self.cycle_and_switch_to_next_controllers(
+                self.cur_player_controller if self.cur_player_controller.enabled else self.cur_dev_controller,
+                self.cur_dev_controller if self.cur_player_controller.enabled else self.cur_player_controller,
+                switch_positions=True
+            ),
             'f4': self.cycle_through_active_controllers
         }
         
@@ -144,7 +158,9 @@ class ControlsCenter(Entity):
         if player_controllers is not None:
             self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else (player_controllers,)
             self.cur_player_controller = self.player_controllers[self.cur_player_index]
+            
         else:
+            ## NO Controllers were passed, so pass in some default ones. 
             self.player_controllers = (
                 FirstPersonShooterController(level=Entity()), 
                 ThirdPersonController(use_actor=False) 
@@ -198,32 +214,23 @@ class ControlsCenter(Entity):
         if self.cur_player_controller.enabled:
             self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
             new_controller = self.player_controllers[self.cur_player_index]
-            self.cycle_and_switch_to_next_controllers(self.cur_player_controller, new_controller, switch_position=True)
+            self.cycle_and_switch_to_next_controllers(self.cur_player_controller, new_controller, switch_positions=True)
             self.cur_player_controller = new_controller
         else:
             self.cur_dev_controller_index = (self.cur_dev_controller_index + 1) % len(self.dev_controllers)
             new_controller = self.dev_controllers[self.cur_dev_controller_index]
-            self.cycle_and_switch_to_next_controllers(self.cur_dev_controller, new_controller, switch_position=True)
+            self.cycle_and_switch_to_next_controllers(self.cur_dev_controller, new_controller, switch_positions=True)
             self.cur_dev_controller = new_controller
         
-    def cycle_and_switch_to_next_controller(self, controllers, controller_index, other_controller):
-        controller_index = (controller_index + 1) % len(controllers)
-        current_controller = controllers[controller_index]
-        self.disable_all_controllers_except_given(current_controller)
-        
-        new_pos = current_controller.world_position
-        new_rot = current_controller.world_rotation
-        
-        self.cycle_and_switch_to_next_controllers(current_controller, other_controller, switch_position=True)
-        
-    def cycle_and_switch_to_next_controllers(self, controller1, controller2, switch_position=False):
-        controller1.enabled = False
-        controller2.enabled = True
-        
-        if switch_position:
+    def cycle_and_switch_to_next_controllers(self, controller1, controller2, switch_positions=False):
+        if switch_positions:
             new_pos = controller1.world_position
             new_rot = controller1.world_rotation
-            
+
+        controller1.enabled = False
+        controller2.enabled = True
+
+        if switch_positions:
             controller2.position = new_pos
             controller2.rotation = new_rot
         
@@ -257,17 +264,11 @@ class ControlsCenter(Entity):
             
     def input(self, key):
         if key in self.key_actions:
-            if key in ['f2', 'f3']:
-                active_controller = self.cur_player_controller if self.cur_player_controller.enabled else self.cur_dev_controller
-                inactive_controller = self.cur_dev_controller if self.cur_player_controller.enabled else self.cur_player_controller
-                switch_position = True if key == 'f3' else False
-                self.key_actions[key](active_controller, inactive_controller, switch_position)
-            else:
-                self.key_actions[key]()
+            self.key_actions[key]()
             
     def update(self):
         ...
-    
+        
     def setup_editor_cameras(self, position, rotation):
         
         self.free_target_base_pos = self.forward * 11
@@ -343,12 +344,14 @@ if __name__ == "__main__":
         dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
         game_pause_menu=GamePauseMenuTemplate(),      
         player_controllers=(
-            ThirdPersonController(
-                use_actor=False, 
-                position=(0,0,-12)),
             FirstPersonShooterController(
                 position=(0,6,-11), 
-                level=Entity())
+                level=Entity(),
+                ),
+            ThirdPersonController(
+                use_actor=False, 
+                # position=(0,.5,-12),
+                ),
         )
     )
     

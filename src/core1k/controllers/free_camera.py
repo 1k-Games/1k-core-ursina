@@ -42,7 +42,8 @@ class FreeCamera(Entity):
         self.hotkeys = {'toggle_orthographic':'shift+p', 'focus':'f', 'reset_center':'shift+f'}
 
     def on_enable(self):
-        pt('free cam ENABLE')
+        # pt('free cam ENABLE')
+        
         # if self.free_target:
             # self.free_target.parent = self
             

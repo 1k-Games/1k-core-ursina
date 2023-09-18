@@ -50,13 +50,13 @@ class FirstPersonShooterController(Entity):
                 self.y = ray.world_point.y
 
     def on_enable(self):
-        pt('FPS ENABLED')
+        # pt('FPS ENABLED')
         mouse.locked = True
         self.reticle.enabled = True
         self.setup_camera()
         
     def on_disable(self):
-        pt('FPS DISABLED')
+        # pt('FPS DISABLED')
         self.reticle.enabled = False
         pt(mouse.locked, self.reticle.enabled)
         

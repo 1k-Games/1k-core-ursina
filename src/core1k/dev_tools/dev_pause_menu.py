@@ -145,10 +145,9 @@ class DevPauseMenu(Entity):
         self.reset_positioner_3d()
         mouse.locked = False
         try:
-            mouse.position = restart_b.position
+            mouse.position = self.restart_b.position
         except:
             mouse.position = (0,0,0)
-            pt(mouse.position)
             ...
             
     def on_disable(self):
@@ -188,7 +187,7 @@ class DevPauseMenu(Entity):
                 + camera.up * 3
                 + camera.right * 8
             )
-            self.positioner_3d.look_at(camera.ui.world_position)
+            self.positioner_3d.look_at(camera.ui.position)
             self.positioner_3d.rotation_y += 180
             self.positioner_3d.rotation_z += 33
             

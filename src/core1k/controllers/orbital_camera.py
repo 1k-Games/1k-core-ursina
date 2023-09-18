@@ -33,6 +33,7 @@ class OrbitalCamera(Entity):
             
             self.target = None
             if self.controls_center is not None:
+                pt('-------------------')
                 self.controls_center.change_editor_cameras()
                 
     def on_enable(self):
@@ -58,38 +59,38 @@ class OrbitalCamera(Entity):
             
     def update(self):
         # pt.t('orbital camera')
-
-        if held_keys['shift']:
-            self.shift_hold_time += time.dt * 11
-            self.speed += self.shift_hold_time  # Increase speed based on how long shift has been held
-        else:
-            self.shift_hold_time = 0  # Reset shift hold time
-            self.speed = self.base_speed  # Reset speed to base speed
+        if self.target:
+            if held_keys['shift']:
+                self.shift_hold_time += time.dt * 11
+                self.speed += self.shift_hold_time  # Increase speed based on how long shift has been held
+            else:
+                self.shift_hold_time = 0  # Reset shift hold time
+                self.speed = self.base_speed  # Reset speed to base speed
+                
+            if held_keys['right mouse']:
+                self.rotation_y += mouse.velocity[0] * self.rotation_speed
+                self.rotation_x -= mouse.velocity[1] * self.rotation_speed
+                
+            if held_keys['e']:
+                self.rotation_x -= self.rotation_speed * time.dt * 2
+            if held_keys['q']:
+                self.rotation_x += self.rotation_speed * time.dt * 2
+            if held_keys['a']:
+                self.rotation_y += self.rotation_speed * time.dt * 2
+            if held_keys['d']:
+                self.rotation_y -= self.rotation_speed * time.dt * 2
+                
+            # self.position = target_position + self.forward * -self.distance
+            self.position = self.target.world_position + self.forward * -self.distance
             
-        if held_keys['right mouse']:
-            self.rotation_y += mouse.velocity[0] * self.rotation_speed
-            self.rotation_x -= mouse.velocity[1] * self.rotation_speed
-            
-        if held_keys['e']:
-            self.rotation_x -= self.rotation_speed * time.dt * 2
-        if held_keys['q']:
-            self.rotation_x += self.rotation_speed * time.dt * 2
-        if held_keys['a']:
-            self.rotation_y += self.rotation_speed * time.dt * 2
-        if held_keys['d']:
-            self.rotation_y -= self.rotation_speed * time.dt * 2
-            
-        # self.position = target_position + self.forward * -self.distance
-        self.position = self.target.world_position + self.forward * -self.distance
-        
-        if held_keys['w']:
-            self.distance -= time.dt * self.speed
-        if held_keys['s']:
-            self.distance += time.dt * self.speed
-            
-        # Prevent the camera from going past the target
-        if self.distance <= 0:
-            self.distance = 0.025
+            if held_keys['w']:
+                self.distance -= time.dt * self.speed
+            if held_keys['s']:
+                self.distance += time.dt * self.speed
+                
+            # Prevent the camera from going past the target
+            if self.distance <= 0:
+                self.distance = 0.025
 
 
 

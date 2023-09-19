@@ -290,8 +290,7 @@ class ControlsCenter(Entity):
         
         # self.free_target.parent = camera
         # self.free_camera.enabled = True
-            
-            
+        
 if __name__ == "__main__":
     from src.core1k.controllers.orbital_camera import OrbitalCamera
     from src.core1k.controllers.free_camera import FreeCamera
@@ -303,9 +302,8 @@ if __name__ == "__main__":
     
     app = Ursina(size=(1920,1080))
     
-    
     ground = Entity(model='plane', position=(0,0,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
-    e = Entity(parent=ground, model='cube', world_position=(0,2.5,0), world_scale=(1,3,10), rotation_y=45, collider='box', texture='white_cube')
+    wall = Entity(parent=ground, model='cube', world_position=(0,2.5,0), world_scale=(1,3,10), rotation_y=45, collider='box', texture='white_cube')
     ball = Entity(name='ball', model='sphere', collider='sphere', position=(-2, 5, 0))
     cyl = Entity(name='cyl', model='sphere', collider='box', scale=(1,3,1), position=(0,5,0))
     box = Entity(name='box', model='cube', collider='box', position=(2, 5, 0))

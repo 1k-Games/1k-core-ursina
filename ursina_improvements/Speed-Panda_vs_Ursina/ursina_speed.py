@@ -14,25 +14,23 @@ TOT_TIME_TO_RUN = int(os.getenv("TOT_TIME_TO_RUN", 10))
 TIME_BETWEEN_PRINTS = int(os.getenv("TIME_BETWEEN_PRINTS", 1))
 
 app = Ursina(
-    development_mode=False,
+    development_mode=True,
     size=(800,600),
     vsync=False,
-    )
-
-from ursina import window
-
+)
+# pt(scene.entities)
+# window.cog_menu.enabled=False
 monitor = get_monitors()[0]
 window_width = window.size[0]
 window_height = window.size[1]
 
 x = (monitor.width / 2) - (window_width / 2) + 900
 y = (monitor.height / 2) - (window_height / 2)
-window.position=(x,y)
+window.position = (x,y)
 
 camera.position=(0,0,0)
 
 cube = Entity(model='cube', color=color.gray, position=(0,0,5))
-
 
 start_time = time.time()
 frame_count = 0

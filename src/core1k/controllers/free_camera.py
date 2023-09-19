@@ -5,7 +5,7 @@ pt.easy_testing(__name__)
 from ursina import *
 
 class FreeCamera(Entity):
-
+    
     def __init__(self,
             controls_center=None,
             free_target=None,
@@ -18,7 +18,7 @@ class FreeCamera(Entity):
         self.free_target_offset = free_target_offset
         super().__init__(name='free_camera', eternal=False)
         # self.gizmo = Entity(parent=self, model='sphere', color=color.orange, scale=.025, add_to_scene_entities=False, enabled=False)
-
+        
         pt.c('------- FreeCamera --------')
         
         self.rotation_speed = 200
@@ -27,22 +27,22 @@ class FreeCamera(Entity):
         self.zoom_speed = 1.25
         self.zoom_smoothing = 8
         self.rotate_around_mouse_hit = False
-
+        
         self.smoothing_helper = Entity(add_to_scene_entities=False)
         self.rotation_smoothing = 0
         self.look_at = self.smoothing_helper.look_at
         self.look_at_2d = self.smoothing_helper.look_at_2d
         self.rotate_key = 'right mouse'
-
+        
         for key, value in kwargs.items():
             setattr(self, key, value)
-
+            
         self.start_position = self.position
         self.perspective_fov = camera.fov
         self.orthographic_fov = camera.fov
         # self.on_destroy = self.on_disable
         self.hotkeys = {'toggle_orthographic':'shift+p', 'focus':'f', 'reset_center':'shift+f'}
-
+        
     def on_enable(self):
         # pt('free cam ENABLE')
         
@@ -57,7 +57,7 @@ class FreeCamera(Entity):
         # camera.rotation = (0,0,0)
         self.goal_z = camera.z
         self.goal_fov = camera.fov
-
+        
     def on_disable(self):
         ...
         # if self.free_target:
@@ -68,7 +68,7 @@ class FreeCamera(Entity):
         # camera.parent = camera.org_parent
         # camera.position = camera.org_position
         # camera.rotation = camera.org_rotation
-
+        
     # def on_destroy(self):
     #     destroy(self.smoothing_helper)
     def change_targets(self):
@@ -82,7 +82,7 @@ class FreeCamera(Entity):
         
     def input(self, key):
         combined_key = ''.join(e+'+' for e in ('control', 'shift', 'alt') if held_keys[e] and not e == key) + key
-
+        
         if combined_key == self.hotkeys['toggle_orthographic']:
             if not camera.orthographic:
                 self.orthographic_fov = camera.fov
@@ -92,13 +92,13 @@ class FreeCamera(Entity):
                 camera.fov = self.orthographic_fov
 
             camera.orthographic = not camera.orthographic
-
+            
         elif combined_key == self.hotkeys['reset_center']:
             self.animate_position(self.start_position, duration=.1, curve=curve.linear)
-
+            
         elif combined_key == self.hotkeys['focus'] and mouse.world_point:
             self.animate_position(mouse.world_point, duration=.1, curve=curve.linear)
-
+            
         elif key == 'scroll up':
             if not camera.orthographic:
                 goal_position = self.world_position
@@ -110,7 +110,7 @@ class FreeCamera(Entity):
             else:
                 self.goal_fov -= self.zoom_speed * (abs(self.goal_fov)*.1)
                 self.goal_fov = clamp(self.goal_fov, 1, 200)
-
+                
         elif key == 'scroll down':
             if not camera.orthographic:
                 # camera.world_position += camera.back * self.zoom_speed * 100 * time.dt * (abs(camera.z)*.1)
@@ -118,16 +118,16 @@ class FreeCamera(Entity):
             else:
                 self.goal_fov += self.zoom_speed * (abs(self.goal_fov)*.1)
                 self.goal_fov = clamp(self.goal_fov, 1, 200)
-
+                
         elif key == 'right mouse down' or key == 'middle mouse down':
             if mouse.hovered_entity and self.rotate_around_mouse_hit:
                 org_pos = camera.world_position
                 self.world_position = mouse.world_point
                 camera.world_position = org_pos
-
         
         if key == 'left mouse down':
             self.change_targets()
+            
     def update(self):
         # pt.t('free camera')
         

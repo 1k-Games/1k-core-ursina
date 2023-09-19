@@ -20,3 +20,6 @@ else:
     subprocess.run(["python", fr"ursina_improvements/Speed-Panda_vs_Ursina/ursina_speed.py"])
     subprocess.run(["python", fr"ursina_improvements/Speed-Panda_vs_Ursina/panda_speed.py"])
 
+'''
+
+'''

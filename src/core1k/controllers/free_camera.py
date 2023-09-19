@@ -3,15 +3,17 @@ pt.easy_imports()
 pt.easy_testing(__name__)
 # from ursina import Entity, camera, destroy, held_keys, mouse, curve, lerp, clamp, time, Vec2, Vec3, slerp
 from ursina import *
-EditorCamera
+
 class FreeCamera(Entity):
 
-    def __init__(self, 
+    def __init__(self,
+            controls_center=None,
             free_target=None,
             free_target_offset = (0,0,10),
             **kwargs
         ):
         camera.free_cam_pos = camera.position
+        self.controls_center = controls_center
         self.free_target = free_target
         self.free_target_offset = free_target_offset
         super().__init__(name='free_camera', eternal=False)

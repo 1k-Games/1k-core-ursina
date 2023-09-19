@@ -261,8 +261,9 @@ class ControlsCenter(Entity):
             position=self.free_target_base_pos,
             rotation=(90,0,0),
             color=color.red,
-            scale=.03,
+            scale=.13,
             collider='box',
+            enabled=False,
         )
         
         orbital_camera = OrbitalCamera(

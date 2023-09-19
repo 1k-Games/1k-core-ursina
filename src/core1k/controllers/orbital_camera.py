@@ -42,7 +42,7 @@ class OrbitalCamera(Entity):
         camera.world_position = self.world_position
         camera.parent = self
         mouse.locked = False
-        # camera.fov = 90
+        camera.fov = 90
         # pt(camera.fov)
     def input(self, key):
         import math
@@ -55,9 +55,9 @@ class OrbitalCamera(Entity):
                 self.change_targets()
             
         if key == 'scroll up':
-            self.distance -= self.speed * 1.5
+            self.distance -= self.speed
         if key == 'scroll down':
-            self.distance += self.speed * 1.5
+            self.distance += self.speed
             
         if key == 'f' and self.target:
             if self.target.model:

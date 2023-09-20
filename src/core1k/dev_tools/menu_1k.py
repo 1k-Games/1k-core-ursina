@@ -17,6 +17,7 @@ class ButtonCore1k(Button):
     def __init__(self, 
         sound=None,
         button_type=None,
+        hover_texture=None,
         # highlight_scale
         **kwargs
     ):
@@ -25,10 +26,12 @@ class ButtonCore1k(Button):
         super().__init__(**kwargs)
         self.sound = sound
         self.button_type = button_type
+        self.hover_texture = hover_texture
         self.original_scale = self.scale
         self.original_y = self.y
         self.original_z = self.z
-        self.adjusted_y = self.y 
+        self.adjusted_y = self.y
+        self.original_texture = self.texture
         # self.shader = lit_with_shadows_shader
         
     def on_mouse_enter(self):
@@ -41,6 +44,9 @@ class ButtonCore1k(Button):
         self.x_factor = (self.highlight_scale[0] - self.original_scale[0]) * .008
         self.y_factor = (self.highlight_scale[1] - self.original_scale[1]) * .008
         
+        if self.button_type == 'icon' and self.hover_texture:
+            self.texture = self.hover_texture
+            
         if self.button_type == 'item':
             for button in self.parent.item_buttons.values():
                 if button is not self:
@@ -48,6 +54,7 @@ class ButtonCore1k(Button):
                         button.y += self.y_factor
                     else:
                         button.y -= self.y_factor
+                        
         elif self.button_type == 'tab':
             for button in self.parent.tab_buttons.values():
                 if button is not self:
@@ -61,6 +68,9 @@ class ButtonCore1k(Button):
         self.scale = self.original_scale 
         self.z = self.original_z
         
+        if self.button_type == 'icon':
+            self.texture = self.original_texture
+            
         if self.button_type == 'item':
             for button in self.parent.item_buttons.values():
                 if button is not self:
@@ -68,6 +78,7 @@ class ButtonCore1k(Button):
                         button.y -= self.y_factor
                     else:
                         button.y += self.y_factor
+                        
         elif self.button_type == 'tab':
             for button in self.parent.tab_buttons.values():
                 if button is not self:
@@ -101,7 +112,7 @@ class MenuTemplate(Entity):
         tabs_start_point=(-.75,.337,0),
         icon_names= None, ## TODO DELETE, TEMPORARY, use icon names and textures
         icon_names_and_textures={},
-        icons_start_point=(.75,.337,0),
+        icons_start_point=(.84,.337,0),
         items_texture=None,
         background_texture=None,
         pause_on_enabled=False,
@@ -118,7 +129,9 @@ class MenuTemplate(Entity):
         self.camera_fov = camera_fov
         self.pause_on_enabled = pause_on_enabled
         
-        super().__init__(parent=camera.ui, ignore_paused=True, enabled=enabled, **kwargs)
+        super().__init__(parent=camera.ui, 
+                        ignore_paused=True, 
+                        enabled=enabled, **kwargs)
         
         pt.c('---- Game Pause Menu ----')
         self.ursfx = ursfx
@@ -129,26 +142,34 @@ class MenuTemplate(Entity):
         self.icon_names_and_textures = icon_names_and_textures
         self.icons_start_point = icons_start_point
         
+        self.background = Entity(
+            model='quad', 
+            scale=(window.aspect_ratio, 1, 1),
+            texture=background_texture,
+            parent=self,
+        )                         
+                                # texture_scale=(1/window.aspect_ratio, 1),)
         self.title = Text(text='Game Pause Menu Template', scale=2, position=title_position, origin=(0,0), parent=self)
         
         if item_names: self.setup_items()     
         if tab_names: self.setup_tabs()
-        if icon_names: self.setup_icons()
+        if icon_names_and_textures: self.setup_icons()
         
     def setup_icons(self):
         total_width = 0
-        for icon, texture in self.icon_names_and_textures.items():
+        for i, (icon, textures) in enumerate(reversed(self.icon_names_and_textures.items())):
             button = ButtonCore1k(
                 button_type='icon',
-                text=icon,
+                text=icon if textures[0] is None else None,
                 x=self.icons_start_point[0] - total_width,
                 y=self.icons_start_point[1],
                 scale=(.075, .075),  # Set the scale of the button
                 highlight_scale=(1.1, 1.2), 
                 color=color.brown,
-                # texture=texture[0] if texture else icon,  # Use the texture if provided, otherwise use the name
+                texture=textures[0],  # Use the first texture
+                hover_texture=textures[1] if len(textures) > 1 else None,  # Use the second texture if it exists
                 parent=self,
-                origin=(0.5, 0)  # Set the origin to the right edge
+                origin=(0.5, 0)
             )
             if icon:  ## Only add click if icon is not an empty string
                 if icon == 'Resume':
@@ -160,6 +181,8 @@ class MenuTemplate(Entity):
             self.icon_buttons[icon] = button
             total_width += button.scale_x + 0.001  # Add the width of the button and some padding
             
+# texture=texture[0] if texture else icon,  # Use the texture if provided, otherwise use the name
+
     def setup_items(self):
         
         for i, item in enumerate(self.item_names):
@@ -253,22 +276,25 @@ if __name__ == '__main__':
                 dpm.enabled = not dpm.enabled
                 
     pause_menu = MenuTemplate(
+        background_texture='menu_background_delete.jpg',
         item_names=[
-            'Resume',
-            'Social',
-            'Challenges/Achievements',
-            'History',
-            'Career Profile',
-            'Options',
-            'Readme',
-            'FAQ',
-            'Patch Notes',
+            'New Game',
+            'Continue',
+            # 'Resume',
+            # 'Social',
+            # 'Challenges/Achievements',
+            # 'History',
+            # 'Career Profile',
+            # 'Options',
+            # 'Readme',
+            # 'FAQ',
+            # 'Patch Notes',
             'Credits',
             '',
             'Exit'
         ],
         # items_start_point=(-.75,-.22,0),
-        items_start_point=(-.44,-.22,0),
+        items_start_point=(-.48,-.22,0),
         tab_names=[
             'video',
             'controls',
@@ -276,8 +302,8 @@ if __name__ == '__main__':
         ],
         icon_names_and_textures={
             'Social':       ('social1.png', 'social2.png'), 
-            'Achievements': ('achievements1.png', 'achivements2.png'), 
-            'Settings':     ('settings1.png', 'settings1.png'),
+            'Achievements': ('achievements1.png', 'achievements2.png'), 
+            'Settings':     ('settings1.png', 'settings2.png'),
             'Docs':         ('docs1.png', 'docs2.png')
         },
         pause_on_enabled=True,

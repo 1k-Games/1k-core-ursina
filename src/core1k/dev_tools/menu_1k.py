@@ -126,7 +126,7 @@ class MenuTemplate(Entity):
         self.items_start_point = items_start_point
         self.tab_names = tab_names
         self.tabs_start_point = tabs_start_point
-        self.icon_names = icon_names
+        self.icon_names_and_textures = icon_names_and_textures
         self.icons_start_point = icons_start_point
         
         self.title = Text(text='Game Pause Menu Template', scale=2, position=title_position, origin=(0,0), parent=self)
@@ -137,7 +137,7 @@ class MenuTemplate(Entity):
         
     def setup_icons(self):
         total_width = 0
-        for i, icon in enumerate(self.icon_names):
+        for icon, texture in self.icon_names_and_textures.items():
             button = ButtonCore1k(
                 button_type='icon',
                 text=icon,
@@ -146,7 +146,7 @@ class MenuTemplate(Entity):
                 scale=(.075, .075),  # Set the scale of the button
                 highlight_scale=(1.1, 1.2), 
                 color=color.brown,
-                # texture='oval_button',
+                # texture=texture[0] if texture else icon,  # Use the texture if provided, otherwise use the name
                 parent=self,
                 origin=(0.5, 0)  # Set the origin to the right edge
             )
@@ -274,8 +274,12 @@ if __name__ == '__main__':
             'controls',
             'sound',
         ],
-        icon_names=('adsf', 'bfads', 'cfads', 'dfafda'),
-        icon_names_and_textures={},
+        icon_names_and_textures={
+            'Social':       ('social1.png', 'social2.png'), 
+            'Achievements': ('achievements1.png', 'achivements2.png'), 
+            'Settings':     ('settings1.png', 'settings1.png'),
+            'Docs':         ('docs1.png', 'docs2.png')
+        },
         pause_on_enabled=True,
         enabled=True
         )

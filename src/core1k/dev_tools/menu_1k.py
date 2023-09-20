@@ -42,14 +42,19 @@ class ButtonCore1k(Button):
         self.y_factor = (self.highlight_scale[1] - self.original_scale[1]) * .008
         
         if self.button_type == 'item':
-            self.adjusted_y = self.y + self.y_factor
             for button in self.parent.item_buttons.values():
-                if button is not self and button.y > self.adjusted_y:
-                    button.y += self.y_factor
+                if button is not self:
+                    if button.y > self.adjusted_y:
+                        button.y += self.y_factor
+                    else:
+                        button.y -= self.y_factor
         elif self.button_type == 'tab':
             for button in self.parent.tab_buttons.values():
-                if button is not self and button.x > self.x:
-                    button.x += self.x_factor
+                if button is not self:
+                    if button.x > self.x:
+                        button.x += self.x_factor
+                    else:
+                        button.x -= self.x_factor
                         
     def on_mouse_exit(self):
         super().on_mouse_exit()
@@ -57,14 +62,19 @@ class ButtonCore1k(Button):
         self.z = self.original_z
         
         if self.button_type == 'item':
-            self.adjusted_y = self.y - self.y_factor
             for button in self.parent.item_buttons.values():
-                if button is not self and button.y > self.adjusted_y:
-                    button.y -= self.y_factor
+                if button is not self:
+                    if button.y > self.adjusted_y:
+                        button.y -= self.y_factor
+                    else:
+                        button.y += self.y_factor
         elif self.button_type == 'tab':
             for button in self.parent.tab_buttons.values():
-                if button is not self and button.x > self.x:
-                    button.x -= self.x_factor
+                if button is not self:
+                    if button.x > self.x:
+                        button.x -= self.x_factor
+                    else:
+                        button.x += self.x_factor
                 
     def input(self, key):
         super().input(key)
@@ -89,8 +99,9 @@ class MenuTemplate(Entity):
         items_start_point=(0,0,0),
         tab_names=None,
         tabs_start_point=(-.75,.337,0),
-        icon_names_and_textures=None,
-        icons_start_point=(0,0,0),
+        icon_names= None, ## TODO DELETE, TEMPORARY, use icon names and textures
+        icon_names_and_textures={},
+        icons_start_point=(.75,.337,0),
         items_texture=None,
         background_texture=None,
         pause_on_enabled=False,
@@ -115,12 +126,40 @@ class MenuTemplate(Entity):
         self.items_start_point = items_start_point
         self.tab_names = tab_names
         self.tabs_start_point = tabs_start_point
+        self.icon_names = icon_names
+        self.icons_start_point = icons_start_point
         
         self.title = Text(text='Game Pause Menu Template', scale=2, position=title_position, origin=(0,0), parent=self)
         
         if item_names: self.setup_items()     
         if tab_names: self.setup_tabs()
+        if icon_names: self.setup_icons()
         
+    def setup_icons(self):
+        total_width = 0
+        for i, icon in enumerate(self.icon_names):
+            button = ButtonCore1k(
+                button_type='icon',
+                text=icon,
+                x=self.icons_start_point[0] - total_width,
+                y=self.icons_start_point[1],
+                scale=(.075, .075),  # Set the scale of the button
+                highlight_scale=(1.1, 1.2), 
+                color=color.brown,
+                # texture='oval_button',
+                parent=self,
+                origin=(0.5, 0)  # Set the origin to the right edge
+            )
+            if icon:  ## Only add click if icon is not an empty string
+                if icon == 'Resume':
+                    button.on_click = self.resume_clicked
+                elif icon == 'Exit':
+                    button.on_click = self.exit_clicked
+                else:
+                    button.on_click = self.create_click_function(icon)
+            self.icon_buttons[icon] = button
+            total_width += button.scale_x + 0.001  # Add the width of the button and some padding
+            
     def setup_items(self):
         
         for i, item in enumerate(self.item_names):
@@ -129,7 +168,7 @@ class MenuTemplate(Entity):
                 text=item,
                 x=self.items_start_point[0],
                 y=self.items_start_point[1] - 0.05 * i, 
-                scale=(.5, .04), 
+                scale=(.41, .04), 
                 highlight_scale=(1.1, 1.8), 
                 color=color.brown,
                 # texture='oval_button',
@@ -229,11 +268,14 @@ if __name__ == '__main__':
             'Exit'
         ],
         # items_start_point=(-.75,-.22,0),
+        items_start_point=(-.44,-.22,0),
         tab_names=[
             'video',
             'controls',
             'sound',
         ],
+        icon_names=('adsf', 'bfads', 'cfads', 'dfafda'),
+        icon_names_and_textures={},
         pause_on_enabled=True,
         enabled=True
         )

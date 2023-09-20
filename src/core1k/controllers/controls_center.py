@@ -56,7 +56,7 @@ if __name__ != '__main__':
     from core1k.controllers.first_person_shooter_controller import FirstPersonShooterController
     from core1k.controllers.third_person_controller import ThirdPersonController
     from core1k.dev_tools.dev_pause_menu import DevPauseMenu
-    from core1k.dev_tools.game_pause_menu_template import GamePauseMenuTemplate
+    from core1k.dev_tools.menu_1k import MenuTemplate
     
 class ControlsCenter(Entity):
     '''
@@ -110,7 +110,7 @@ class ControlsCenter(Entity):
         self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
-
+        
     def set_controls_center_for_controllers(self):
         for controller in self.all_controllers:
             controller.controls_center = self
@@ -298,7 +298,7 @@ if __name__ == "__main__":
     from src.core1k.controllers.third_person_controller import ThirdPersonController
     
     from src.core1k.dev_tools.dev_pause_menu import DevPauseMenu
-    from src.core1k.dev_tools.game_pause_menu_template import GamePauseMenuTemplate
+    from src.core1k.dev_tools.menu_1k import MenuTemplate
     
     app = Ursina(size=(1920,1080))
     
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     cc = ControlsCenter(
         position=(0,4,-22), rotation=(11,0,0),
         dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
-        game_pause_menu=GamePauseMenuTemplate(),      
+        game_pause_menu=MenuTemplate(),      
         player_controllers=(
             FirstPersonShooterController(
                 position=(0,6,-11), 

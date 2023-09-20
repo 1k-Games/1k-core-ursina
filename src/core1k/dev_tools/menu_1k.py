@@ -42,6 +42,7 @@ class ButtonCore1k(Button):
         self.y_factor = (self.highlight_scale[1] - self.original_scale[1]) * .008
         
         if self.button_type == 'item':
+            self.adjusted_y = self.y + self.y_factor
             for button in self.parent.item_buttons.values():
                 if button is not self and button.y > self.adjusted_y:
                     button.y += self.y_factor
@@ -56,6 +57,7 @@ class ButtonCore1k(Button):
         self.z = self.original_z
         
         if self.button_type == 'item':
+            self.adjusted_y = self.y - self.y_factor
             for button in self.parent.item_buttons.values():
                 if button is not self and button.y > self.adjusted_y:
                     button.y -= self.y_factor

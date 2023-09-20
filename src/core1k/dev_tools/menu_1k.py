@@ -14,15 +14,18 @@ from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
 from ursina.shaders import lit_with_shadows_shader
 
 class ButtonCore1k(Button):
-    def __init__(self, 
+    
+    def __init__(self,
         sound=None,
         button_type=None,
         hover_texture=None,
+        ursfx=None,
         # highlight_scale
         **kwargs
     ):
         from ursina.prefabs.ursfx import ursfx
-        self.ursfx = ursfx
+        self.ursfx = ursfx 
+        
         super().__init__(**kwargs)
         self.sound = sound
         self.button_type = button_type
@@ -65,6 +68,7 @@ class ButtonCore1k(Button):
                         
     def on_mouse_exit(self):
         super().on_mouse_exit()
+        self.hover_sound.stop()
         self.scale = self.original_scale 
         self.z = self.original_z
         
@@ -120,6 +124,7 @@ class MenuTemplate(Entity):
         camera_fov=33,
         **kwargs):
         from ursina.prefabs.ursfx import ursfx
+        self.ursfx = ursfx
         
         self.item_buttons = {}
         self.tab_buttons = {}
@@ -134,13 +139,13 @@ class MenuTemplate(Entity):
                         enabled=enabled, **kwargs)
         
         pt.c('---- Game Pause Menu ----')
-        self.ursfx = ursfx
         self.item_names = item_names
         self.items_start_point = items_start_point
         self.tab_names = tab_names
         self.tabs_start_point = tabs_start_point
         self.icon_names_and_textures = icon_names_and_textures
         self.icons_start_point = icons_start_point
+        self.menu_color = color.dark_gray
         
         self.background = Entity(
             model='quad', 
@@ -148,8 +153,9 @@ class MenuTemplate(Entity):
             texture=background_texture,
             parent=self,
         )                         
-                                # texture_scale=(1/window.aspect_ratio, 1),)
-        self.title = Text(text='Game Pause Menu Template', scale=2, position=title_position, origin=(0,0), parent=self)
+
+        # self.title = Text(text='In The Dark', scale=2, position=title_position, origin=(0,0), shader=gradient_shader, parent=self)
+        self.title = Entity(model='quad', texture='CompanionInTheDark', position=(-.33,0), scale=.8, origin=(0,0), parent=self)
         
         if item_names: self.setup_items()     
         if tab_names: self.setup_tabs()
@@ -160,12 +166,13 @@ class MenuTemplate(Entity):
         for i, (icon, textures) in enumerate(reversed(self.icon_names_and_textures.items())):
             button = ButtonCore1k(
                 button_type='icon',
+                ursfx=self.ursfx,
                 text=icon if textures[0] is None else None,
                 x=self.icons_start_point[0] - total_width,
                 y=self.icons_start_point[1],
                 scale=(.075, .075),  # Set the scale of the button
                 highlight_scale=(1.1, 1.2), 
-                color=color.brown,
+                color=self.menu_color,
                 texture=textures[0],  # Use the first texture
                 hover_texture=textures[1] if len(textures) > 1 else None,  # Use the second texture if it exists
                 parent=self,
@@ -179,12 +186,11 @@ class MenuTemplate(Entity):
                 else:
                     button.on_click = self.create_click_function(icon)
             self.icon_buttons[icon] = button
-            total_width += button.scale_x + 0.001  # Add the width of the button and some padding
+            total_width += button.scale_x + 0.003  # Add the width of the button and some padding
             
 # texture=texture[0] if texture else icon,  # Use the texture if provided, otherwise use the name
 
     def setup_items(self):
-        
         for i, item in enumerate(self.item_names):
             button = ButtonCore1k(
                 button_type='item',
@@ -192,9 +198,9 @@ class MenuTemplate(Entity):
                 x=self.items_start_point[0],
                 y=self.items_start_point[1] - 0.05 * i, 
                 scale=(.41, .04), 
-                highlight_scale=(1.1, 1.8), 
-                color=color.brown,
-                # texture='oval_button',
+                highlight_scale=(1.1, 1.8),
+                color=self.menu_color,
+                texture='oval_button',
                 parent=self)
             if item:  ## Only add click if item is not an empty string
                 if item == 'Resume':
@@ -216,7 +222,7 @@ class MenuTemplate(Entity):
                 y=self.tabs_start_point[1],
                 scale=(scale_x, .04),  # Use scale_x for the x scale
                 highlight_scale=(1.1, 1.2), 
-                color=color.brown,
+                color=self.menu_color,
                 # texture='oval_button',
                 parent=self,
                 origin=(-0.5, 0)  # Set the origin to the left edge
@@ -262,7 +268,9 @@ class MenuTemplate(Entity):
         # print("Exit clicked")
 
 if __name__ == '__main__':
-    app = Ursina(size=(1920,1080))
+    app = Ursina(size=(1920,1080), 
+                development_mode=False,
+                )
     from dev_pause_menu import DevPauseMenu
     
     class temp_game_manager(Entity):
@@ -276,7 +284,7 @@ if __name__ == '__main__':
                 dpm.enabled = not dpm.enabled
                 
     pause_menu = MenuTemplate(
-        background_texture='menu_background_delete.jpg',
+        background_texture='menu_background_delete2.jpg',
         item_names=[
             'New Game',
             'Continue',
@@ -295,17 +303,18 @@ if __name__ == '__main__':
         ],
         # items_start_point=(-.75,-.22,0),
         items_start_point=(-.48,-.22,0),
-        tab_names=[
-            'video',
-            'controls',
-            'sound',
-        ],
+        # tab_names=[
+        #     'video',
+        #     'controls',
+        #     'sound',
+        # ],
         icon_names_and_textures={
             'Social':       ('social1.png', 'social2.png'), 
             'Achievements': ('achievements1.png', 'achievements2.png'), 
             'Settings':     ('settings1.png', 'settings2.png'),
             'Docs':         ('docs1.png', 'docs2.png')
         },
+        icons_start_point=Vec3(0.875, 0.45, 0),
         pause_on_enabled=True,
         enabled=True
         )

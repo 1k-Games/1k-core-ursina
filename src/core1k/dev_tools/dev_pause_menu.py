@@ -169,7 +169,8 @@ class DevPauseMenu(Entity):
             scale=(self.exit_b.scale),
             texture='..\\assets\\Square_Border',
             position=Vec2(-.225,.225),
-            text="Positioner UI", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"Positioner UI: {self.positioner_ui.position}"), z=-300,  ignore_paused=True, parent=self)
+            collider='box',
+            text="Positioner UI", color=color.hsv(360,1,1,.05), on_click=lambda: print(f"Positioner UI: {self.positioner_ui.position}"), z=-300, ignore_paused=True, parent=self)
         
         Text.size = .010
         

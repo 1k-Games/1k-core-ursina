@@ -148,14 +148,14 @@ class MenuTemplate(Entity):
         self.menu_color = color.dark_gray
         
         self.background = Entity(
-            model='quad', 
+            model='quad',
             scale=(window.aspect_ratio, 1, 1),
             texture=background_texture,
             parent=self,
-        )                         
-
+        )
+        
         # self.title = Text(text='In The Dark', scale=2, position=title_position, origin=(0,0), shader=gradient_shader, parent=self)
-        self.title = Entity(model='quad', texture='CompanionInTheDark', position=(-.33,0), scale=.8, origin=(0,0), parent=self)
+        self.title = Entity(model='quad', texture='CompanionInTheDark', position=(-.45,.05), scale=.8, origin=(0,0), parent=self)
         
         if item_names: self.setup_items()     
         if tab_names: self.setup_tabs()
@@ -196,19 +196,23 @@ class MenuTemplate(Entity):
                 button_type='item',
                 text=item,
                 x=self.items_start_point[0],
-                y=self.items_start_point[1] - 0.05 * i, 
-                scale=(.41, .04), 
+                y=self.items_start_point[1] - 0.05 * i,
+                scale=(.41, .04),
                 highlight_scale=(1.1, 1.8),
-                color=self.menu_color,
                 texture='oval_button',
+                color=self.menu_color,
                 parent=self)
             if item:  ## Only add click if item is not an empty string
+                
                 if item == 'Resume':
                     button.on_click = self.resume_clicked
                 elif item == 'Exit':
                     button.on_click = self.exit_clicked
                 else:
                     button.on_click = self.create_click_function(item)
+            else:
+                button.texture=None
+                button.model=None
             self.item_buttons[item] = button
             
     def setup_tabs(self):
@@ -221,7 +225,7 @@ class MenuTemplate(Entity):
                 x=self.tabs_start_point[0] + total_width,
                 y=self.tabs_start_point[1],
                 scale=(scale_x, .04),  # Use scale_x for the x scale
-                highlight_scale=(1.1, 1.2), 
+                highlight_scale=(1.1, 1.2),
                 color=self.menu_color,
                 # texture='oval_button',
                 parent=self,
@@ -268,7 +272,7 @@ class MenuTemplate(Entity):
         # print("Exit clicked")
 
 if __name__ == '__main__':
-    app = Ursina(size=(1920,1080), 
+    app = Ursina(size=(1920,1080),
                 development_mode=False,
                 )
     from dev_pause_menu import DevPauseMenu
@@ -302,7 +306,7 @@ if __name__ == '__main__':
             'Exit'
         ],
         # items_start_point=(-.75,-.22,0),
-        items_start_point=(-.48,-.22,0),
+        items_start_point=(-.66,-.22,0),
         # tab_names=[
         #     'video',
         #     'controls',

@@ -165,7 +165,7 @@ class ControlsCenter(Entity):
             
     def setup_pause_menus(self, dev_pause_menu, game_pause_menu, incoming_name, incoming_filename):
         self.dev_pause_menu = dev_pause_menu if dev_pause_menu is not None else DevPauseMenu(incoming_name=incoming_name, incoming_filename=incoming_filename)
-        self.game_pause_menu = game_pause_menu if game_pause_menu is not None else GamePauseMenuTemplate()
+        self.game_pause_menu = game_pause_menu if game_pause_menu is not None else MenuTemplate()
         
     def setup_dev_controllers(self):
         if application.development_mode:

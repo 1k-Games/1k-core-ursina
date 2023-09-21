@@ -22,10 +22,12 @@ class ThirdPersonController(Entity):
         
         super().__init__(*args, **kwargs)
         
+        pt.c('---------- third person controller --------')
+        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        
         # Set position after calling super().__init__()
         self.position = position
         
-        pt.ci('---------- third person controller --------')
         
         self.mouse_sensitivity = Vec2(40, 40)
         

@@ -97,20 +97,33 @@ class ControlsCenter(Entity):
         incoming_name=__name__,
         incoming_filename=__file__,
         *args,
-        **kwargs):
-                
+        **kwargs
+    ):
+        
         super().__init__(*args, ignore_paused=True, **kwargs)
+        
+        pt.c('------- Controls Center --------')
+        pt(self.world_position, self.position, self.world_rotation, self.rotation)
         
         self.setup_key_actions()
         self.setup_controller_indices()
         self.setup_dev_controllers()
         self.setup_player_controllers(player_controllers)
         self.all_controllers = self.dev_controllers + self.player_controllers
+        self.setup_positions_rotations()
         self.set_controls_center_for_controllers()
         self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
         
+    def setup_positions_rotations(self):
+        if not self.world_position == (0,0,0) and self.world_rotation == (0,0,0):
+            for controller in self.all_controllers:
+                if controller.world_position == (0,0,0):
+                    controller.world_position = self.position
+                if controller.world_rotation == (0,0,0):
+                    controller.world_rotation = self.rotation
+                    
     def set_controls_center_for_controllers(self):
         for controller in self.all_controllers:
             controller.controls_center = self
@@ -309,7 +322,7 @@ if __name__ == "__main__":
     box = Entity(name='box', model='cube', collider='box', position=(2, 5, 0))
     
     cc = ControlsCenter(
-        position=(0,4,-22), rotation=(11,0,0),
+        position=(3,6,-9), rotation=(5,5,0),
         dev_pause_menu=DevPauseMenu(incoming_name=__name__, incoming_filename=__file__),
         game_pause_menu=MenuTemplate(),      
         player_controllers=(

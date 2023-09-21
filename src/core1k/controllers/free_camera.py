@@ -16,10 +16,12 @@ class FreeCamera(Entity):
         self.controls_center = controls_center
         self.free_target = free_target
         self.free_target_offset = free_target_offset
+        
         super().__init__(name='free_camera', eternal=False)
-        # self.gizmo = Entity(parent=self, model='sphere', color=color.orange, scale=.025, add_to_scene_entities=False, enabled=False)
         
         pt.c('------- FreeCamera --------')
+        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        
         
         self.rotation_speed = 200
         self.pan_speed = Vec2(5, 5)

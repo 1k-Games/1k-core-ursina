@@ -6,13 +6,17 @@ from ursina import *
 from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
-    def __init__(self, level, fov=90, enabled=True, **kwargs):
-        pt.c('FirstPersonShooterController')
+    def __init__(self, level, fov=90, enabled=True, position=(0,0,0), rotation=(0,0,0), **kwargs):
         self.level = level
         self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png', enabled=enabled)
         self.camera_pivot = Entity()
         self.camera_fov = fov
-        super().__init__()
+        
+        super().__init__(position=position, rotation=rotation, **kwargs)
+        
+        pt.c('------- FPS Controller --------')
+        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        
         self.speed = 11
         self.sprint_speed = self.speed * 1.6
         self.height = 2
@@ -69,8 +73,8 @@ class FirstPersonShooterController(Entity):
         camera.rotation = self.camera_pivot.rotation
         camera.parent = self.camera_pivot
         
-        # pt(self.camera_boom.parent, camera.parent, 
-        #     camera.world_position, self.camera_boom.world_position)
+        pt(self.camera_pivot.parent, camera.parent, 
+            camera.world_position, self.camera_pivot.world_position)
     def update(self):
         # pt('-------------- third person controller ---------')
 

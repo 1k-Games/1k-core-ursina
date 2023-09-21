@@ -7,7 +7,12 @@ class OrbitalCamera(Entity):
             speed=25, 
             *args, **kwargs
         ):
+        
         super().__init__(*args, **kwargs)
+        
+        pt.c('------- Orbital Camera --------')
+        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        
         self.controls_center = controls_center
         self.target = camera.ui ##NOTE Setting this to something that I know will always be
                                 #### 000. This is for the initial target when you load up the 
@@ -48,11 +53,6 @@ class OrbitalCamera(Entity):
         import math
         if key == 'left mouse down':
             self.change_targets()
-            
-        if key == 'right mouse down':
-            ## right click can select a target if target is still none. 
-            if not self.target:
-                self.change_targets()
             
         if key == 'scroll up':
             self.distance -= self.speed

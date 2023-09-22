@@ -33,10 +33,25 @@ class BuildLevel:
     ### setup first target:
     dummy_target = Entity(model='sphere', collider='box', scale=(1,2.5,1), position=(weapon.world_position.x - 8, weapon.world_position.y, weapon.world_position.z))
 
+class InputStuff(Entity):
+    def __init__(self, **kwargs):
+        super().__init__(ignore_paused=True, **kwargs)
+        
+    def input(self, key):
+        if key == 'p':
+            pt(cc.orbital_camera.enabled, cc.free_camera.enabled, cc.dev_pause_menu.enabled, 
+                cc.game_pause_menu.enabled, cc.cur_player_controller.enabled)
+            pt(cc.cur_dev_controller, cc.cur_dev_controller.world_position, cc.cur_dev_controller.position, 
+                camera.world_position, camera.position)
+InputStuff()
+
 cc = ControlsCenter(
-    position=(0.5, -13.5, -1.37), 
+    position=(0.5, 1.5, -1.37), 
     rotation=(5, -54, 0), 
     starting_cam='free_cam'
 )
-pt(camera.position, camera.world_position, cc.cur_dev_controller.world_position, cc.cur_dev_controller.position)
+pt(cc.orbital_camera.enabled, cc.free_camera.enabled, cc.dev_pause_menu.enabled, 
+    cc.game_pause_menu.enabled, cc.cur_player_controller.enabled)
+pt(cc.cur_dev_controller, cc.cur_dev_controller.world_position, cc.cur_dev_controller.position, 
+    camera.world_position, camera.position)
 app.run()

@@ -189,7 +189,7 @@ class ControlsCenter(Entity):
             self.disable_all_controllers_except_given(self.cur_player_controller)
         else:
             pt('else player controllers')
-            self.disable_all_controllers_except_given(self.orbital_camera)
+            self.disable_all_controllers_except_given(self.cur_dev_controller)
             
     def toggle_game_pause_menu(self):
         if not self.game_pause_menu.enabled:

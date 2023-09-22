@@ -65,16 +65,16 @@ class FirstPersonShooterController(Entity):
         
     def setup_camera(self):
         
-        # pt(camera.parent, camera.world_position, camera.position)
-        # camera.world_position = self.camera_boom.world_position
+        # pt(1, '-fps-',  self.camera_pivot.parent, camera.parent, 
+        #     camera.world_position, self.camera_pivot.world_position)
         
         camera.fov = self.camera_fov
         camera.position = self.camera_pivot.position 
         camera.rotation = self.camera_pivot.rotation
         camera.parent = self.camera_pivot
         
-        pt(self.camera_pivot.parent, camera.parent, 
-            camera.world_position, self.camera_pivot.world_position)
+        # pt(2, '-fps-',  self.camera_pivot.parent, camera.parent, 
+        #     camera.world_position, self.camera_pivot.world_position)
     def update(self):
         # pt('-------------- third person controller ---------')
 

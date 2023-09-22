@@ -22,6 +22,9 @@ class OrbitalCamera(Entity):
         
         self.speed = speed
         self.base_speed = speed  # Save the base speed for resetting
+        self.shift_speed = self.base_speed * 6
+        self.scroll_speed = self.base_speed / 15
+        self.shift_scroll_speed = self.scroll_speed * 6
         self.shift_hold_time = 0  # Variable to keep track of how long shift has been held
         
         self.rotation_speed = 88
@@ -34,12 +37,11 @@ class OrbitalCamera(Entity):
             # self.position = self.target.world_position + self.forward * -self.distance
             self.distance = (self.world_position - hit_info.world_position).length()
             
-        else: 
+        else:
             
             self.target = None
-            pt.ci('else')
+            # pt.ci('else')
             if self.controls_center is not None:
-                pt.ci('-------------------')
                 self.controls_center.cycle_through_active_controllers()
                 
     def on_enable(self):
@@ -55,9 +57,15 @@ class OrbitalCamera(Entity):
             self.change_targets()
             
         if key == 'scroll up':
-            self.distance -= self.speed
+            if held_keys['left shift']:
+                self.distance -= self.shift_scroll_speed
+            else:
+                self.distance -= self.scroll_speed
         if key == 'scroll down':
-            self.distance += self.speed
+            if held_keys['left shift']:
+                self.distance += self.shift_scroll_speed
+            else:
+                self.distance += self.scroll_speed
             
         if key == 'f' and self.target:
             if self.target.model:
@@ -76,10 +84,8 @@ class OrbitalCamera(Entity):
         # pt.t('orbital camera')
         if self.target:
             if held_keys['shift']:
-                self.shift_hold_time += time.dt * 11
-                self.speed += self.shift_hold_time  # Increase speed based on how long shift has been held
+                self.speed = self.shift_speed
             else:
-                self.shift_hold_time = 0  # Reset shift hold time
                 self.speed = self.base_speed  # Reset speed to base speed
                 
             if held_keys['right mouse']:

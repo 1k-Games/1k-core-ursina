@@ -48,15 +48,15 @@ pt.easy_testing(__name__)
 from ursina import *
 
 if __name__ != '__main__':
-    from core1k.controllers.orbital_camera import OrbitalCamera
-    from core1k.controllers.free_camera import FreeCamera
+    from src.core1k.controllers.orbital_camera import OrbitalCamera
+    from src.core1k.controllers.free_camera import FreeCamera
     
     ## These are the default controllers to be used ONLY if you don't pass your own
     
-    from core1k.controllers.first_person_shooter_controller import FirstPersonShooterController
-    from core1k.controllers.third_person_controller import ThirdPersonController
-    from core1k.dev_tools.dev_pause_menu import DevPauseMenu
-    from core1k.dev_tools.menu_1k import MenuTemplate
+    from src.core1k.controllers.first_person_shooter_controller import FirstPersonShooterController
+    from src.core1k.controllers.third_person_controller import ThirdPersonController
+    from src.core1k.dev_tools.dev_pause_menu import DevPauseMenu
+    from src.core1k.dev_tools.menu_1k import MenuTemplate
     
 class ControlsCenter(Entity):
     '''
@@ -110,19 +110,24 @@ class ControlsCenter(Entity):
         self.setup_dev_controllers()
         self.setup_player_controllers(player_controllers)
         self.all_controllers = self.dev_controllers + self.player_controllers
-        self.setup_positions_rotations()
         self.set_controls_center_for_controllers()
         self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
+        self.setup_positions_rotations()
         
     def setup_positions_rotations(self):
-        if not self.world_position == (0,0,0) and self.world_rotation == (0,0,0):
+        # pt.c('/////////// CC - setup positions rotations ///////////')
+        if not self.world_position == (0,0,0) and not self.world_rotation == (0,0,0):
+            camera.world_position=(0,0,0)
+            camera.position=(0,0,0)
             for controller in self.all_controllers:
+                # pt(1, controller.name, controller.world_position, controller.world_rotation)
                 if controller.world_position == (0,0,0):
                     controller.world_position = self.position
                 if controller.world_rotation == (0,0,0):
                     controller.world_rotation = self.rotation
+                # pt(2, controller.name, controller.world_position, controller.world_rotation)
                     
     def set_controls_center_for_controllers(self):
         for controller in self.all_controllers:
@@ -171,6 +176,8 @@ class ControlsCenter(Entity):
         if application.development_mode:
             self.free_camera, self.orbital_camera = self.dev_controllers = self.setup_editor_cameras(self.position, self.rotation)
         self.cur_dev_controller = self.dev_controllers[0]
+        # pt(self.cur_dev_controller)
+        # pt(self.dev_controllers)
         
     def setup_main_items(self):
         self.saved_states = {}
@@ -178,10 +185,10 @@ class ControlsCenter(Entity):
         
     def setup_initial_controller(self, player_controllers):
         if player_controllers:
-            # pt('if')
+            pt('if player controllers')
             self.disable_all_controllers_except_given(self.cur_player_controller)
         else:
-            # pt('else')
+            pt('else player controllers')
             self.disable_all_controllers_except_given(self.orbital_camera)
             
     def toggle_game_pause_menu(self):

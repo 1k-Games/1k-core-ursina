@@ -45,21 +45,23 @@ class FreeCamera(Entity):
         # self.on_destroy = self.on_disable
         self.hotkeys = {'toggle_orthographic':'shift+p', 'focus':'f', 'reset_center':'shift+f'}
         
-    def on_enable(self):
-        # pt('free cam ENABLE')
+    def on_enable(self):        
+        # pt(1, '-free cam-',camera.parent, 
+        #     camera.world_position, camera.position)
+        
         
         # if self.free_target:
             # self.free_target.parent = self
-            
-        # camera.org_parent = camera.parent
-        # camera.org_position = camera.position
-        # camera.org_rotation = camera.rotation
+
+        camera.world_position = (0,0,0)
+        camera.position = (0,0,0)
         camera.parent = self
-        # camera.position = camera.free_cam_pos
-        # camera.rotation = (0,0,0)
+
         self.goal_z = camera.z
         self.goal_fov = camera.fov
         
+        # pt(2, '-free cam-',camera.parent, 
+        #     camera.world_position, camera.position)
     def on_disable(self):
         ...
         # if self.free_target:

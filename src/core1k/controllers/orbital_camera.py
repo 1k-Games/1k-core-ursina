@@ -10,8 +10,8 @@ class OrbitalCamera(Entity):
         
         super().__init__(*args, **kwargs)
         
-        pt.c('------- Orbital Camera --------')
-        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        # pt.c('------- Orbital Camera --------')
+        # pt(self.world_position, self.position, self.world_rotation, self.rotation)
         
         self.controls_center = controls_center
         self.target = camera.ui ##NOTE Setting this to something that I know will always be

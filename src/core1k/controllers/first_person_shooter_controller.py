@@ -14,8 +14,8 @@ class FirstPersonShooterController(Entity):
         
         super().__init__(**kwargs)
         
-        pt.c('------- FPS Controller --------')
-        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        # pt.c('------- FPS Controller --------')
+        # pt(self.world_position, self.position, self.world_rotation, self.rotation)
         
         self.speed = 11
         self.sprint_speed = self.speed * 1.6

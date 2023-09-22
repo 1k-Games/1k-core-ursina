@@ -19,8 +19,8 @@ class FreeCamera(Entity):
         
         super().__init__(name='free_camera', eternal=False)
         
-        pt.c('------- FreeCamera --------')
-        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        # pt.c('------- FreeCamera --------')
+        # pt(self.world_position, self.position, self.world_rotation, self.rotation)
         
         
         self.rotation_speed = 200

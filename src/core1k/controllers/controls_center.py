@@ -185,10 +185,10 @@ class ControlsCenter(Entity):
         
     def setup_initial_controller(self, player_controllers):
         if player_controllers:
-            pt('if player controllers')
+            # pt('if player controllers')
             self.disable_all_controllers_except_given(self.cur_player_controller)
         else:
-            pt('else player controllers')
+            # pt('else player controllers')
             self.disable_all_controllers_except_given(self.cur_dev_controller)
             
     def toggle_game_pause_menu(self):

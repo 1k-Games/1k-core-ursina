@@ -77,17 +77,17 @@ class FirstPersonShooterController(Entity):
         #     camera.world_position, self.camera_pivot.world_position)
     def update(self):
         # pt('-------------- third person controller ---------')
-
+        
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
-
+        
         self.camera_pivot.rotation_x -= mouse.velocity[1] * self.mouse_sensitivity[0]
         self.camera_pivot.rotation_x= clamp(self.camera_pivot.rotation_x, -90, 90)
-
+        
         self.direction = Vec3(
             self.forward * ((held_keys['w'] - held_keys['s']) or held_keys['gamepad left stick y'])
             + self.right * ((held_keys['d'] - held_keys['a']) or held_keys['gamepad left stick x'])
             ).normalized()
-
+            
         feet_ray = raycast(self.position+Vec3(0,0.5,0), self.direction, traverse_target=self.traverse_target, ignore=self.ignore_list, distance=.5, debug=False)
         head_ray = raycast(self.position+Vec3(0,self.height-.1,0), self.direction, traverse_target=self.traverse_target, ignore=self.ignore_list, distance=.5, debug=False)
         

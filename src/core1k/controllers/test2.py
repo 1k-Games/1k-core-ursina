@@ -46,12 +46,15 @@ class InputStuff(Entity):
 InputStuff()
 
 cc = ControlsCenter(
-    position=(0.5, 1.5, -1.37), 
-    rotation=(5, -54, 0), 
+    position=(0.5, 1.5, -1.37),
+    rotation=(5, -54, 0),
     starting_cam='free_cam'
 )
+
 pt(cc.orbital_camera.enabled, cc.free_camera.enabled, cc.dev_pause_menu.enabled, 
     cc.game_pause_menu.enabled, cc.cur_player_controller.enabled)
+
 pt(cc.cur_dev_controller, cc.cur_dev_controller.world_position, cc.cur_dev_controller.position, 
     camera.world_position, camera.position)
+
 app.run()

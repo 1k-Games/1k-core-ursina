@@ -28,7 +28,6 @@ class ThirdPersonController(Entity):
         # Set position after calling super().__init__()
         self.position = position
         
-        
         self.mouse_sensitivity = Vec2(40, 40)
         
         self.setup_actor_or_model(actor_model, use_actor)

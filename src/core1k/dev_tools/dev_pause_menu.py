@@ -49,7 +49,8 @@ class DevPauseMenu(Entity):
         self.setup_positioner_3d(positioner_3d_saved_attributes)
         super().__init__(parent=camera.ui, ignore_paused=True, enabled=enabled, **kwargs)
         
-        pt.c('---- Dev Pause Menu ----')
+        # pt.c('---- Dev Pause Menu ----')
+        
         self.quit_key = 'x'
         self.restart_key = 'r'
         self.dev_menu_key = 'f1'

@@ -102,8 +102,8 @@ class ControlsCenter(Entity):
         
         super().__init__(*args, ignore_paused=True, **kwargs)
         
-        pt.c('------- Controls Center --------')
-        pt(self.world_position, self.position, self.world_rotation, self.rotation)
+        # pt.c('------- Controls Center --------')
+        # pt(self.world_position, self.position, self.world_rotation, self.rotation)
         
         self.setup_key_actions()
         self.setup_controller_indices()

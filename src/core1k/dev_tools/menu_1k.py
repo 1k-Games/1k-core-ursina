@@ -3,7 +3,7 @@ pt.easy_imports()
 # pt.easy_testing(__name__)
 
 import os
-pt(os.getcwd())
+# pt(os.getcwd())
 # os.chdir('../../')
 # pt(os.getcwd())
 # os.chdir('assets/ui')
@@ -138,7 +138,8 @@ class MenuTemplate(Entity):
                         ignore_paused=True, 
                         enabled=enabled, **kwargs)
         
-        pt.c('---- Game Pause Menu ----')
+        # pt.c('---- Menu 1k ----')
+        
         self.item_names = item_names
         self.items_start_point = items_start_point
         self.tab_names = tab_names

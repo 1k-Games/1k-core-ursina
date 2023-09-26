@@ -12,7 +12,6 @@ from print_tricks import pt
 pt.easy_imports()
 pt.easy_testing(__name__)
 
-
 from ursina import *
     
 class DevPauseMenu(Entity):

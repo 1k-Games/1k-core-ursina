@@ -1,4 +1,4 @@
-
+from ursina import Entity
 
 class CoreLevelMixed(Entity):
     def __init__(self, **kwargs):

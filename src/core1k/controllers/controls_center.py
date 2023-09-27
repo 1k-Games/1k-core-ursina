@@ -159,10 +159,10 @@ class ControlsCenter(Entity):
         
     def setup_player_controllers(self, player_controllers):
         if player_controllers is not None:
+            self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else (player_controllers,)
             for controller in player_controllers:
                 if isinstance(controller, type) or not isinstance(controller, object):
                     raise TypeError(f"{controller} is not an instance of a class. Please pass instances instead.")
-            self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else (player_controllers,)
             self.cur_player_controller = self.player_controllers[self.cur_player_index]
         else:
             ## NO Controllers were passed, so pass in some default ones. 

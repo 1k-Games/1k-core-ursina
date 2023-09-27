@@ -41,6 +41,8 @@
             for them to do it if they are being controlled by a 3rd party controller. 
     '''
 
+import inspect, warnings
+
 from print_tricks import pt
 pt.easy_imports()
 pt.easy_testing(__name__)
@@ -157,9 +159,11 @@ class ControlsCenter(Entity):
         
     def setup_player_controllers(self, player_controllers):
         if player_controllers is not None:
+            for controller in player_controllers:
+                if isinstance(controller, type) or not isinstance(controller, object):
+                    raise TypeError(f"{controller} is not an instance of a class. Please pass instances instead.")
             self.player_controllers = player_controllers if isinstance(player_controllers, (list, tuple)) else (player_controllers,)
             self.cur_player_controller = self.player_controllers[self.cur_player_index]
-            
         else:
             ## NO Controllers were passed, so pass in some default ones. 
             self.player_controllers = (
@@ -178,6 +182,32 @@ class ControlsCenter(Entity):
         self.cur_dev_controller = self.dev_controllers[0]
         # pt(self.cur_dev_controller)
         # pt(self.dev_controllers)
+        
+    def setup_editor_cameras(self, position, rotation):
+        
+        self.free_target_base_pos = self.forward * 11
+        self.free_target = Entity(
+            name='free_target',
+            model='cube',
+            position=self.free_target_base_pos,
+            rotation=(90,0,0),
+            color=color.red,
+            scale=.13,
+            collider='box',
+            enabled=False,
+        )
+        
+        orbital_camera = OrbitalCamera(
+            controls_center=self,
+        )
+        free_camera = FreeCamera(position=position, rotation=rotation,
+            free_target=self.free_target,
+        )
+        
+        # self.free_target.parent = self.free_camera
+        self.free_target.parent = camera
+        
+        return free_camera, orbital_camera
         
     def setup_main_items(self):
         self.saved_states = {}
@@ -242,12 +272,10 @@ class ControlsCenter(Entity):
             passed_controllers = (passed_controllers,)
         
         for item in self.main_items:
-            pt(1, item)
             item.disable()
             
         for item in passed_controllers:
             item.enable()
-            pt(2, item)
         # pt('disable all but passed:',
         # self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
         # self.game_pause_menu.enabled, self.cur_player_controller.enabled)
@@ -273,31 +301,7 @@ class ControlsCenter(Entity):
     def update(self):
         ...
         
-    def setup_editor_cameras(self, position, rotation):
-        
-        self.free_target_base_pos = self.forward * 11
-        self.free_target = Entity(
-            name='free_target',
-            model='cube',
-            position=self.free_target_base_pos,
-            rotation=(90,0,0),
-            color=color.red,
-            scale=.13,
-            collider='box',
-            enabled=False,
-        )
-        
-        orbital_camera = OrbitalCamera(
-            controls_center=self,
-        )
-        free_camera = FreeCamera(position=position, rotation=rotation,
-            free_target=self.free_target,
-        )
-        
-        # self.free_target.parent = self.free_camera
-        self.free_target.parent = camera
-        
-        return free_camera, orbital_camera
+
     
     def change_editor_cameras(self, hit_info=None):
         pt('---------- change cameras - -----------')

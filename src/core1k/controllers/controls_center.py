@@ -242,11 +242,12 @@ class ControlsCenter(Entity):
             passed_controllers = (passed_controllers,)
         
         for item in self.main_items:
+            pt(1, item)
             item.disable()
             
         for item in passed_controllers:
             item.enable()
-            
+            pt(2, item)
         # pt('disable all but passed:',
         # self.orbital_camera.enabled, self.free_camera.enabled, self.dev_pause_menu.enabled, 
         # self.game_pause_menu.enabled, self.cur_player_controller.enabled)

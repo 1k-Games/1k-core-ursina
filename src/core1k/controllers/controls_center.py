@@ -111,13 +111,19 @@ class ControlsCenter(Entity):
         self.setup_controller_indices()
         self.setup_dev_controllers()
         self.setup_player_controllers(player_controllers)
-        self.all_controllers = self.dev_controllers + self.player_controllers
+        self.setup_all_controllers()
         self.set_controls_center_for_controllers()
         self.setup_pause_menus(dev_pause_menu, game_pause_menu, incoming_name, incoming_filename)
         self.setup_main_items()
         self.setup_initial_controller(player_controllers)
         self.setup_positions_rotations()
         
+    def setup_all_controllers(self):
+        if application.development_mode: 
+            self.all_controllers = self.dev_controllers + self.player_controllers
+        else:
+            self.all_controllers = self.player_controllers
+            
     def setup_positions_rotations(self):
         # pt.c('/////////// CC - setup positions rotations ///////////')
         if not self.world_position == (0,0,0) and not self.world_rotation == (0,0,0):
@@ -211,7 +217,7 @@ class ControlsCenter(Entity):
         
     def setup_main_items(self):
         self.saved_states = {}
-        self.main_items = tuple([self.game_pause_menu, self.dev_pause_menu] + list(self.dev_controllers) + list(self.player_controllers))
+        self.main_items = tuple([self.game_pause_menu, self.dev_pause_menu] + list(self.all_controllers))
         
     def setup_initial_controller(self, player_controllers):
         if player_controllers:
@@ -325,7 +331,7 @@ if __name__ == "__main__":
     from src.core1k.dev_tools.dev_pause_menu import DevPauseMenu
     from src.core1k.dev_tools.menu_1k import MenuTemplate
     
-    app = Ursina(size=(1920,1080))
+    app = Ursina(size=(1920,1080), development_mode=False)
     
     ground = Entity(model='plane', position=(0,0,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
     wall = Entity(parent=ground, model='cube', world_position=(0,2.5,0), world_scale=(1,3,10), rotation_y=45, collider='box', texture='white_cube')

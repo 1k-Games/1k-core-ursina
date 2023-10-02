@@ -178,12 +178,12 @@ class ControlsCenter(Entity):
         
     def setup_dev_controllers(self):
         if application.development_mode:
-            self.free_camera, self.orbital_camera = self.dev_controllers = self.setup_editor_cameras(self.position, self.rotation)
-        self.cur_dev_controller = self.dev_controllers[0]
-        # pt(self.cur_dev_controller)
-        # pt(self.dev_controllers)
+            self.free_camera, self.orbital_camera = self.dev_controllers = self.instantiate_dev_controllers(self.position, self.rotation)
+            self.cur_dev_controller = self.dev_controllers[0]
+            # pt(self.cur_dev_controller)
+            # pt(self.dev_controllers)
         
-    def setup_editor_cameras(self, position, rotation):
+    def instantiate_dev_controllers(self, position, rotation):
         
         self.free_target_base_pos = self.forward * 11
         self.free_target = Entity(

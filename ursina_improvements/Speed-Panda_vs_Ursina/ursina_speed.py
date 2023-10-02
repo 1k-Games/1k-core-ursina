@@ -24,9 +24,9 @@ monitor = get_monitors()[0]
 window_width = window.size[0]
 window_height = window.size[1]
 
-x = (monitor.width / 2) - (window_width / 2) + 900
+x = (monitor.width / 2) - (window_width / 2) + window.size[0]/2
 y = (monitor.height / 2) - (window_height / 2)
-# window.position = (x,y)
+window.position = (x,y)
 
 camera.position=(0,0,0)
 

@@ -114,7 +114,7 @@ class MenuTemplate(Entity):
         items_start_point=(0,0,0),
         tab_names=None,
         tabs_start_point=(-.75,.337,0),
-        icon_names= None, ## TODO DELETE, TEMPORARY, use icon names and textures
+        icon_names = None, ## TODO DELETE, TEMPORARY, use icon names and textures
         icon_names_and_textures={},
         icons_start_point=(.84,.337,0),
         items_texture=None,

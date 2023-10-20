@@ -14,7 +14,7 @@ TOT_TIME_TO_RUN = int(os.getenv("TOT_TIME_TO_RUN", 10))
 TIME_BETWEEN_PRINTS = int(os.getenv("TIME_BETWEEN_PRINTS", 1))
 
 app = Ursina(
-    development_mode=True,
+    development_mode=False,
     size=(800,600),
     vsync=False,
 )

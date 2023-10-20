@@ -129,8 +129,8 @@ class FreeCamera(Entity):
                 self.world_position = mouse.world_point
                 camera.world_position = org_pos
         
-        if key == 'left mouse down':
-            self.change_targets()
+        # if key == 'left mouse down':
+        #     self.change_targets()
             
     def update(self):
         # pt.t('free camera')

@@ -287,12 +287,18 @@ class ControlsCenter(Entity):
         # self.game_pause_menu.enabled, self.cur_player_controller.enabled)
         
     def save_current_states(self):
-        self.saved_states = {
-            'cur_player_controller': self.cur_player_controller.enabled,
-            'cur_dev_controller': self.cur_dev_controller.enabled,
-            'dev_pause_menu': self.dev_pause_menu.enabled,
-            'game_pause_menu': self.game_pause_menu.enabled,
-        }
+        if application.development_mode:
+            self.saved_states = {
+                'cur_player_controller': self.cur_player_controller.enabled,
+                'cur_dev_controller': self.cur_dev_controller.enabled,
+                'dev_pause_menu': self.dev_pause_menu.enabled,
+                'game_pause_menu': self.game_pause_menu.enabled,
+            }
+        else:
+            self.saved_states = {
+                'cur_player_controller': self.cur_player_controller.enabled,
+                'game_pause_menu': self.game_pause_menu.enabled,
+            }
         
     def restore_saved_states(self):
         for entity_name, initial_state in self.saved_states.items():
@@ -331,7 +337,10 @@ if __name__ == "__main__":
     from src.core1k.dev_tools.dev_pause_menu import DevPauseMenu
     from src.core1k.dev_tools.menu_1k import MenuTemplate
     
-    app = Ursina(size=(1920,1080), development_mode=False)
+    app = Ursina(
+        # size=(1920,1080), 
+        development_mode=False
+        )
     
     ground = Entity(model='plane', position=(0,0,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
     wall = Entity(parent=ground, model='cube', world_position=(0,2.5,0), world_scale=(1,3,10), rotation_y=45, collider='box', texture='white_cube')

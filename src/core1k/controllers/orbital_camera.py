@@ -53,8 +53,8 @@ class OrbitalCamera(Entity):
         # pt(camera.fov)
     def input(self, key):
         import math
-        if key == 'left mouse down':
-            self.change_targets()
+        # if key == 'left mouse down':
+        #     self.change_targets()
             
         if key == 'scroll up':
             if held_keys['left shift']:

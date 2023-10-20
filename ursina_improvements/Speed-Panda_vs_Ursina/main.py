@@ -9,23 +9,24 @@ dad_pc:
             1632 fps ursina
             10152 fps panda
 '''
-
 from print_tricks import pt
 # pt.easy_imports()
 # pt.easy_testing(__name__)
 import os
 import subprocess
 
-dad_pc = 'i:/.PythonProjects/sg/1k-core-ursina'
+run_apps_at_the_same_time = True 
+run_apps_at_the_same_time = False 
+
+os.environ["TIME_BETWEEN_PRINTS"] = "10"
+os.environ["TOT_TIME_TO_RUN"] = "180"
+
+dad_pc = 'c:/.PythonProjects/sg/1k-core-ursina'
 
 ursina_file = dad_pc + '/ursina_improvements/Speed-Panda_vs_Ursina/ursina_speed.py'
 panda_file = dad_pc + '/ursina_improvements/Speed-Panda_vs_Ursina/panda_speed.py'
 
-os.environ["TIME_BETWEEN_PRINTS"] = "10"
-os.environ["TOT_TIME_TO_RUN"] = "35"
 
-run_apps_at_the_same_time = True 
-run_apps_at_the_same_time = False 
 
 if run_apps_at_the_same_time:
     ursina_process = subprocess.Popen(["python", ursina_file])

@@ -1,3 +1,55 @@
+from ursina import *
+
+app = Ursina()
+
+def move_card(card, position):
+    card.position.y += position
+
+def calculate_stats():
+    print('calculate_stats')
+
+def shake(entity):
+    # Define your shake function here
+    pass
+
+e_one = Entity(model='quad', position=(0.0, 0.0))
+e_two = Entity(model='quad', position=(1.05, 0.0))
+
+def battle():
+    sequence = Sequence(
+        Func(move_card, e_one, 0.1),
+        0.5,
+        Func(shake, e_two),
+        0.5,
+        Func(calculate_stats),
+        1,
+        Func(move_card, e_one, -0.1),
+        loop=False
+    )
+    sequence.start()
+
+def input(key):
+    if key == 's':
+        for turn in range(3):
+            
+            battle()
+            print(f"turn: {turn}")
+
+app.run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from print_tricks import pt
 
 from ursina import *

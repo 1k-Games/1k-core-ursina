@@ -7,11 +7,11 @@
             active while a new controller is being used. 
             - Fix: Either, everything uses the disable all, or I also get a list of the 
             menus, like I have a list of the dev_controllers and player controllers. And then
-            disable those in the other functions. 
+            disable those in the other functions.
             
     positioner_3d - cube/uv's are wrong
-        - In blender, I have the UV's or something wrong. 
-        - by default, it shows me y as forward instead of z. 
+        - In blender, I have the UV's or something wrong.
+        - by default, it shows me y as forward instead of z.
         
         - While I am fixing the cube in blender, I need to remove these lines to test properly
             in dev_pause_menu:
@@ -19,26 +19,27 @@
                 self.positioner_3d.rotation_z += 33
                 
     - Reticle/targets/positioner:
-        - Free_cam: Need to get rid of free_cam target when switching off. 
+        - Free_cam: Need to get rid of free_cam target when switching off.
         
-    - Dev Menu 
+    - Dev Menu
         - positioners - information gathering
-            - Can drag them over an object to change into the shape/size of that object. 
+            - Can drag them over an object to change into the shape/size of that object.
             - How to:
-                - drag so mouse is over your target. 
+                - drag so mouse is over your target.
                 - Click a button or hotkey like "r"
         - Pressing Resume button should do the same thing as pressing the 'f1' key again (disable dev menu)
-            - Perhaps just need to take any logit out of resume function, and redirect it to the 
-            controls_controlle if it exists.
+            - Perhaps just need to take any logic out of resume function, and redirect it to the 
+            controls_controller if it exists.
             
-    - Print out The Name, attributes, (including model path, texture path etc) of 
-        anything I click on. Possibly in another thread because entities seem to 
-        cause a large amount of lag/stutter. 
+    - Print out The Name, attributes, (including model path, texture path etc) of
+        anything I click on. Possibly in another thread because entities seem to
+        cause a large amount of lag/stutter.
         
     - Menus:
-        - neither menu is pausing (i must have deleted that code)
+        - neither menu is pausing (I must have deleted that code)
             - figure out the best approach for them to do it themselves and
-            for them to do it if they are being controlled by a 3rd party controller. 
+            for them to do it if they are being controlled by a 3rd party controller.
+            
     '''
 
 import inspect, warnings
@@ -91,6 +92,7 @@ class ControlsCenter(Entity):
             
             
             '''
+
 class ControlsCenter(Entity):
     def __init__(self, 
         dev_pause_menu=None, 
@@ -147,13 +149,13 @@ class ControlsCenter(Entity):
             'escape': self.toggle_game_pause_menu,
             'f1': self.toggle_dev_pause_menu,
             'f2': lambda: self.cycle_and_switch_to_next_controllers(
-                self.cur_player_controller if self.cur_player_controller.enabled else self.cur_dev_controller,
-                self.cur_dev_controller if self.cur_player_controller.enabled else self.cur_player_controller,
+                self.cur_player_controller if self.cur_player_controller.enabled else (self.cur_dev_controller if application.development_mode else None),
+                self.cur_dev_controller if self.cur_player_controller.enabled and application.development_mode else self.cur_player_controller,
                 switch_positions=False
             ),
             'f3': lambda: self.cycle_and_switch_to_next_controllers(
-                self.cur_player_controller if self.cur_player_controller.enabled else self.cur_dev_controller,
-                self.cur_dev_controller if self.cur_player_controller.enabled else self.cur_player_controller,
+                self.cur_player_controller if self.cur_player_controller.enabled else (self.cur_dev_controller if application.development_mode else None),
+                self.cur_dev_controller if self.cur_player_controller.enabled and application.development_mode else self.cur_player_controller,
                 switch_positions=True
             ),
             'f4': self.cycle_through_active_controllers

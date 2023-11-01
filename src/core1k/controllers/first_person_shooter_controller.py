@@ -112,6 +112,7 @@ class FirstPersonShooterController(Entity):
 
 
         if self.gravity:
+            # pt()
             # gravity
             ray = raycast(self.world_position+(0,self.height,0), self.down, traverse_target=self.traverse_target, ignore=self.ignore_list)
             # ray = boxcast(self.world_position+(0,2,0), self.down, ignore=self.ignore_list)
@@ -130,7 +131,11 @@ class FirstPersonShooterController(Entity):
             # if not on ground and not on way up in jump, fall
             self.y -= min(self.air_time, ray.distance-.05) * time.dt * 100
             self.air_time += time.dt * .25 * self.gravity
-        
+            
+            pt(self.height, self.y, ray.hit, ray.distance)
+            pt.c(ray.entity)
+            if pt.r(loops=3):
+                pt.ex()
         # hv = self.level.terrain.model.height_values
         # self.y = self.true_y(self.world_position, self.level)
         # pt('_______', self.y)
@@ -209,6 +214,7 @@ if __name__ == '__main__':
     e.texture_scale = (e.scale_z, e.scale_y)
 
     player = FirstPersonShooterController(y=2, origin_y=-.5, level=Entity())
+    player.y=1
     player.gun = None
 
 

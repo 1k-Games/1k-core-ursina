@@ -42,6 +42,38 @@
             
     '''
 
+''' NOTE How to build a compatible Controller:
+    - Any controller will work, but we need to add the some functions (see below):
+    
+    - Functions to add: 
+        @property
+        def active(self):
+            return self._active
+
+        @active.setter
+        def active(self, value):
+            self._active = value
+            if self._active:
+                self.on_activate()
+            else:
+                self.on_deactivate()
+
+        def on_activate(self):
+            mouse.locked = True          ##Optional, example
+            self.reticle.enabled = True  ##Optional, example
+            self.setup_camera()
+            
+        def on_deactivate(self):
+            self.reticle.enabled = False
+        
+            def setup_camera()
+            camera.fov = 90
+            self.camera_boom.parent = self
+            self.camera_boom.position=(0,1.25,-3.25)
+            
+            camera.position = self.camera_boom.position
+            camera.parent = self.camera_boom
+'''
 import inspect, warnings
 
 from print_tricks import pt

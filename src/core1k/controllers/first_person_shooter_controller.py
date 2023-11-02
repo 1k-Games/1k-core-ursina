@@ -12,6 +12,8 @@ class FirstPersonShooterController(Entity):
         self.camera_pivot = Entity()
         self.camera_fov = fov
         
+        self.active = True
+        
         super().__init__(**kwargs)
         
         # pt.c('------- FPS Controller --------')
@@ -24,12 +26,6 @@ class FirstPersonShooterController(Entity):
         self.camera_pivot.parent = self
         self.camera_pivot.y = self.height
 
-        camera.parent = self.camera_pivot
-        camera.position = (0,0,0)
-        camera.rotation = (0,0,0)
-        camera.fov = self.camera_fov
-
-        mouse.locked = True
         self.mouse_sensitivity = Vec2(40, 40)
 
         self.gravity = 1
@@ -54,6 +50,7 @@ class FirstPersonShooterController(Entity):
 
     def on_enable(self):
         # pt('FPS ENABLED')
+        
         mouse.locked = True
         self.reticle.enabled = True
         self.setup_camera()
@@ -62,7 +59,26 @@ class FirstPersonShooterController(Entity):
         # pt('FPS DISABLED')
         self.reticle.enabled = False
         # pt(mouse.locked, self.reticle.enabled)
+    @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        self._active = value
+        if self._active:
+            self.on_activate()
+        else:
+            self.on_deactivate()
+
+    def on_activate(self):
+        mouse.locked = True
+        self.reticle.enabled = True
+        self.setup_camera()
         
+    def on_deactivate(self):
+        self.reticle.enabled = False
+
     def setup_camera(self):
         
         # pt(1, '-fps-',  self.camera_pivot.parent, camera.parent, 
@@ -76,10 +92,11 @@ class FirstPersonShooterController(Entity):
         # pt(2, '-fps-',  self.camera_pivot.parent, camera.parent, 
         #     camera.world_position, self.camera_pivot.world_position)
     def update(self):
-        # pt('-------------- third person controller ---------')
+        if not self.active:
+            return
+        # pt('-------------- first person controller ---------')
         
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
-        
         self.camera_pivot.rotation_x -= mouse.velocity[1] * self.mouse_sensitivity[0]
         self.camera_pivot.rotation_x= clamp(self.camera_pivot.rotation_x, -90, 90)
         
@@ -110,7 +127,6 @@ class FirstPersonShooterController(Entity):
 
             # self.position += self.direction * self.speed * time.dt
 
-
         if self.gravity:
             # pt()
             # gravity
@@ -132,10 +148,11 @@ class FirstPersonShooterController(Entity):
             self.y -= min(self.air_time, ray.distance-.05) * time.dt * 100
             self.air_time += time.dt * .25 * self.gravity
             
-            pt(self.height, self.y, ray.hit, ray.distance)
-            pt.c(ray.entity)
-            if pt.r(loops=3):
-                pt.ex()
+            # pt(self.height, self.y, ray.hit, ray.distance)
+            # pt.c(ray.entity)
+            # if pt.r(loops=3):
+            #     pt.ex()
+            
         # hv = self.level.terrain.model.height_values
         # self.y = self.true_y(self.world_position, self.level)
         # pt('_______', self.y)
@@ -165,6 +182,9 @@ class FirstPersonShooterController(Entity):
             pt.ex()
 
     def input(self, key):
+        if not self.active:
+            return
+        
         if key == 'space':
             self.jump()
 

@@ -20,6 +20,8 @@ class ThirdPersonController(Entity):
         self.rotation_speed = 88
         self.default_y = position[1]
         
+        self.active = True 
+        
         super().__init__(*args, **kwargs)
         
         # pt.c('---------- third person controller --------')
@@ -48,6 +50,28 @@ class ThirdPersonController(Entity):
     
     def on_disable(self):
         ...
+        
+
+        
+    @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        self._active = value
+        if self._active:
+            self.on_activate()
+        else:
+            self.on_deactivate()
+
+    def on_activate(self):
+        mouse.locked = True
+        self.setup_camera()
+        self.y += self.default_y
+        
+    def on_deactivate(self):
+        ...        
         
     def setup_camera(self):
         
@@ -93,8 +117,14 @@ class ThirdPersonController(Entity):
     def set_model(self):
         self.model = 'cube'
         self.color = color.rgba(.2,.2,1,1)
+    
+    def input(self, key):
+        if not self.active:
+            return
         
     def update(self):
+        if not self.active:
+            return
         # pt('-------------- third person controller ---------')
         # if pt.r(seconds=5):
         #     pt(camera.parent, self.camera_boom.parent, camera.world_position, camera.position, self.world_position, self.position, self.camera_boom.world_position, self.camera_boom.position)

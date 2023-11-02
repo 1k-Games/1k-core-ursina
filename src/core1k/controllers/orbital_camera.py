@@ -8,6 +8,8 @@ class OrbitalCamera(Entity):
             *args, **kwargs
         ):
         
+        self.active = True  
+        
         super().__init__(*args, **kwargs)
         
         # pt.c('------- Orbital Camera --------')
@@ -51,7 +53,34 @@ class OrbitalCamera(Entity):
         mouse.locked = False
         camera.fov = 90
         # pt(camera.fov)
+    
+    
+    @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        self._active = value
+        if self._active:
+            self.on_activate()
+        else:
+            self.on_deactivate()
+
+    def on_activate(self):
+        camera.position = self.position
+        camera.world_position = self.world_position
+        camera.parent = self
+        mouse.locked = False
+        camera.fov = 90
+        
+    def on_deactivate(self):
+        ...        
     def input(self, key):
+        if not self.active: 
+            return 
+
+
         import math
         # if key == 'left mouse down':
         #     self.change_targets()
@@ -81,6 +110,10 @@ class OrbitalCamera(Entity):
                 # pt(camera.fov, x,y,z, orig_window_x, orig_window_y, window_aspect_ratio, bounding_box_aspect_ratio, self.distance)
                 
     def update(self):
+        if not self.active: 
+            return 
+
+
         # pt.t('orbital camera')
         if self.target:
             if held_keys['shift']:

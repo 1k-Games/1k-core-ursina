@@ -149,13 +149,13 @@ class ControlsCenter(Entity):
             'escape': self.toggle_game_pause_menu,
             'f1': self.toggle_dev_pause_menu,
             'f2': lambda: self.cycle_and_switch_to_next_controllers(
-                self.cur_player_controller if self.cur_player_controller.enabled else (self.cur_dev_controller if application.development_mode else None),
-                self.cur_dev_controller if self.cur_player_controller.enabled and application.development_mode else self.cur_player_controller,
+                self.cur_player_controller if self.cur_player_controller.active else (self.cur_dev_controller if application.development_mode else None),
+                self.cur_dev_controller if self.cur_player_controller.active and application.development_mode else self.cur_player_controller,
                 switch_positions=False
             ),
             'f3': lambda: self.cycle_and_switch_to_next_controllers(
-                self.cur_player_controller if self.cur_player_controller.enabled else (self.cur_dev_controller if application.development_mode else None),
-                self.cur_dev_controller if self.cur_player_controller.enabled and application.development_mode else self.cur_player_controller,
+                self.cur_player_controller if self.cur_player_controller.active else (self.cur_dev_controller if application.development_mode else None),
+                self.cur_dev_controller if self.cur_player_controller.active and application.development_mode else self.cur_player_controller,
                 switch_positions=True
             ),
             'f4': self.cycle_through_active_controllers
@@ -252,7 +252,7 @@ class ControlsCenter(Entity):
             self.dev_pause_menu.enabled = False
             
     def cycle_through_active_controllers(self):
-        if self.cur_player_controller.enabled:
+        if self.cur_player_controller.active:
             self.cur_player_index = (self.cur_player_index + 1) % len(self.player_controllers)
             new_controller = self.player_controllers[self.cur_player_index]
             self.cycle_and_switch_to_next_controllers(self.cur_player_controller, new_controller, switch_positions=True)
@@ -263,6 +263,16 @@ class ControlsCenter(Entity):
             self.cycle_and_switch_to_next_controllers(self.cur_dev_controller, new_controller, switch_positions=True)
             self.cur_dev_controller = new_controller
         
+    # def cycle_and_switch_to_next_controllers(self, controller1, controller2, switch_positions=False):
+    #     if switch_positions:
+    #         new_pos = controller1.world_position
+    #         new_rot = controller1.world_rotation
+    #         controller2.position = new_pos
+    #         controller2.rotation = new_rot
+
+    #     controller1.enabled = False
+    #     controller2.enabled = True
+
     def cycle_and_switch_to_next_controllers(self, controller1, controller2, switch_positions=False):
         if switch_positions:
             new_pos = controller1.world_position
@@ -270,10 +280,13 @@ class ControlsCenter(Entity):
             controller2.position = new_pos
             controller2.rotation = new_rot
 
-        controller1.enabled = False
-        controller2.enabled = True
-
-        # if switch_positions:
+        controller1.active = False
+        controller2.active = True
+        if not controller2.enabled: controller2.enabled = True
+        
+        pt(controller1.name, controller1.active, controller1.enabled,
+        controller2.name, controller2.active, controller2.enabled,
+        )
         
     def disable_all_controllers_except_given(self, passed_controllers):
         if not isinstance(passed_controllers, (list, tuple)):
@@ -291,22 +304,24 @@ class ControlsCenter(Entity):
     def save_current_states(self):
         if application.development_mode:
             self.saved_states = {
-                'cur_player_controller': self.cur_player_controller.enabled,
-                'cur_dev_controller': self.cur_dev_controller.enabled,
-                'dev_pause_menu': self.dev_pause_menu.enabled,
-                'game_pause_menu': self.game_pause_menu.enabled,
+                'cur_player_controller': {'active': self.cur_player_controller.active, 'enabled': self.cur_player_controller.enabled},
+                'cur_dev_controller': {'active': self.cur_dev_controller.active, 'enabled': self.cur_dev_controller.enabled},
+                
+                'dev_pause_menu': {'enabled': self.dev_pause_menu.enabled},
+                'game_pause_menu': {'enabled': self.game_pause_menu.enabled},
             }
         else:
             self.saved_states = {
-                'cur_player_controller': self.cur_player_controller.enabled,
-                'game_pause_menu': self.game_pause_menu.enabled,
+                'cur_player_controller': {'active': self.cur_player_controller.active, 'enabled': self.cur_player_controller.enabled},
+                'game_pause_menu': {'active': self.game_pause_menu.active, 'enabled': self.game_pause_menu.enabled},
             }
-        
+
     def restore_saved_states(self):
-        for entity_name, initial_state in self.saved_states.items():
+        for entity_name, states in self.saved_states.items():
             entity = getattr(self, entity_name)
             if entity is not None:
-                entity.enabled = initial_state
+                entity.enabled = states['enabled']
+                entity.active = states['active']
             
     def input(self, key):
         if key in self.key_actions:
@@ -315,8 +330,6 @@ class ControlsCenter(Entity):
     def update(self):
         ...
         
-
-    
     def change_editor_cameras(self, hit_info=None):
         pt('---------- change cameras - -----------')
         
@@ -341,7 +354,7 @@ if __name__ == "__main__":
     
     app = Ursina(
         # size=(1920,1080), 
-        development_mode=False
+        # development_mode=False
         )
     
     ground = Entity(model='plane', position=(0,0,0), scale=(222,1,222), color=color.gray.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')

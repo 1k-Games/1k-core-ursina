@@ -17,6 +17,8 @@ class FreeCamera(Entity):
         self.free_target = free_target
         self.free_target_offset = free_target_offset
         
+        self.active = True
+        
         super().__init__(name='free_camera', eternal=False)
         
         # pt.c('------- FreeCamera --------')
@@ -75,6 +77,30 @@ class FreeCamera(Entity):
         
     # def on_destroy(self):
     #     destroy(self.smoothing_helper)
+    
+    @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        self._active = value
+        if self._active:
+            self.on_activate()
+        else:
+            self.on_deactivate()
+
+    def on_activate(self):
+        camera.world_position = (0,0,0)
+        camera.position = (0,0,0)
+        camera.parent = self
+
+        self.goal_z = camera.z
+        self.goal_fov = camera.fov
+        
+    def on_deactivate(self):
+        ...        
+        
     def change_targets(self):
         if self.controls_center:
             hit_info = mouse.hovered_entity if not mouse.locked else raycast(
@@ -85,6 +111,10 @@ class FreeCamera(Entity):
     ...
         
     def input(self, key):
+        if not self.active:
+            return  
+
+
         combined_key = ''.join(e+'+' for e in ('control', 'shift', 'alt') if held_keys[e] and not e == key) + key
         
         if combined_key == self.hotkeys['toggle_orthographic']:
@@ -133,6 +163,10 @@ class FreeCamera(Entity):
         #     self.change_targets()
             
     def update(self):
+        if not self.active:
+            return  
+
+
         # pt.t('free camera')
         
         # self.free_target.position = camera.position * self.forward *-2

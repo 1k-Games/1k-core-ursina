@@ -43,8 +43,18 @@
     '''
 
 ''' NOTE How to build a compatible Controller:
-    - Any controller will work, but we need to add the some functions (see below):
+    - Any controller will work, but... 
+        - we need to add the some functions (see below):
+        - we need to add checks for self._active in the update/input. 
     
+    - Functions to edit:
+        def update(self):
+            if not self.active:
+                return
+        def input(self):
+            if not self.active:
+                return
+                
     - Functions to add: 
         @property
         def active(self):
@@ -316,9 +326,9 @@ class ControlsCenter(Entity):
         controller2.active = True
         if not controller2.enabled: controller2.enabled = True
         
-        pt(controller1.name, controller1.active, controller1.enabled,
-        controller2.name, controller2.active, controller2.enabled,
-        )
+        # pt(controller1.name, controller1.active, controller1.enabled,
+        # controller2.name, controller2.active, controller2.enabled,
+        # )
         
     def disable_all_controllers_except_given(self, passed_controllers):
         if not isinstance(passed_controllers, (list, tuple)):

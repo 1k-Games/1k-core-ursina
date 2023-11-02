@@ -17,7 +17,7 @@ class FreeCamera(Entity):
         self.free_target = free_target
         self.free_target_offset = free_target_offset
         
-        self.active = True
+        self._active = True
         
         super().__init__(name='free_camera', eternal=False)
         

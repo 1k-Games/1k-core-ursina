@@ -8,7 +8,7 @@ class OrbitalCamera(Entity):
             *args, **kwargs
         ):
         
-        self.active = True  
+        self._active = True  
         
         super().__init__(*args, **kwargs)
         

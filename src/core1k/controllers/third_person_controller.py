@@ -20,7 +20,7 @@ class ThirdPersonController(Entity):
         self.rotation_speed = 88
         self.default_y = position[1]
         
-        self.active = True 
+        self._active = True 
         
         super().__init__(*args, **kwargs)
         

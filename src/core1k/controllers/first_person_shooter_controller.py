@@ -12,7 +12,7 @@ class FirstPersonShooterController(Entity):
         self.camera_pivot = Entity()
         self.camera_fov = fov
         
-        self.active = True
+        self._active = True
         
         super().__init__(**kwargs)
         

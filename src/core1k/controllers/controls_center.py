@@ -1,5 +1,12 @@
 '''TODO
 
+    - Put the camera views of Hybrid controller into..
+        Either:
+            - it's own dev camera
+            - Or all dev cameras have access to those different views. 
+        - This will allow me to dynamically change views on a player, whether the player 
+        should or should not have access to those views. 
+        
     - Possibly: refactor the disable_all stuff. I don't think that is necessary to do.
         - maybe just disable all once in the very beginning.
         - Actually, there is a bug that will happen if I switch to not using this: 

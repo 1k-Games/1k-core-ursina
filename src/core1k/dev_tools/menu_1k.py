@@ -273,7 +273,7 @@ class MenuTemplate(Entity):
         # print("Exit clicked")
 
 if __name__ == '__main__':
-    app = Ursina(size=(1920,1080),
+    app = Ursina(
                 development_mode=False,
                 )
     from dev_pause_menu import DevPauseMenu

@@ -16,7 +16,7 @@ class PauseMenu(Entity):
 
 
     
-class Dev_Pause_Menu(Entity):
+class DevPauseMenu(Entity):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.pause_menu = PauseMenu(add_to_scene_entities=False, enabled=False)
@@ -27,5 +27,5 @@ class Dev_Pause_Menu(Entity):
             
 if __name__ == '__main__':
     app = Ursina(size=(1920,1080))
-    Dev_Pause_Menu()
+    DevPauseMenu()
     app.run()

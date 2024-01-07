@@ -5,7 +5,7 @@ class FirstPersonShooterController(Entity):
     def __init__(self, level, **kwargs):
         self.level = level
         self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png')
-        super().__init__()
+        super().__init__(**kwargs)
         self.speed = 11
         self.sprint_speed = self.speed * 1.6
         self.height = 2

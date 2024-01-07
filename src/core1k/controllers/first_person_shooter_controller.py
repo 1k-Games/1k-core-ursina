@@ -1,31 +1,20 @@
-from print_tricks import pt
-pt.easy_imports()
-pt.easy_testing(__name__)
-
 from ursina import *
-from core1k.base_entities.trigger_base_entity import TriggerBaseEntity
 
 class FirstPersonShooterController(Entity):
-    def __init__(self, level, fov=90, enabled=True, **kwargs):
+    def __init__(self, level, **kwargs):
         self.level = level
-        self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png', enabled=enabled)
-        self.camera_pivot = Entity()
-        self.camera_fov = fov
-        
-        self._active = True
-        
-        super().__init__(**kwargs)
-        
-        # pt.c('------- FPS Controller --------')
-        # pt(self.world_position, self.position, self.world_rotation, self.rotation)
-        
+        self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png')
+        super().__init__()
         self.speed = 11
         self.sprint_speed = self.speed * 1.6
         self.height = 2
-        
-        self.camera_pivot.parent = self
-        self.camera_pivot.y = self.height
+        self.camera_pivot = Entity(parent=self, y=self.height)
 
+        camera.parent = self.camera_pivot
+        camera.position = (0,0,0)
+        camera.rotation = (0,0,0)
+        camera.fov = 90
+        mouse.locked = True
         self.mouse_sensitivity = Vec2(40, 40)
 
         self.gravity = 1
@@ -37,8 +26,8 @@ class FirstPersonShooterController(Entity):
         self.air_time = 0
 
         self.traverse_target = scene     # by default, it will collide with everything. change this to change the raycasts' traverse targets.
-        self.ignore_list = [self, TriggerBaseEntity]
-        
+        self.ignore_list = [self]
+
         for key, value in kwargs.items():
             setattr(self, key ,value)
 
@@ -48,63 +37,18 @@ class FirstPersonShooterController(Entity):
             if ray.hit:
                 self.y = ray.world_point.y
 
-    def on_enable(self):
-        # pt('FPS ENABLED')
-        
-        mouse.locked = True
-        self.reticle.enabled = True
-        self.setup_camera()
-        
-    def on_disable(self):
-        # pt('FPS DISABLED')
-        self.reticle.enabled = False
-        # pt(mouse.locked, self.reticle.enabled)
-    @property
-    def active(self):
-        return self._active
 
-    @active.setter
-    def active(self, value):
-        self._active = value
-        if self._active:
-            self.on_activate()
-        else:
-            self.on_deactivate()
-
-    def on_activate(self):
-        mouse.locked = True
-        self.reticle.enabled = True
-        self.setup_camera()
-        
-    def on_deactivate(self):
-        self.reticle.enabled = False
-
-    def setup_camera(self):
-        
-        # pt(1, '-fps-',  self.camera_pivot.parent, camera.parent, 
-        #     camera.world_position, self.camera_pivot.world_position)
-        
-        camera.fov = self.camera_fov
-        camera.position = self.camera_pivot.position 
-        camera.rotation = self.camera_pivot.rotation
-        camera.parent = self.camera_pivot
-        
-        # pt(2, '-fps-',  self.camera_pivot.parent, camera.parent, 
-        #     camera.world_position, self.camera_pivot.world_position)
     def update(self):
-        if not self.active:
-            return
-        # pt('-------------- first person controller ---------')
-        
         self.rotation_y += mouse.velocity[0] * self.mouse_sensitivity[1]
+
         self.camera_pivot.rotation_x -= mouse.velocity[1] * self.mouse_sensitivity[0]
         self.camera_pivot.rotation_x= clamp(self.camera_pivot.rotation_x, -90, 90)
-        
+
         self.direction = Vec3(
             self.forward * ((held_keys['w'] - held_keys['s']) or held_keys['gamepad left stick y'])
             + self.right * ((held_keys['d'] - held_keys['a']) or held_keys['gamepad left stick x'])
             ).normalized()
-            
+
         feet_ray = raycast(self.position+Vec3(0,0.5,0), self.direction, traverse_target=self.traverse_target, ignore=self.ignore_list, distance=.5, debug=False)
         head_ray = raycast(self.position+Vec3(0,self.height-.1,0), self.direction, traverse_target=self.traverse_target, ignore=self.ignore_list, distance=.5, debug=False)
         
@@ -127,8 +71,8 @@ class FirstPersonShooterController(Entity):
 
             # self.position += self.direction * self.speed * time.dt
 
+
         if self.gravity:
-            # pt()
             # gravity
             ray = raycast(self.world_position+(0,self.height,0), self.down, traverse_target=self.traverse_target, ignore=self.ignore_list)
             # ray = boxcast(self.world_position+(0,2,0), self.down, ignore=self.ignore_list)
@@ -147,18 +91,14 @@ class FirstPersonShooterController(Entity):
             # if not on ground and not on way up in jump, fall
             self.y -= min(self.air_time, ray.distance-.05) * time.dt * 100
             self.air_time += time.dt * .25 * self.gravity
-            
-            # pt(self.height, self.y, ray.hit, ray.distance)
-            # pt.c(ray.entity)
-            # if pt.r(loops=3):
-            #     pt.ex()
-            
+        
         # hv = self.level.terrain.model.height_values
         # self.y = self.true_y(self.world_position, self.level)
         # pt('_______', self.y)
         # self.y = terraincast(self.world_position, self.level.terrain, hv)
         # pt(self.y)
-        
+
+
     def true_y(self, p_pos, level):
         terrain = level.terrain
         w = level.w 
@@ -180,11 +120,7 @@ class FirstPersonShooterController(Entity):
 
         if pt.r(seconds=2):
             pt.ex()
-
     def input(self, key):
-        if not self.active:
-            return
-        
         if key == 'space':
             self.jump()
 
@@ -220,6 +156,15 @@ class FirstPersonShooterController(Entity):
         self.grounded = True
 
 
+    def on_enable(self):
+        mouse.locked = True
+        self.reticle.enabled = True
+
+
+    def on_disable(self):
+        mouse.locked = False
+        self.reticle.enabled = False
+
 
 
 
@@ -233,8 +178,7 @@ if __name__ == '__main__':
     e = Entity(model='cube', scale=(1,5,10), x=-2, y=.01, collider='box', texture='white_cube')
     e.texture_scale = (e.scale_z, e.scale_y)
 
-    player = FirstPersonShooterController(y=2, origin_y=-.5, level=Entity())
-    player.y=1
+    player = FPSController(y=2, origin_y=-.5)
     player.gun = None
 
 

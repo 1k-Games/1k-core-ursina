@@ -1,8 +1,7 @@
 from ursina import *
-
+from print_tricks import pt
 class FirstPersonShooterController(Entity):
-    def __init__(self, level, **kwargs):
-        self.level = level
+    def __init__(self, **kwargs):
         self.reticle = Entity(parent=camera.ui, model='quad', color=color.green, scale=.024, rotation_z=45, texture='default-reticle.png')
         super().__init__()
         self.speed = 11
@@ -92,11 +91,7 @@ class FirstPersonShooterController(Entity):
             self.y -= min(self.air_time, ray.distance-.05) * time.dt * 100
             self.air_time += time.dt * .25 * self.gravity
         
-        # hv = self.level.terrain.model.height_values
-        # self.y = self.true_y(self.world_position, self.level)
-        # pt('_______', self.y)
-        # self.y = terraincast(self.world_position, self.level.terrain, hv)
-        # pt(self.y)
+
 
 
     def true_y(self, p_pos, level):
@@ -106,20 +101,13 @@ class FirstPersonShooterController(Entity):
         x = int(p_pos.x/(terrain.scale_x/w) + w/2)
         z = int(p_pos.z/(terrain.scale_z/h) + h/2)
         i = (z*(w)) + x
-        # pt(p_pos, x, z, i)
 
         true_x, true_z = int(x/7), int(z/7)
-        # pt(true_x, true_z)
         y1 = terrain.model.height_values[x][z]
-        # pt(y1)
         y2 = terrain.model.height_values[true_x][true_z]
-        # pt(y2)
         difx = abs(p_pos.x) - abs(x)
         dify = abs(p_pos.z) - abs(z)
-        pt(p_pos, x, z, true_x, true_z, difx, dify)
 
-        if pt.r(seconds=2):
-            pt.ex()
     def input(self, key):
         if key == 'space':
             self.jump()
@@ -171,42 +159,12 @@ class FirstPersonShooterController(Entity):
 if __name__ == '__main__':
     window.vsync = False
     app = Ursina(size=(1920,1080))
-    # Sky(color=color.gray)
+    Sky(color=color.gray)
+    
     ground = Entity(model='plane', scale=(100,1,100), color=color.yellow.tint(-.2), texture='white_cube', texture_scale=(100,100), collider='box')
-    e = Entity(model='cube', scale=(1,5,10), x=2, y=.01, rotation_y=45, collider='box', texture='white_cube')
-    e.texture_scale = (e.scale_z, e.scale_y)
-    e = Entity(model='cube', scale=(1,5,10), x=-2, y=.01, collider='box', texture='white_cube')
-    e.texture_scale = (e.scale_z, e.scale_y)
-
-    player = FPSController(y=2, origin_y=-.5)
-    player.gun = None
-
-
-    gun = Button(parent=scene, model='cube', color=color.blue, origin_y=-.5, position=(3,0,3), collider='box', scale=(.2,.2,1))
-    def get_gun():
-        gun.parent = camera
-        gun.position = Vec3(.5,0,.5)
-        player.gun = gun
-    gun.on_click = get_gun
-
-    gun_2 = duplicate(gun, z=7, x=8)
     slope = Entity(model='cube', collider='box', position=(0,0,8), scale=6, rotation=(45,0,0), texture='brick', texture_scale=(8,8))
     slope = Entity(model='cube', collider='box', position=(5,0,10), scale=6, rotation=(80,0,0), texture='brick', texture_scale=(8,8))
-    # hill = Entity(model='sphere', position=(20,-10,10), scale=(25,25,25), collider='sphere', color=color.green)
-    # hill = Entity(model='sphere', position=(20,-0,10), scale=(25,25,25), collider='mesh', color=color.green)
-    # from ursina.shaders import basic_lighting_shader
-    # for e in scene.entities:
-    #     e.shader = basic_lighting_shader
 
-    hookshot_target = Button(parent=scene, model='cube', color=color.brown, position=(4,5,5))
-    hookshot_target.on_click = Func(player.animate_position, hookshot_target.position, duration=.5, curve=curve.linear)
-    def input(key):
-        if key == 'left mouse down' and player.gun:
-            gun.blink(color.orange)
-            bullet = Entity(parent=gun, model='cube', scale=.1, color=color.black)
-            bullet.world_parent = scene
-            bullet.animate_position(bullet.position+(bullet.forward*50), curve=curve.linear, duration=1)
-            destroy(bullet, delay=1)
+    player = FirstPersonShooterController(y=2, origin_y=-.5)
 
-    # player.add_script(NoclipMode())
     app.run()

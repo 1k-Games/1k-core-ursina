@@ -24,6 +24,11 @@ from panda3d.core import CompassEffect  ## use this for rotations only. Can poin
                                         ## rotations/scales due to rendering/cull.
 from panda3d.core import Camera
 
+from allbilities.mod_senders import mod_senders_main
+import inspect
+
+
+                
 from temp_core1k.light_entities import *
 from temp_core1k.linecast import linecast
 from assets.dynamic.create_mesh_path import Mesh_Creator
@@ -35,39 +40,39 @@ mesh_creator = Mesh_Creator()
 # import hotloader
 
 
-class Jitter_Teleport_Curve:
-    def __init__(self, 
-        jitter_duration=1.0, 
-        jump_duration=0.01, 
-        end_duration=0.04,
-        backward_jitter=-0.05,
-        forward_jitter=0.01,
-    ):
+# class Jitter_Teleport_Curve:
+#     def __init__(self, 
+#         jitter_duration=1.0, 
+#         jump_duration=0.01, 
+#         end_duration=0.04,
+#         backward_jitter=-0.05,
+#         forward_jitter=0.01,
+#     ):
         
-        self.combility_backward_jitter = backward_jitter
-        self.forward_jitter = forward_jitter
+#         self.combility_backward_jitter = backward_jitter
+#         self.forward_jitter = forward_jitter
         
         
-        # Normalize the durations
-        self.total = jitter_duration + jump_duration + end_duration
-        self.jitter_duration = jitter_duration / self.total
-        self.jump_duration = jump_duration / self.total
-        self.end_duration = end_duration / self.total
-        self.jitter_ended = False
+#         # Normalize the durations
+#         self.total = jitter_duration + jump_duration + end_duration
+#         self.jitter_duration = jitter_duration / self.total
+#         self.jump_duration = jump_duration / self.total
+#         self.end_duration = end_duration / self.total
+#         self.jitter_ended = False
 
-    def __call__(self, t):
-        t /= self.total  # normalize t to the duration
-        if t < self.jitter_duration:
-            ## Jitter back and forward, mostly back. 
-            return self.combility_backward_jitter * t + self.forward_jitter * sin(10 * pi * t)
-        else:
-            if not self.jitter_ended:
-                self.jitter_ended = True
-                return 0.93
-            else:
-                # Use a square root function for the end phase
-                end_t = (t - (self.jitter_duration + self.jump_duration)) / self.end_duration
-                return 0.93 + 0.07 * (1 - sqrt(1 - min(end_t, 1)))
+#     def __call__(self, t):
+#         t /= self.total  # normalize t to the duration
+#         if t < self.jitter_duration:
+#             ## Jitter back and forward, mostly back. 
+#             return self.combility_backward_jitter * t + self.forward_jitter * sin(10 * pi * t)
+#         else:
+#             if not self.jitter_ended:
+#                 self.jitter_ended = True
+#                 return 0.93
+#             else:
+#                 # Use a square root function for the end phase
+#                 end_t = (t - (self.jitter_duration + self.jump_duration)) / self.end_duration
+#                 return 0.93 + 0.07 * (1 - sqrt(1 - min(end_t, 1)))
 
 
 class WeaponTypeEnum(Enum):
@@ -1295,9 +1300,11 @@ class Combility(EG_Object):
     def update_example(self, energy_amount):
         print('update example')
 
+
     def add_function_if_exists(self, action_name, prepared_values, func_prefix, mod_list, mod_readable_list):
         func_name = f"{func_prefix}_{action_name}"
         if hasattr(self, func_name):
+            pt()
             func = getattr(self, func_name)
 
             # Get the parameters of the function
@@ -1321,7 +1328,129 @@ class Combility(EG_Object):
             func_add = func_name + str(prepared_values)
             mod_readable_list.append(func_add)
             return True
+        else:
+            pt()
+            for name, obj in inspect.getmembers(mod_senders_main):
+                if inspect.isclass(obj):
+                    if hasattr(obj, func_name):
+                        func = getattr(obj, func_name)
+                        # Get the parameters of the function
+                        params = inspect.signature(func).parameters
+
+                        # If prepared_values is not a tuple and it's a single value, make it a tuple
+                        if not isinstance(prepared_values, tuple):
+                            prepared_values = (prepared_values,)
+
+                        # Filter the prepared_values to only include the ones that the function needs
+                        prepared_values = tuple(value for name, value in zip(params, prepared_values) if name in params)
+
+                        def action_func():
+                            return func(*prepared_values)
+
+                        # Store func and prepared_values as attributes of action_func
+                        action_func.func = func
+                        action_func.prepared_values = prepared_values
+
+                        mod_list.append(action_func)
+                        func_add = func_name + str(prepared_values)
+                        mod_readable_list.append(func_add)
+                        return True
         return False
+
+    # def add_function_if_exists(self, action_name, prepared_values, func_prefix, mod_list, mod_readable_list):
+    #     func_name = f"{func_prefix}_{action_name}"
+        
+    #     # First, check the current class
+    #     if hasattr(self, func_name) and inspect.ismethod(getattr(self, func_name)):
+    #         func = getattr(self, func_name)
+    #         # rest of your code
+    #     else:
+    #         # If not found in the current class, check the classes in mod_senders_main
+    #         for name, obj in inspect.getmembers(mod_senders_main):
+    #             if inspect.isclass(obj) and hasattr(obj, func_name) and inspect.ismethod(getattr(obj, func_name)):
+    #                 func = getattr(obj, func_name)
+    #                 # rest of your code
+
+    #                 # Get the parameters of the function
+    #                 params = inspect.signature(func).parameters
+
+    #                 # If prepared_values is not a tuple and it's a single value, make it a tuple
+    #                 if not isinstance(prepared_values, tuple):
+    #                     prepared_values = (prepared_values,)
+
+    #                 # Filter the prepared_values to only include the ones that the function needs
+    #                 prepared_values = tuple(value for name, value in zip(params, prepared_values) if name in params)
+
+    #                 def action_func():
+    #                     return func(*prepared_values)
+
+    #                 # Store func and prepared_values as attributes of action_func
+    #                 action_func.func = func
+    #                 action_func.prepared_values = prepared_values
+
+    #                 mod_list.append(action_func)
+    #                 func_add = func_name + str(prepared_values)
+    #                 mod_readable_list.append(func_add)
+    #                 return True
+    #             return False
+    
+                    
+    # def add_function_if_exists(self, action_name, prepared_values, func_prefix, mod_list, mod_readable_list):
+    #     func_name = f"{func_prefix}_{action_name}"
+    #     for name, obj in inspect.getmembers(mod_senders_main):
+    #         if inspect.isclass(obj):
+    #             if hasattr(obj, func_name):
+    #                 func = getattr(obj, func_name)
+    #                 # Get the parameters of the function
+    #                 params = inspect.signature(func).parameters
+
+    #                 # If prepared_values is not a tuple and it's a single value, make it a tuple
+    #                 if not isinstance(prepared_values, tuple):
+    #                     prepared_values = (prepared_values,)
+
+    #                 # Filter the prepared_values to only include the ones that the function needs
+    #                 prepared_values = tuple(value for name, value in zip(params, prepared_values) if name in params)
+
+    #                 def action_func():
+    #                     return func(*prepared_values)
+
+    #                 # Store func and prepared_values as attributes of action_func
+    #                 action_func.func = func
+    #                 action_func.prepared_values = prepared_values
+
+    #                 mod_list.append(action_func)
+    #                 func_add = func_name + str(prepared_values)
+    #                 mod_readable_list.append(func_add)
+    #                 return True
+    #             return False
+
+    # def add_function_if_exists(self, action_name, prepared_values, func_prefix, mod_list, mod_readable_list):
+    #     func_name = f"{func_prefix}_{action_name}"
+    #     if hasattr(self, func_name):
+    #         func = getattr(self, func_name)
+
+    #         # Get the parameters of the function
+    #         params = inspect.signature(func).parameters
+
+    #         # If prepared_values is not a tuple and it's a single value, make it a tuple
+    #         if not isinstance(prepared_values, tuple):
+    #             prepared_values = (prepared_values,)
+
+    #         # Filter the prepared_values to only include the ones that the function needs
+    #         prepared_values = tuple(value for name, value in zip(params, prepared_values) if name in params)
+
+    #         def action_func():
+    #             return func(*prepared_values)
+
+    #         # Store func and prepared_values as attributes of action_func
+    #         action_func.func = func
+    #         action_func.prepared_values = prepared_values
+
+    #         mod_list.append(action_func)
+    #         func_add = func_name + str(prepared_values)
+    #         mod_readable_list.append(func_add)
+    #         return True
+    #     return False
 
     def add_use_function_if_exists(self, action_name, prepared_values):
         return self.add_function_if_exists(action_name, prepared_values, "use", self.mod_actions, self.mod_actions_readable)
@@ -1335,18 +1464,46 @@ class Combility(EG_Object):
     def add_disable_function_if_exists(self, action_name, prepared_values):
         # pt(self.name, action_name)
         return self.add_function_if_exists(action_name, prepared_values, "disable", self.mod_disables, self.mod_disables_readable)
-    
+
+
     def prepare_func_values(self, action_name, *args, **kwargs):
         prepare_func_name = f"prepare_{action_name}"
+        prepare_func = None
+
+        # First, check the current class
         if hasattr(self, prepare_func_name):
             prepare_func = getattr(self, prepare_func_name)
-            result = prepare_func(*args, **kwargs)
+        else:
+            # If not found in the current class, check the classes in mod_senders_main
+            for name, obj in inspect.getmembers(mod_senders_main):
+                if inspect.isclass(obj) and hasattr(obj, prepare_func_name):
+                    prepare_func = getattr(obj, prepare_func_name)
+                    break
+
+        if prepare_func is not None:
+            # Check if prepare_func is a bound method
+            if getattr(prepare_func, '__self__', None) is not None:
+                result = prepare_func(*args, **kwargs)
+            else:
+                result = prepare_func(self, *args, **kwargs)
             if result is not None:
                 if isinstance(result, tuple):
                     return result
                 else:
                     return (result,)
         return args + tuple(kwargs.values())
+
+    # def prepare_func_values(self, action_name, *args, **kwargs):
+    #     prepare_func_name = f"prepare_{action_name}"
+    #     if hasattr(self, prepare_func_name):
+    #         prepare_func = getattr(self, prepare_func_name)
+    #         result = prepare_func(*args, **kwargs)
+    #         if result is not None:
+    #             if isinstance(result, tuple):
+    #                 return result
+    #             else:
+    #                 return (result,)
+    #     return args + tuple(kwargs.values())
     
     def add_mod(self, action_name, *args, debug=False, **kwargs):
         prepared_values = self.prepare_func_values(action_name, *args, **kwargs)
@@ -2299,50 +2456,50 @@ class Combility(EG_Object):
         else:
             return direction_vec.x * self.combility_barrel_end.right + direction_vec.y * self.combility_barrel_end.up + direction_vec.z * self.combility_barrel_end.forward
 
-    def prepare_force(self, direction, energy_distance, type=None):
-        type = 'impulse' if type is None else type
+    # def prepare_force(self, direction, energy_distance, type=None):
+    #     type = 'impulse' if type is None else type
 
-        if type not in ['impulse', 'teleport', 'blink']:
-            raise ValueError(f'"{type}" is not a valid type for "add_force"')
+    #     if type not in ['impulse', 'teleport', 'blink']:
+    #         raise ValueError(f'"{type}" is not a valid type for "add_force"')
 
-        initial_direction_vec = self.calculate_user_passed_direction_vec(direction)
+    #     initial_direction_vec = self.calculate_user_passed_direction_vec(direction)
 
-        if type == 'teleport':
-            custom_curve = Jitter_Teleport_Curve(jitter_duration=0.5, jump_duration=0.01, end_duration=1.5)
-            duration = 1.5
-        else:
-            if type == 'blink':
-                custom_curve = curve.linear
-                duration = 0.0
-            elif type == 'impulse' or type == 'impulse_force':
-                custom_curve = curve.out_expo
-                duration = 0.3
+    #     if type == 'teleport':
+    #         custom_curve = Jitter_Teleport_Curve(jitter_duration=0.5, jump_duration=0.01, end_duration=1.5)
+    #         duration = 1.5
+    #     else:
+    #         if type == 'blink':
+    #             custom_curve = curve.linear
+    #             duration = 0.0
+    #         elif type == 'impulse' or type == 'impulse_force':
+    #             custom_curve = curve.out_expo
+    #             duration = 0.3
 
-        # Return the values that will be used as arguments for the use_force function
-        return initial_direction_vec, energy_distance, custom_curve, duration, type
+    #     # Return the values that will be used as arguments for the use_force function
+    #     return initial_direction_vec, energy_distance, custom_curve, duration, type
     
-    def use_force(self, initial_direction_vec, energy_distance, custom_curve, duration, type):
-        if self.get_real_eaat().parent.name == 'environment':
-            return
-        final_direction_vec = self.calculate_real_time_direction_vec_from_hit(initial_direction_vec)
-        ignore_list = self.get_relevant_descendants(self.eaat)
-        half_size_eaat = self.eaat.world_scale.x * 0.5
+    # def use_force(self, initial_direction_vec, energy_distance, custom_curve, duration, type):
+    #     if self.get_real_eaat().parent.name == 'environment':
+    #         return
+    #     final_direction_vec = self.calculate_real_time_direction_vec_from_hit(initial_direction_vec)
+    #     ignore_list = self.get_relevant_descendants(self.eaat)
+    #     half_size_eaat = self.eaat.world_scale.x * 0.5
 
-        if type == 'teleport':
-            energy_distance = self.calculate_energy_dist_for_teleport_hit(final_direction_vec, energy_distance, ignore_list, half_size_eaat)
-        else:
-            energy_distance = self.calculate_energy_dist_from_hit(final_direction_vec, energy_distance, ignore_list, half_size_eaat)
-        self.eaat.recieve_impulse(final_direction_vec, energy_distance, duration, custom_curve)
+    #     if type == 'teleport':
+    #         energy_distance = self.calculate_energy_dist_for_teleport_hit(final_direction_vec, energy_distance, ignore_list, half_size_eaat)
+    #     else:
+    #         energy_distance = self.calculate_energy_dist_from_hit(final_direction_vec, energy_distance, ignore_list, half_size_eaat)
+    #     self.eaat.recieve_impulse(final_direction_vec, energy_distance, duration, custom_curve)
         
-        ## TODO, REDO this section, too many repetitive if statements
-        if type == 'teleport':
-            Audio('teleport-90137.mp3', autoplay=True)
+    #     ## TODO, REDO this section, too many repetitive if statements
+    #     if type == 'teleport':
+    #         Audio('teleport-90137.mp3', autoplay=True)
 
-        elif type == 'blink':
-            Audio('futuristic-smg-sound-effect-100378.mp3', autoplay=True)
+    #     elif type == 'blink':
+    #         Audio('futuristic-smg-sound-effect-100378.mp3', autoplay=True)
             
-        else:
-            Audio('push_wind_whipy-woosh-transition-38006', autoplay=True)
+    #     else:
+    #         Audio('push_wind_whipy-woosh-transition-38006', autoplay=True)
         
 
 

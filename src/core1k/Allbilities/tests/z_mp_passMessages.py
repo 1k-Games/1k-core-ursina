@@ -1,0 +1,38 @@
+''' simple message passing between multiprocessing processes 
+https://pymotw.com/2/multiprocessing/communication.html
+
+'''
+
+import multiprocessing
+from print_tricks import pt
+import threading
+import os 
+
+
+pt.h('1')
+class MyFancyClass(object):
+    
+    def __init__(self, name):
+        self.name = name
+    
+    def do_something(self):
+        pt.h('2')
+
+
+def worker(q):
+    obj = q.get()
+    obj.do_something()
+
+
+if __name__ == '__main__':
+    queue = multiprocessing.Queue()
+
+    p = multiprocessing.Process(target=worker, args=(queue,))
+    p.start()
+    
+    queue.put(MyFancyClass('Fancy Dan'))
+    
+    # Wait for the worker to finish
+    queue.close()
+    queue.join_thread()
+    p.join()

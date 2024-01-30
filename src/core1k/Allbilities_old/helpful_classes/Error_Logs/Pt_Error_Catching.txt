@@ -1,0 +1,14 @@
+2023-05-09 02:29:33 Traceback (most recent call last): 
+  File "i:\.PythonProjects\EnergyGame\EG\helpful_classes\print_tricks.py", line 5616, in <module>
+    pt.e(msgType='full', printFileLoc='Pt_Error_Catching.txt')
+  File "i:\.PythonProjects\EnergyGame\EG\helpful_classes\print_tricks.py", line 5614, in <module>
+    print(len(7))
+          ^^^^^^
+TypeError: object of type 'int' has no len()
+2023-05-09 02:53:06 Traceback (most recent call last): 
+  File "i:\.PythonProjects\EnergyGame\EG\helpful_classes\print_tricks.py", line 5615, in <module>
+    pt.e(msgType='full', printFileLoc='Pt_Error_Catching.txt')
+  File "i:\.PythonProjects\EnergyGame\EG\helpful_classes\print_tricks.py", line 5613, in <module>
+    print(len(7))
+          ^^^^^^
+TypeError: object of type 'int' has no len()

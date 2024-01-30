@@ -3,9 +3,9 @@ Combilities organization:
 
 Main.py
 
-test_combilities.py (My placeholder that I currently have with hundreds of tests, all written out inefficiently)
-
 game_manager.py
+
+test_combilities.py (My placeholder that I currently have with hundreds of tests, all written out inefficiently)
 
 Level.py
 
@@ -26,27 +26,15 @@ Mod_receiver_category.py (the actions to be done on the character when receiving
 '''
 
 from ursina import *
+from print_tricks import pt
 
-def test_combilities(app):
-    from print_tricks import pt
-    
+def test_combilities(app, level):
     
     from eg_globals import EG_Globals
     from allbilities.ccaus.ccaus import CAUS
     from inputs.input_simulation import VR_Trigger_Simulator
     from allbilities.combilities.combility import Combility
     
-    # app = Ursina(
-    #     # size=(1280, 720),
-    #     # borderless=False,
-    #     # fullscreen=True,
-    #     # development_mode=False
-    #     )
-    # window.position=(360,0)
-    
-    # import testing_range
-    from levels import testing_range_city as testing_range
-    level = testing_range.BuildLevel()
     player = level.player
     slot_owner = level.weapon_slot_1.owner
 
@@ -71,10 +59,13 @@ def test_combilities(app):
             # Start all combilities disabled
             for device_build in self._test_device_builds:
                 device_build.disable()
+                # del device_build
                 for device in device_build.devices:
                     device.disable()
+                    # del device
                 for combility in device_build.combilities:
                     combility.disable()
+                    # del com
 
 
             self.current_trigger_simulator = VR_Trigger_Simulator(device)
@@ -89,9 +80,11 @@ def test_combilities(app):
                 # Disable the current devices
                 for device in self.current_devices:
                     device.disable()
+                    del device
 
                 for combility in self.current_combilities:
                     combility.disable()
+                    del combility
 
                 # Update the current combility index based on the scroll direction
                 if key == 'scroll down':
@@ -2205,4 +2198,12 @@ def test_combilities(app):
 
     test_device_builds = test_device_builds()
     
+    app.run()
+    
+    
+if __name__ == "__main__":
+    app = Ursina()
+    from levels import testing_range_city as testing_range
+    level = testing_range.BuildLevel()
+    test_combilities(app, level)
     app.run()

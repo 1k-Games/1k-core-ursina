@@ -1,0 +1,4 @@
+from print_tricks import pt
+
+v = 1.0000000000000000000000000000000000909
+pt(v)

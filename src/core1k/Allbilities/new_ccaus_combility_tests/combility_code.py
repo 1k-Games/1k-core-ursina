@@ -13,12 +13,12 @@ def create(trajectory_mixes=None, effects_mixes=None):
     :return: A dictionary with keys "trajectory_mixes" and "effects_mixes" mapping to their respective lists.
     """
     if not trajectory_mixes or not any(trajectory_mixes):
-        pt(f">>Warning: At least one trajectory mix is required. Adding a default Trajectory mix of mods")
+        pt(f">>Warning: At least one trajectory mix is required... Adding a default Trajectory mix of mods")
         trajectory_mixes = [mods.create_trajectory_mix()]
         
     if not effects_mixes or not any(effects_mixes):
-        pt(">>Warning: At least one effects mix is required. Adding an effects mod mix")
-        effects_mixes = [mods.create_effects_mix(mods.add_mod(mods.Mod_One_A))]
+        pt(">>Warning: At least one effects mix is required... Adding an effects mod mix")
+        effects_mixes = [mods.create_effects_mix(mods.add(mods.Mod_One_A))]
         
     combility = {
         "trajectory_mixes": [mix for mix in trajectory_mixes if mix],  # Ensure the trajectory mixes are not empty
@@ -31,16 +31,20 @@ def create(trajectory_mixes=None, effects_mixes=None):
 if __name__ == '__main__':
     new_blank_combility = create()
     pt(new_blank_combility)    
+    pt(new_blank_combility['trajectory_mixes'])    
+    pt(new_blank_combility['effects_mixes'])    
     
     
     
     trajectory_mix = mods.create_trajectory_mix(
-        mods.add_mod(mods.mods_trajectories.Path_Shape, 10, 20),
-        mods.add_mod(mods.mods_trajectories.Path_Curve, curvature=5))
+        mods.add(mods.mods_trajectories.Path_Shape, 10, 20),
+        mods.add(mods.mods_trajectories.Path_Curve, curvature=5))
     
     effect_mix = mods.create_effects_mix(
-        mods.add_mod(mods.Mod_One_A, a='new kwarg for a'),
-        mods.add_mod(mods.Mod_Two_B, 723, f='new kwarg for f'))
-            
-    new_combility = create(trajectory_mix, effect_mix)
-    pt(new_combility)
+        mods.add(mods.Mod_One_A, a='new kwarg for a'),
+        mods.add(mods.Mod_Two_B, 723, f='new kwarg for f'))
+
+
+    
+    combility_code = create(trajectory_mix, effect_mix)
+    pt(combility_code)

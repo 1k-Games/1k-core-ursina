@@ -515,9 +515,10 @@ class Combility(EG_Object):
         # for readable in enumerate(mod_readable_list):
         #     pt(readable)
         
-    def perform_actions(self, debug_print=False):
+    def perform_actions(self, debug_print=True):
         if not debug_print:
             for action_func in self.mod_actions:
+                
                 action_func()
         else:
             self.perform_debugger(self.mod_actions, "perform_actions", self.mod_actions_readable)

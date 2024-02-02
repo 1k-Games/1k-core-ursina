@@ -12,33 +12,32 @@ import mods_trajectories
 effects_methods = {getattr(mods_effects, name) for name in dir(mods_effects) if callable(getattr(mods_effects, name))}
 trajectory_methods = {getattr(mods_trajectories, name) for name in dir(mods_trajectories) if callable(getattr(mods_trajectories, name))}
 
-def add_mod(method, *args, **kwargs):
+def add(method, *args, **kwargs):
     return {'method': method, 'args': args, 'kwargs': kwargs}
 
-def add_mod_to_mix(mix, mod):
+def add_to_mix(mix, mod, *args, **kwargs):
+    # If mod is a callable, create the mod dictionary here
+    if callable(mod):
+        mod = {'method': mod, 'args': args, 'kwargs': kwargs}
+    
     method = mod['method']
-    args = mod['args']
-    kwargs = mod['kwargs']
+    args = mod.get('args', ())
+    kwargs = mod.get('kwargs', {})
 
     if not mix:
-        # If the mix is empty, add the mod and define the mix type implicitly
         mix.append(mod)
     else:
-        # Determine the mix type by checking the first method in the mix
         is_trajectory_mix = mix[0]['method'] in trajectory_methods
-
-        # If it's a trajectory mix, ensure only trajectory mods are added
         if is_trajectory_mix and method not in trajectory_methods:
             pt(f">> Warning: Only trajectory methods can be added to a trajectory mix. Not a {method}")
             return
-        # If it's an effects mix, ensure no trajectory mods are added
         if not is_trajectory_mix and method in trajectory_methods:
             pt(f">> Warning: Trajectory methods ({method}) cannot be added to an effects mix.")
             return
         mix.append(mod)
     return mix
 
-# Modify the create_effects_mix function to use the new add_mod_to_mix function
+# Modify the create_effects_mix function to use the new add_to_mix function
 def create_effects_mix(*effects):
     effects_mix = []
     for mod in effects:
@@ -46,10 +45,10 @@ def create_effects_mix(*effects):
         if mod['method'] in trajectory_methods:
             pt(f">> Warning: Trajectory methods ({mod}) cannot be added to an effects mix.")
             continue
-        add_mod_to_mix(effects_mix, mod)
+        add_to_mix(effects_mix, mod)
     return effects_mix
 
-# Modify the create_trajectory_mix function to use the new add_mod_to_mix function
+# Modify the create_trajectory_mix function to use the new add_to_mix function
 def create_trajectory_mix(*mod_methods):
     trajectory_mix = []
     for mod in mod_methods:
@@ -57,17 +56,27 @@ def create_trajectory_mix(*mod_methods):
         if mod['method'] not in trajectory_methods:
             pt(f">> Warning: Only trajectory methods can be added to a trajectory mix. Not a {mod}")
             continue
-        add_mod_to_mix(trajectory_mix, mod)
+        add_to_mix(trajectory_mix, mod)
 
     # Ensure default methods are included if they were not passed
     default_method_names = ["Path_Range", "Path_Shape", "Path_Curve", "Target_Types"]
     default_methods = {getattr(mods_trajectories, name) for name in default_method_names}
     for default_method in default_methods:
         if all(default_method is not item['method'] for item in trajectory_mix):
-            add_mod_to_mix(trajectory_mix, add_mod(default_method))
+            add_to_mix(trajectory_mix, add(default_method))
 
     return trajectory_mix
 
+def remove_mod_from_mix(mix, *mods_to_remove):
+    """
+    Removes all mods with the given references from the mix.
+    
+    :param mix: The list of mods to remove from.
+    :param mods_to_remove: The mod method references to remove.
+    """
+    # Use list comprehension to keep mods not in mods_to_remove
+    mix[:] = [mod for mod in mix if mod['method'] not in mods_to_remove]
+    
 def print_mod_sources(*args):
     '''Takes any of these:
         - A single mod
@@ -101,7 +110,6 @@ def _print_method_source(method):
     else:
         print(f"Provided method is not callable: {method}")
 
-
 def print_modified_mod_calls(mod_mix):
     for mod in mod_mix:
         modified_call = _generate_modified_call(mod)
@@ -132,30 +140,29 @@ if __name__ == "__main__":
         
         # Create initial effect mixes
         effect_mix_1 = mods.create_effects_mix(
-            mods.add_mod(Mod_One_A),
-            mods.add_mod(Mod_One_A, a='new kwarg for a'),
-            mods.add_mod(Mod_Two_B, 723, f='new kwarg for f')
+            mods.add(Mod_One_A),
+            mods.add(Mod_One_A, a='new kwarg for a'),
+            mods.add(Mod_Two_B, 723, f='new kwarg for f')
         )
         pt(effect_mix_1)
         
         # test against adding wrong trajectory mod to effects:
         effect_mix_2 = mods.create_effects_mix(
-            mods.add_mod(mods_trajectories.Path_Range)
+            mods.add(mods_trajectories.Path_Range)
         )
         pt(effect_mix_2)
         
         # Add a mod to the existing list
-        mods.add_mod_to_mix(effect_mix_1, add_mod(Mod_Two_B, 44.32, f='new kwarg for f'))
+        mods.add_to_mix(effect_mix_1, add(Mod_Two_B, 44.32, f=' added new mod, this is a new kwarg for f'))
         pt(effect_mix_1)
         
-        # Test against adding wrong trajectory mod to effects
-        # mods.add_mod_to_list(effect_mix_1, mods_trajectories.Path_Range)
-        # pt(effect_mix_1)
-        # pt.ex()
+        ## Test against adding wrong trajectory mod to effects
+        mods.add_to_mix(effect_mix_1, mods_trajectories.Path_Range)
+        pt(effect_mix_1)
         
-        # Remove a mod from the list
-        # mods.remove_mod_from_list(effect_mix_1, Mod_One_A) TODO Test this and add this back in
-        # # pt(effect_mix_1)
+        ## Remove a mod from the list
+        mods.remove_mod_from_mix(effect_mix_1, Mod_One_A) ## TODO Test this and add this back in
+        pt(effect_mix_1)
         
     def tests_create_trajectory():
         # No methods passed
@@ -165,26 +172,29 @@ if __name__ == "__main__":
         
         # 2 methods passed
         trajectory_mix_2 = mods.create_trajectory_mix(
-            mods.add_mod(mods_trajectories.Path_Shape, 10, 20),
-            mods.add_mod(mods_trajectories.Path_Curve, curvature=5)
+            mods.add(mods_trajectories.Path_Shape, 10, 20),
+            mods.add(mods_trajectories.Path_Curve, curvature=5)
         )
         pt(trajectory_mix_2)
 
         
         # 4 methods passed
         trajectory_mix_3 = create_trajectory_mix(
-            mods.add_mod(mods_trajectories.Path_Range),
-            mods.add_mod(mods_trajectories.Path_Shape, 10, 20),
-            mods.add_mod(mods_trajectories.Path_Curve, curvature=5), 
-            mods.add_mod(mods_trajectories.Target_Types, 'enemy')
+            mods.add(mods_trajectories.Path_Range),
+            mods.add(mods_trajectories.Path_Shape, 10, 20),
+            mods.add(mods_trajectories.Path_Curve, curvature=5), 
+            mods.add(mods_trajectories.Target_Types, 'enemy')
         )
         pt(trajectory_mix_3)
 
         # adding wrong effects mod to trajectory
         trajectory_mix_4 = mods.create_trajectory_mix(
-            mods.add_mod(mods_trajectories.Path_Curve),
-            mods.add_mod(Mod_One_B)
+            mods.add(mods_trajectories.Path_Curve),
+            mods.add(Mod_One_B)
         )
+        pt(trajectory_mix_4)
+        
+        mods.add_to_mix(trajectory_mix_4, mods_trajectories.Path_Range)
         pt(trajectory_mix_4)
         
     def tests_print_sources():
@@ -194,18 +204,18 @@ if __name__ == "__main__":
         pt.c('----------')
         
         effect_mix = mods.create_effects_mix(
-            mods.add_mod(Mod_One_A), 
-            mods.add_mod(Mod_One_B), 
-            mods.add_mod(Mod_Two_A))
+            mods.add(Mod_One_A), 
+            mods.add(Mod_One_B), 
+            mods.add(Mod_Two_A))
         mods.print_mod_sources(effect_mix)
         
         pt.c('--------------')
         
     def tests_print_modified_mod_calls():
         effect_mix = mods.create_effects_mix(
-            mods.add_mod(Mod_One_A),
-            mods.add_mod(Mod_One_A, a='new kwarg for a'),
-            mods.add_mod(Mod_Two_B, 723, f='new kwarg for f'))
+            mods.add(Mod_One_A),
+            mods.add(Mod_One_A, a='new kwarg for a'),
+            mods.add(Mod_Two_B, 723, f='new kwarg for f'))
         print_modified_mod_calls(effect_mix)
         
     tests_create_effects()

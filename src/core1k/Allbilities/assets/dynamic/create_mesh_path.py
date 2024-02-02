@@ -1,3 +1,4 @@
+
 import warnings 
 
 from print_tricks import pt
@@ -5,7 +6,6 @@ from ursina import *
 
 from math import radians
 from ursina import distance
-from math import atan2, pi
 
 from PIL import Image, ImageDraw
 
@@ -35,6 +35,106 @@ def generate_star_points(arms, radius=1):
             points.append(Vec2(cos(angle) * radius / 2, sin(angle) * radius / 2))
     return points
 
+
+class Create_Mesh_From_Model:
+    
+
+    def adjust_model_to_path_with_multiple_clones_of_parts_of_model(self, model, path_vertices):
+        distances = [distance(path_vertices[i], path_vertices[i+1]) for i in range(len(path_vertices)-1)]
+
+        total_distance = sum(distances)
+        
+        new_triangles = []
+        
+        original_vertices = model.vertices.copy()
+        
+        for i, dist in enumerate(distances):
+            closest_vertices = [v for v in original_vertices if v[2] < dist]
+            
+            for v in closest_vertices:
+                model.vertices.append((v[0], v[1], v[2] + dist))
+            
+            for t in model.triangles:
+                new_triangles.append([t[0] + i*len(closest_vertices), t[1] + i*len(closest_vertices), t[2] + i*len(closest_vertices)])
+        
+        model.triangles = new_triangles
+        model.generate()
+        return model
+
+    def adjust_model_to_path_close(self, model, path_vertices):
+        distances = [distance(path_vertices[i], path_vertices[i+1]) for i in range(len(path_vertices)-1)]
+        total_distance = sum(distances)
+        new_triangles = []
+        model.vertices = [(v[0] * total_distance, v[1] * total_distance, v[2] * total_distance) for v in model.vertices]
+        original_vertices = model.vertices.copy()
+
+        vertices_per_section = len(model.vertices) // len(path_vertices)
+
+        for i, dist in enumerate(distances):
+            closest_vertices = [v for v in original_vertices if v[2] < dist]
+            for v in closest_vertices:
+                model.vertices.append((v[0], v[1], v[2] + dist))
+            for t in model.triangles:
+                new_triangles.append([t[0] + i*len(closest_vertices), t[1] + i*len(closest_vertices), t[2] + i*len(closest_vertices)])
+
+            # Calculate the indices of the vertices in this section
+            start_index = i * vertices_per_section
+            end_index = start_index + vertices_per_section
+
+            # Calculate the center point of this section
+            section_vertices = model.vertices[start_index:end_index]
+            section_center = Vec3(sum(vertex[0] for vertex in section_vertices) / len(section_vertices),
+                                sum(vertex[1] for vertex in section_vertices) / len(section_vertices),
+                                sum(vertex[2] for vertex in section_vertices) / len(section_vertices))
+
+            # Calculate the displacement for this section
+            displacement = path_vertices[i] - section_center
+
+            # Adjust the vertices in this section
+            for j in range(start_index, end_index):
+                model.vertices[j] = tuple(Vec3(*model.vertices[j]) + displacement)
+
+        model.triangles = new_triangles
+        model.generate()
+        return model
+
+    def adjust_model_to_path_no_adjustment_yet(self, model, path_vertices):
+        distances = [distance(path_vertices[i], path_vertices[i+1]) for i in range(len(path_vertices)-1)]
+
+        total_distance = sum(distances)
+            
+        new_triangles = []
+            
+        # Scale the vertices in the z direction
+        # model.vertices = [(v[0], v[1], v[2] * total_distance) for v in model.vertices]
+        # Scale in all directions
+        model.vertices = [(v[0] * total_distance, v[1] * total_distance, v[2] * total_distance) for v in model.vertices]
+
+        original_vertices = model.vertices.copy()
+            
+        # # Scale the vertices in the z direction
+        # original_vertices = [(v[0], v[1], v[2] * total_distance) for v in original_vertices]
+            
+        for i, dist in enumerate(distances):
+            # Find the closest vertices to the right of this point
+            closest_vertices = [v for v in original_vertices if v[2] < dist]
+                
+            # Duplicate the closest vertices and place them at this distance
+            for v in closest_vertices:
+                model.vertices.append((v[0], v[1], v[2] + dist))
+                
+            # Adjust the triangles to account for the new vertices
+            for t in model.triangles:
+                new_triangles.append([t[0] + i*len(closest_vertices), t[1] + i*len(closest_vertices), t[2] + i*len(closest_vertices)])
+            
+        model.triangles = new_triangles
+        # pt(model.vertices)
+        model.generate()
+        return model
+    
+    
+    def convert_model_to_cross_sections(self):
+        ...
 
 class Mesh_Creator:
     """
@@ -69,101 +169,105 @@ class Mesh_Creator:
     The result of this code is a 3D mesh that follows the path defined by the input vertices, with a cross-section at each vertex defined by the custom_shapes, height, and width parameters.
     """
 
+    def create_mesh(self, vertices, height=None, width=None, diameter=1, num_sides=8, custom_shapes=None, rotation=0, interpolate=True, debug_uvs=False):
+        ## height/width
+        height, width = self.set_dimensions(height, width, diameter)
+        height_radius, width_radius = self.get_radius(height, width, vertices, interpolate)
+        
+        ## Path Shape
+        custom_shapes, num_sides = self.get_shapes(custom_shapes, num_sides, rotation, vertices)
+        
+        ## Sides of mesh
+        new_vertices, new_triangles, new_normals, new_uvs = self.create_mesh_data(vertices, custom_shapes, num_sides, height_radius, width_radius)
+        
+        ## Front/Back of mesh (NOTE, BUG, this is currently causing some of the front verts to connect to some of the back ones)
+        # new_vertices, new_triangles, new_normals, new_uvs = self.create_front_and_back_faces(vertices, num_sides, new_vertices, new_triangles, new_normals, new_uvs )
+        
+        if debug_uvs:
+            self.debug_uv_map(new_triangles, new_uvs)
+        return new_vertices, new_triangles, new_uvs, new_normals
     
-    def convert_model_to_cross_sections(self):
-        ...
-    def create_mesh_data(self, 
-        vertices, 
-        height=None, 
-        width=None, 
-        diameter=1, 
-        num_sides=8, 
-        custom_shapes=None, 
-        rotation=0, 
-        interpolate=True,
-        debug_uvs=False
-        ):
-
-        # If only height is provided, set width to the same value
+    def set_dimensions(self, height, width, diameter):
         if height is not None and width is None:
             width = height
-
-        # If only width is provided, set height to the same value
         if width is not None and height is None:
             height = width
-
-        # If dimension is provided and neither height nor width is specified, set both to the value of dimension
         if diameter is not None and height is None and width is None:
             height = diameter
             width = diameter
-            
-            
+        return height, width
+
+    def get_radius(self, height, width, vertices, interpolate):
         height_radius = self.interpolate_dimension(height, vertices, interpolate)
         width_radius = self.interpolate_dimension(width, vertices, interpolate)
-        
+        return height_radius, width_radius
+
+    def get_shapes(self, custom_shapes, num_sides, rotation, vertices):
         if custom_shapes is None:
-            num_sides = num_sides if num_sides is not None else 4  # Default to a square (cube) cross-section
+            num_sides = num_sides if num_sides is not None else 4
             custom_shapes = {i: [Vec2(cos(radians(j * 360 / num_sides + rotation)), sin(radians(j * 360 / num_sides + rotation))) for j in range(num_sides)] for i in range(len(vertices))}
         elif isinstance(custom_shapes, list):
             num_sides = len(custom_shapes)
             custom_shapes = {i: custom_shapes for i in range(len(vertices))}
         else:
-            num_sides = max(len(shape) for shape in custom_shapes.values())  # Get the maximum length of the custom shapes in the dictionary
+            num_sides = max(len(shape) for shape in custom_shapes.values())
             custom_shapes = {i: [Vec2(v.x * cos(radians(rotation)) - v.y * sin(radians(rotation)), v.x * sin(radians(rotation)) + v.y * cos(radians(rotation))) for v in shape] for i, shape in custom_shapes.items()}
+        return custom_shapes, num_sides
 
-        new_vertices, triangles, new_uvs, new_normals = [], [], [], []
+
+    def create_vertex_and_normal(self, i, j, vertex, scaled_shape, vertices):
+        if i == 0:  # Handling the first set of vertices
+            new_vertex = Vec3(0, 0, 0)  # Set to the desired constant location
+            normal = Vec3(0, 0, 1)  # Set to a constant normal
+        elif i == len(vertices) - 1:  # Handling the last set of vertices
+            new_vertex = Vec3(vertices[-1].x, vertices[-1].y, vertices[-1].z)  # Set to the location of the last vertex
+            normal = Vec3(0, 0, -1)  # Set to a constant normal
+        else:
+            new_vertex = Vec3(vertex.x + scaled_shape[j].x, vertex.y + scaled_shape[j].y, vertex.z)
+            normal = (new_vertex - vertex).normalized()
+        return new_vertex, normal
+
+    def create_uv(self, i, num_sides, vertices):
+        u = (i % num_sides) / num_sides
+        v = i // num_sides / len(vertices)
+        return Vec2(u, v)
+
+    def create_triangles(self, base_index, num_sides, i, vertices):
+        triangles = []
+        if i < len(vertices) - 1:  # Only create triangles if it's not the last vertex
+            for j in range(num_sides):
+                next_j = (j + 1) % num_sides
+                triangles.extend([
+                    [base_index + num_sides + next_j, base_index + next_j, base_index + j],
+                    [base_index + num_sides + j, base_index + num_sides + next_j, base_index + j]
+                ])
+        return triangles
+
+    def create_mesh_data(self, vertices, custom_shapes, num_sides, height_radius, width_radius):
+        new_vertices, new_triangles, new_normals, new_uvs = [], [], [], []
 
         for i, vertex in enumerate(vertices):
-            # Select the shape associated with the largest key that is less than or equal to the current index
             shape_key = max(k for k in custom_shapes.keys() if k <= i)
             scaled_shape = [Vec2(v.x * width_radius[i], v.y * height_radius[i]) for v in custom_shapes[shape_key]]
-            # If the number of vertices in the current shape is less than num_sides, duplicate some vertices
+
             while len(scaled_shape) < num_sides:
                 scaled_shape.append(scaled_shape[-1])
 
             base_index = i * num_sides
+
             for j in range(num_sides):
-                new_vertex = Vec3(vertex.x + scaled_shape[j].x, vertex.y + scaled_shape[j].y, vertex.z)
+                new_vertex, normal = self.create_vertex_and_normal(i, j, vertex, scaled_shape, vertices)
                 new_vertices.append(new_vertex)
-
-                u = j / num_sides
-                v = i / len(vertices)
-                new_uvs.append(Vec2(u, v))
-
-                normal = (new_vertex - vertex).normalized()
                 new_normals.append(normal)
+                new_uvs.append(self.create_uv(i, num_sides, vertices))  # Add UV coordinate for each vertex
 
-            if i < len(vertices) - 1:
-                for j in range(num_sides):
-                    next_j = (j + 1) % num_sides
-                    triangles.extend([
-                        [base_index + num_sides + next_j, base_index + next_j, base_index + j],
-                        [base_index + num_sides + j, base_index + num_sides + next_j, base_index + j]
-                    ])
+            new_triangles.extend(self.create_triangles(base_index, num_sides, i, vertices))
+
+        return new_vertices, new_triangles, new_normals, new_uvs
 
 
 
-
-        front_center_vertex = Vec3(vertices[0].x, vertices[0].y, vertices[0].z)
-        new_vertices.append(front_center_vertex)
-        front_center_index = len(new_vertices) - 1
-        for i in range(num_sides):
-            next_i = (i + 1) % num_sides
-            triangles.append([front_center_index, i, next_i])
-
-        back_center_vertex = Vec3(vertices[-1].x, vertices[-1].y, vertices[-1].z)
-        new_vertices.append(back_center_vertex)
-        back_center_index = len(new_vertices) - 1
-        base_index = (len(vertices) - 1) * num_sides
-        for i in range(num_sides):
-            next_i = (i + 1) % num_sides
-            triangles.append([back_center_index, base_index + next_i, base_index + i])
-
-        if debug_uvs:
-            self.debug_uv_map(triangles, new_uvs)
         
-        return new_vertices, triangles, new_uvs, new_normals
-    
     def interpolate_dimension(self, dimension, vertices, interpolate=True):
         """
         Interpolate dimension values based on the type of input and convert them to radius.
@@ -207,107 +311,11 @@ class Mesh_Creator:
 
         if isinstance(dimension, list) and len(dimension) < len(vertices):
             dimension += [dimension[-1]] * (len(vertices) - len(dimension))
+            
         return dimension
     
 
-    def adjust_model_to_path_with_multiple_clones_of_parts_of_model(self, model, path_vertices):
-        distances = [distance(path_vertices[i], path_vertices[i+1]) for i in range(len(path_vertices)-1)]
-
-        total_distance = sum(distances)
-        
-        new_triangles = []
-        
-        original_vertices = model.vertices.copy()
-        
-        for i, dist in enumerate(distances):
-            closest_vertices = [v for v in original_vertices if v[2] < dist]
-            
-            for v in closest_vertices:
-                model.vertices.append((v[0], v[1], v[2] + dist))
-            
-            for t in model.triangles:
-                new_triangles.append([t[0] + i*len(closest_vertices), t[1] + i*len(closest_vertices), t[2] + i*len(closest_vertices)])
-        
-        model.triangles = new_triangles
-        model.generate()
-        return model
-
-
-    def adjust_model_to_path_close(self, model, path_vertices):
-        distances = [distance(path_vertices[i], path_vertices[i+1]) for i in range(len(path_vertices)-1)]
-        total_distance = sum(distances)
-        new_triangles = []
-        model.vertices = [(v[0] * total_distance, v[1] * total_distance, v[2] * total_distance) for v in model.vertices]
-        original_vertices = model.vertices.copy()
-
-        vertices_per_section = len(model.vertices) // len(path_vertices)
-
-        for i, dist in enumerate(distances):
-            closest_vertices = [v for v in original_vertices if v[2] < dist]
-            for v in closest_vertices:
-                model.vertices.append((v[0], v[1], v[2] + dist))
-            for t in model.triangles:
-                new_triangles.append([t[0] + i*len(closest_vertices), t[1] + i*len(closest_vertices), t[2] + i*len(closest_vertices)])
-
-            # Calculate the indices of the vertices in this section
-            start_index = i * vertices_per_section
-            end_index = start_index + vertices_per_section
-
-            # Calculate the center point of this section
-            section_vertices = model.vertices[start_index:end_index]
-            section_center = Vec3(sum(vertex[0] for vertex in section_vertices) / len(section_vertices),
-                                sum(vertex[1] for vertex in section_vertices) / len(section_vertices),
-                                sum(vertex[2] for vertex in section_vertices) / len(section_vertices))
-
-            # Calculate the displacement for this section
-            displacement = path_vertices[i] - section_center
-
-            # Adjust the vertices in this section
-            for j in range(start_index, end_index):
-                model.vertices[j] = tuple(Vec3(*model.vertices[j]) + displacement)
-
-        model.triangles = new_triangles
-        model.generate()
-        return model
-
-
-
-    def adjust_model_to_path_no_adjustment_yet(self, model, path_vertices):
-        distances = [distance(path_vertices[i], path_vertices[i+1]) for i in range(len(path_vertices)-1)]
-
-        total_distance = sum(distances)
-            
-        new_triangles = []
-            
-        # Scale the vertices in the z direction
-        # model.vertices = [(v[0], v[1], v[2] * total_distance) for v in model.vertices]
-        # Scale in all directions
-        model.vertices = [(v[0] * total_distance, v[1] * total_distance, v[2] * total_distance) for v in model.vertices]
-
-        original_vertices = model.vertices.copy()
-            
-        # # Scale the vertices in the z direction
-        # original_vertices = [(v[0], v[1], v[2] * total_distance) for v in original_vertices]
-            
-        for i, dist in enumerate(distances):
-            # Find the closest vertices to the right of this point
-            closest_vertices = [v for v in original_vertices if v[2] < dist]
-                
-            # Duplicate the closest vertices and place them at this distance
-            for v in closest_vertices:
-                model.vertices.append((v[0], v[1], v[2] + dist))
-                
-            # Adjust the triangles to account for the new vertices
-            for t in model.triangles:
-                new_triangles.append([t[0] + i*len(closest_vertices), t[1] + i*len(closest_vertices), t[2] + i*len(closest_vertices)])
-            
-        model.triangles = new_triangles
-        # pt(model.vertices)
-        model.generate()
-        return model
-    
-
-    def debug_uv_map(self, triangles, new_uvs):
+    def debug_uv_map(self, new_triangles, new_uvs):
         # Define the resolution of the image
         width, height = 1024, 1024
 
@@ -317,8 +325,8 @@ class Mesh_Creator:
         # Create a draw object
         draw = ImageDraw.Draw(img)
 
-        # Iterate over the triangles
-        for triangle in triangles:
+        # Iterate over the new_triangles
+        for triangle in new_triangles:
             # Check if the indices in triangle are within the range of new_uvs
             if all(index < len(new_uvs) for index in triangle):
                 # Get the UV coordinates of the vertices of the triangle
@@ -338,6 +346,10 @@ class Mesh_Creator:
 
         # Display the image
         img.show()
+
+
+
+
 
 if __name__ == '__main__':
     test_path_vertices = [Vec3(-0.005, -0.005, -0.005), Vec3(0.005, -0.005, -0.005), Vec3(0.005, 0.005, -0.005), Vec3(-0.005, 0.005, -0.005), Vec3(-0.005, -0.005, 0.005), Vec3(0.005, -0.005, 0.005), Vec3(0.005,
@@ -417,17 +429,20 @@ if __name__ == '__main__':
             "width": {0: 2.0, 10: 1.0, len(test_path_vertices) // 2: 0.5, len(test_path_vertices) - 1: 1.0}}
     ]
     
-    c = Mesh_Creator()
+    mesh_creator = Mesh_Creator()
     spacing = 1.5
     for i, scenario in enumerate(scenarios):
-        new_vertices, triangles, new_uvs, new_normals = c.create_mesh_data(test_path_vertices, **scenario)
-
-        mesh = Mesh(vertices=new_vertices, triangles=triangles, uvs=new_uvs, normals=new_normals, mode='triangle')
+        new_vertices, new_triangles, new_uvs, new_normals = mesh_creator.create_mesh(test_path_vertices, **scenario)
+        pt(new_vertices)
+        pt(new_triangles)
+        pt(new_uvs)
+        pt(new_normals)
+        mesh = Mesh(vertices=new_vertices, triangles=new_triangles, uvs=new_uvs, normals=new_normals, mode='triangle')
         path_mesh = Mesh(vertices=test_path_vertices, mode='point', thickness=.005)
-        wireframe_mesh = Mesh(vertices=new_vertices, triangles=triangles, mode='line')
+        wireframe_mesh = Mesh(vertices=new_vertices, triangles=new_triangles, mode='line')
         points_mesh = Mesh(vertices=new_vertices, mode='point', thickness=.005, render_points_in_3d=True)
 
-        box_entity = Entity(model=mesh, texture='brick', texture_scale=(1,3), color=color.azure, double_sided=False, x=i*spacing)
+        box_entity = Entity(model=mesh, texture='brick', texture_scale=(1,3), color=color.rgba(0,0,1,1), double_sided=False, x=i*spacing)
         path_entity = Entity(model=path_mesh, color=color.yellow, always_on_top=True, x=i*spacing)
         wireframe_entity = Entity(model=wireframe_mesh, color=color.red, x=i*spacing)
         points_entity = Entity(model=points_mesh, color=color.blue, x=i*spacing)
@@ -436,11 +451,11 @@ if __name__ == '__main__':
     # # light = DirectionalLight(parent=scene, x=10, y=10, z=10, shadows=True)
     
 
-
-
-    arrow = load_model("arrow1", use_deepcopy=True)
-    curved_arrow_model = c.adjust_model_to_path(arrow, test_path_vertices)
-    curved_arrow = Entity(model=curved_arrow_model, double_sided=True, x=-11, z=10)
+    # pt('Test create mesh from model')
+    # create_mesh_from_model = Create_Mesh_From_Model()
+    # arrow = load_model("arrow1", use_deepcopy=True)
+    # curved_arrow_model = create_mesh_from_model.adjust_model_to_path(arrow, test_path_vertices)
+    # curved_arrow = Entity(model=curved_arrow_model, double_sided=True, x=-11, z=10)
 
 
 
@@ -448,3 +463,5 @@ if __name__ == '__main__':
     
     EditorCamera()
     app.run()
+    
+    

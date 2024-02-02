@@ -18,7 +18,7 @@ def create(trajectory_mixes=None, effects_mixes=None):
         
     if not effects_mixes or not any(effects_mixes):
         pt(">>Warning: At least one effects mix is required. Adding an effects mod mix")
-        effects_mixes = [mods.create_effects_mix(mods.add_mod(mods.mod_one_a))]
+        effects_mixes = [mods.create_effects_mix(mods.add_mod(mods.Mod_One_A))]
         
     combility = {
         "trajectory_mixes": [mix for mix in trajectory_mixes if mix],  # Ensure the trajectory mixes are not empty
@@ -35,12 +35,12 @@ if __name__ == '__main__':
     
     
     trajectory_mix = mods.create_trajectory_mix(
-        mods.add_mod(mods.mods_trajectories.path_shape, 10, 20),
-        mods.add_mod(mods.mods_trajectories.path_curve, curvature=5))
+        mods.add_mod(mods.mods_trajectories.Path_Shape, 10, 20),
+        mods.add_mod(mods.mods_trajectories.Path_Curve, curvature=5))
     
     effect_mix = mods.create_effects_mix(
-        mods.add_mod(mods.mod_one_a, a='new kwarg for a'),
-        mods.add_mod(mods.Mod_Category_Two.mod_two_b, 723, f='new kwarg for f'))
+        mods.add_mod(mods.Mod_One_A, a='new kwarg for a'),
+        mods.add_mod(mods.Mod_Two_B, 723, f='new kwarg for f'))
             
     new_combility = create(trajectory_mix, effect_mix)
     pt(new_combility)

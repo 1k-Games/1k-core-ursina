@@ -5,21 +5,15 @@ from mod_category_two import *
 
 
 if __name__ == "__main__":
-    class blah:
-        
-        mod_one_a = mod_one_a
-        # m1a = mod_one_a
-        # mod_one_a('custom arg')
-        # mod_one_a('custom arg', 'custom kwarg')
-    blah().mod_one_a()
+    Mod_One_A().prepare_mod_one_a()
+    Mod_One_A().use_mod_one_a()
+    
+    Mod_One_B().use_mod_one_b()
+    Mod_One_B().update_mod_one_b()
+    
+    Mod_Two_A().prepare_mod_two_a()
+    Mod_Two_A().update_mod_two_a()
+    
+    Mod_Two_B().enable_mod_two_b()
+    Mod_Two_B().disable_mod_two_b()
 
-
-    mod_two_instance = Mod_Category_Two()
-    mod_two_a = mod_two_instance.mod_two_a
-    mod_two_b = mod_two_instance.mod_two_b
-
-    mod_two_a()
-    mod_two_a('2a custom kwarg')
-
-    mod_two_b('2b custom arg')
-    mod_two_b('2b custom arg', '2b custom kwarg')

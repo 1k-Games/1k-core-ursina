@@ -1,9 +1,15 @@
 from print_tricks import pt
 
 
-def mod_one_a(self, a='mod_one_a default kwarg'):
-    pt(a)
+class Mod_One_A:
+    def prepare_mod_one_a(self, a='mod_one_a default kwarg'):
+        pt(a)
     
-def mod_one_b(self, b, c='mod_one_b default kwarg'):
-    pt(b, c)
+    def use_mod_one_a(self, a):
+        pt(a)
+class Mod_One_B:
+    def use_mod_one_b(self, b, c='mod_one_b default kwarg'):
+        pt(b, c)
     
+    def update_mod_one_b(self, b, c):
+        pt(b, c)

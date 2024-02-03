@@ -1,7 +1,7 @@
 from print_tricks import pt
 
 import inspect
-
+import types
 
 import combility_code
 import mods
@@ -32,7 +32,14 @@ class Combility:
                     self._process_mod(mod)  # Process each mod dictionary
                 
 
+
+
+
     def _process_mod(self, mod):
+        mod_class = mod['method']  # This gets the class
+        args = mod.get('args', ())
+        kwargs = mod.get('kwargs', {})
+        
         prepare_list = []
         use_list = []
         update_list = []
@@ -40,29 +47,35 @@ class Combility:
         disable_list = []
         helper_functions_list = []
 
-        # Assuming 'mod' is a dictionary with the structure:
-        # {"method": <class '...'>, "args": (...), "kwargs": {...}}
-        mod_class = mod['method']  # This gets the class
+        # Initialize a flag to track if a prepare_ method has been added
+        prepare_added = False
 
-        # Now, iterate through each method of the class
         for method_name in dir(mod_class):
             if method_name.startswith('__'):
                 continue  # Skip magic methods
             method = getattr(mod_class, method_name)
-            if inspect.isfunction(method):  # Check if the attribute is a method
-                # Categorize the method based on its name
+            if inspect.isfunction(method):
+                bound_method = types.MethodType(method, self)  # Bind the method to the instance
+
+                # Add prepare_ method with args and kwargs
                 if method_name.startswith('prepare_'):
-                    prepare_list.append(method)
-                elif method_name.startswith('use_'):
-                    use_list.append(method)
+                    self.mods_prepare_list.append((bound_method, args, kwargs))
+                    prepare_added = True
+
+                # Add use_ method only if no prepare_ method has been added
+                elif method_name.startswith('use_') and not prepare_added:
+                    self.mods_use_list.append((bound_method, args, kwargs))
+                    prepare_added = True  # Prevent adding more than one use_ if prepare_ was not found
+
+                # Handle other method types without args and kwargs
                 elif method_name.startswith('update_'):
-                    update_list.append(method)
+                    self.mods_update_list.append((bound_method, (), {}))
                 elif method_name.startswith('enable_'):
-                    enable_list.append(method)
+                    self.mods_enable_list.append((bound_method, (), {}))
                 elif method_name.startswith('disable_'):
-                    disable_list.append(method)
+                    self.mods_disable_list.append((bound_method, (), {}))
                 else:
-                    helper_functions_list.append(method)
+                    self.mods_helper_functions_list.append((bound_method, (), {}))
 
         # Assuming you want to add these methods to the class lists
         self.mods_prepare_list.extend(prepare_list)
@@ -73,15 +86,7 @@ class Combility:
         self.mods_helper_functions_list.extend(helper_functions_list)
 
 
-# Example usage
-# if __name__ == "__main__":
-#     prepare, update, enable, disable = _process_mod(mod_category_two)
-#     print("Prepare methods:", prepare)
-#     print("Update methods:", update)
-#     print("Enable methods:", enable)
-#     print("Disable methods:", disable)
 
-# Usage
 if __name__ == "__main__":
     trajectory_mix = mods.create_trajectory_mix(
         mods.add(mods.mods_trajectories.Path_Shape, 10, 20),
@@ -89,7 +94,7 @@ if __name__ == "__main__":
     
     effect_mix = mods.create_effects_mix(
         mods.add(mods.Mod_One_A, a='new kwarg for a'),
-        mods.add(mods.Mod_One_B),
+        mods.add(mods.Mod_One_B, 777),
         mods.add(mods.Mod_Two_A), 
         mods.add(mods.Mod_Two_B, 723, f='new kwarg for f'))
     
@@ -112,35 +117,35 @@ if __name__ == "__main__":
         print("mods_helper_functions_list:", combility.mods_helper_functions_list)
         
     def test_mods(combility):
-        print("Testing mods_prepare_list...")
-        for func in combility.mods_prepare_list:
+        print("\nTesting mods_prepare_list...")
+        for func, args, kwargs in combility.mods_prepare_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func()
+            func(*args, **kwargs)
 
-        print("Testing mods_use_list...")
-        for func in combility.mods_use_list:
+        print("\nTesting mods_use_list...")
+        for func, args, kwargs in combility.mods_use_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func()
+            func(*args, **kwargs)
 
-        print("Testing mods_update_list...")
-        for func in combility.mods_update_list:
+        print("\nTesting mods_update_list...")
+        for func, args, kwargs in combility.mods_update_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func()
+            func(*args, **kwargs)
 
-        print("Testing mods_enable_list...")
-        for func in combility.mods_enable_list:
+        print("\nTesting mods_enable_list...")
+        for func, args, kwargs in combility.mods_enable_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func()
+            func(*args, **kwargs)
 
-        print("Testing mods_disable_list...")
-        for func in combility.mods_disable_list:
+        print("\nTesting mods_disable_list...")
+        for func, args, kwargs in combility.mods_disable_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func()
+            func(*args, **kwargs)
 
-        print("Testing mods_helper_functions_list...")
-        for func in combility.mods_helper_functions_list:
+        print("\nTesting mods_helper_functions_list...")
+        for func, args, kwargs in combility.mods_helper_functions_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func()
+            func(*args, **kwargs)
             
     print_mod_lists()
     test_mods(combility)

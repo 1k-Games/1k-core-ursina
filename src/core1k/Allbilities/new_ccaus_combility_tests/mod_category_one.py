@@ -15,5 +15,5 @@ class Mod_One_B:
     def use_mod_one_b(self, b, c='mod_one_b default kwarg'):
         pt(b, c)
     
-    def update_mod_one_b(self, b, c):
-        pt(b, c)
+    def update_mod_one_b(self):
+        pt('inside the update')

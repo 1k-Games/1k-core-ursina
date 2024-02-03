@@ -5,34 +5,43 @@ import mods
 
 def create(trajectory_mixes=None, effects_mixes=None):
     """
-    Creates a combility which is a dictionary containing keys "trajectory_mixes" and "effects_mixes".
-    Each key maps to a list of respective mixes. Ensures that the provided trajectory_mixes and effects_mixes are not empty.
-    
-    :param trajectory_mixes: A list of trajectory mix lists.
-    :param effects_mixes: A list of effects mix lists.
-    :return: A dictionary with keys "trajectory_mixes" and "effects_mixes" mapping to their respective lists.
+    Adjusted to ensure the structure is always a dict of lists of lists,
+    correctly handling different scenarios for input arguments.
     """
-    if not trajectory_mixes or not any(trajectory_mixes):
-        pt(f">>Warning: At least one trajectory mix is required... Adding a default Trajectory mix of mods")
-        trajectory_mixes = [mods.create_trajectory_mix()]
-        
-    if not effects_mixes or not any(effects_mixes):
-        pt(">>Warning: At least one effects mix is required... Adding an effects mod mix")
-        effects_mixes = [mods.create_effects_mix(mods.add(mods.Mod_One_A))]
-        
-    combility = {
-        "trajectory_mixes": [mix for mix in trajectory_mixes if mix],  # Ensure the trajectory mixes are not empty
-        "effects_mixes": [mix for mix in effects_mixes if mix]  # Ensure the effects mixes are not empty
+    # Function to ensure the argument is a list of lists
+    def ensure_list_of_lists(arg):
+        if arg is None:
+            return []  # Correctly initialize as an empty list for no input
+        elif isinstance(arg, list):
+            if not arg or not isinstance(arg[0], list):
+                return [arg]  # Wrap in another list if it's a single list or empty
+            return arg  # Return as is if it's already a list of lists
+        else:
+            return [[arg]]  # Wrap non-list arguments in a list of lists
+
+    # Apply the ensure_list_of_lists function to both sets of mixes
+    trajectory_mixes = ensure_list_of_lists(trajectory_mixes)
+    effects_mixes = ensure_list_of_lists(effects_mixes)
+
+    # Check if the mixes are empty and add default mixes if necessary
+    if not trajectory_mixes:
+        trajectory_mixes = [mods.create_trajectory_mix()]  # Initialize with a default mix in a list of lists
+    if not effects_mixes:
+        effects_mixes = [mods.create_effects_mix(mods.add(mods.Mod_One_A))]  # Initialize with a default mix in a list of lists
+
+    combility_code = {
+        "trajectory_mixes": trajectory_mixes,
+        "effects_mixes": effects_mixes
     }
-    
-    return combility
+
+    return combility_code
 
 
 if __name__ == '__main__':
-    new_blank_combility = create()
-    pt(new_blank_combility)    
-    pt(new_blank_combility['trajectory_mixes'])    
-    pt(new_blank_combility['effects_mixes'])    
+    new_blank_combility_code = create()
+    pt(new_blank_combility_code)    
+    pt(new_blank_combility_code['trajectory_mixes'])    
+    pt(new_blank_combility_code['effects_mixes'])    
     
     
     
@@ -46,5 +55,5 @@ if __name__ == '__main__':
 
 
     
-    combility_code = create(trajectory_mix, effect_mix)
-    pt(combility_code)
+    new_combility_code = create(trajectory_mix, effect_mix)
+    pt(new_combility_code)

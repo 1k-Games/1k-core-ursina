@@ -1,6 +1,6 @@
-
 from print_tricks import pt
 
+import inspect
 
 
 import combility_code
@@ -9,45 +9,77 @@ import mods
 
 class Combility:
     def __init__(self):
-        self.mod_prepares = []
-        self.mod_actions = []
-        self.mod_updates = []
-        self.mod_enables = []
-        self.mod_disables = []
-        self.mod_helpers = []
+        self.mods_prepare_list = []
+        self.mods_use_list = []
+        self.mods_update_list = []
+        self.mods_enable_list = []
+        self.mods_disable_list = []
+        self.mods_helper_functions_list = []
 
-    def add_combility_code(self, *mod_mixes):
-        for mod_mix in mod_mixes:
-            for mod in mod_mix:
-                self._process_mod(mod)
+    # def add_combility_code(self, *mod_mixes):
+    #     for mod_mix in mod_mixes:
+    #         for mod in mod_mix:
+    #             self._process_mod(mod)
 
     def add_combility_code(self, combility_code):
         pt(combility_code)
-        for mix_category in combility_code:
-            pt(mix_category)
-            for mod_mix in mix_category:
-                pt(mod_mix)
-                for mod in mod_mix:
-                    pt(mod)
-                    pt.ex()
-                    self._process_mod(mod)
+        for mix_category, mod_mixes in combility_code.items():  # Iterate over key-value pairs
+            pt(mix_category)  # This will print the category name
+            for mod_mix in mod_mixes:  # Iterate over each mod_mix in the list of mod_mixes
+                pt(mod_mix)  # This will print the current mod_mix list
+                for mod in mod_mix:  # Iterate over the list of mod dictionaries within the current mod_mix
+                    pt(mod)  # This will print the mod dictionary
+                    self._process_mod(mod)  # Process each mod dictionary
                 
+
     def _process_mod(self, mod):
-        mod_namespace = mod.__class__.__name__
-        for func_name in dir(mod):
-            if callable(getattr(mod, func_name)):
-                if func_name.startswith('prepare'):
-                    self.mod_prepares.append(getattr(mod, func_name))
-                elif func_name.startswith('action'):
-                    self.mod_actions.append(getattr(mod, func_name))
-                elif func_name.startswith('update'):
-                    self.mod_updates.append(getattr(mod, func_name))
-                elif func_name.startswith('enable'):
-                    self.mod_enables.append(getattr(mod, func_name))
-                elif func_name.startswith('disable'):
-                    self.mod_disables.append(getattr(mod, func_name))
+        prepare_list = []
+        use_list = []
+        update_list = []
+        enable_list = []
+        disable_list = []
+        helper_functions_list = []
+
+        # Assuming 'mod' is a dictionary with the structure:
+        # {"method": <class '...'>, "args": (...), "kwargs": {...}}
+        mod_class = mod['method']  # This gets the class
+
+        # Now, iterate through each method of the class
+        for method_name in dir(mod_class):
+            if method_name.startswith('__'):
+                continue  # Skip magic methods
+            method = getattr(mod_class, method_name)
+            if inspect.isfunction(method):  # Check if the attribute is a method
+                # Categorize the method based on its name
+                if method_name.startswith('prepare_'):
+                    prepare_list.append(method)
+                elif method_name.startswith('use_'):
+                    use_list.append(method)
+                elif method_name.startswith('update_'):
+                    update_list.append(method)
+                elif method_name.startswith('enable_'):
+                    enable_list.append(method)
+                elif method_name.startswith('disable_'):
+                    disable_list.append(method)
                 else:
-                    self.mod_helpers.append(getattr(mod, func_name))
+                    helper_functions_list.append(method)
+
+        # Assuming you want to add these methods to the class lists
+        self.mods_prepare_list.extend(prepare_list)
+        self.mods_use_list.extend(use_list)
+        self.mods_update_list.extend(update_list)
+        self.mods_enable_list.extend(enable_list)
+        self.mods_disable_list.extend(disable_list)
+        self.mods_helper_functions_list.extend(helper_functions_list)
+
+
+# Example usage
+# if __name__ == "__main__":
+#     prepare, update, enable, disable = _process_mod(mod_category_two)
+#     print("Prepare methods:", prepare)
+#     print("Update methods:", update)
+#     print("Enable methods:", enable)
+#     print("Disable methods:", disable)
 
 # Usage
 if __name__ == "__main__":
@@ -57,51 +89,56 @@ if __name__ == "__main__":
     
     effect_mix = mods.create_effects_mix(
         mods.add(mods.Mod_One_A, a='new kwarg for a'),
+        mods.add(mods.Mod_One_B),
+        mods.add(mods.Mod_Two_A), 
         mods.add(mods.Mod_Two_B, 723, f='new kwarg for f'))
     
-    combility_code = combility_code.create(trajectory_mix, effect_mix)
-    # pt(combility_code)
+    effect_mix_2 = mods.create_effects_mix(
+        mods.add(mods.Mod_One_A, a='mod one a in effect mix 2'))
+    
+    combility_code = combility_code.create(trajectory_mix, [effect_mix, effect_mix_2])
+    pt(combility_code)
     
     combility = Combility()
     combility.add_combility_code(combility_code)
     
     
     def print_mod_lists():
-        print("mod_prepares:", combility.mod_prepares)
-        print("mod_actions:", combility.mod_actions)
-        print("mod_updates:", combility.mod_updates)
-        print("mod_enables:", combility.mod_enables)
-        print("mod_disables:", combility.mod_disables)
-        print("mod_helpers:", combility.mod_helpers)
+        print("mods_prepare_list:", combility.mods_prepare_list)
+        print("mods_use_list:", combility.mods_use_list)
+        print("mods_update_list:", combility.mods_update_list)
+        print("mods_enable_list:", combility.mods_enable_list)
+        print("mods_disable_list:", combility.mods_disable_list)
+        print("mods_helper_functions_list:", combility.mods_helper_functions_list)
         
     def test_mods(combility):
-        print("Testing mod_prepares...")
-        for func in combility.mod_prepares:
+        print("Testing mods_prepare_list...")
+        for func in combility.mods_prepare_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
             func()
 
-        print("Testing mod_actions...")
-        for func in combility.mod_actions:
+        print("Testing mods_use_list...")
+        for func in combility.mods_use_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
             func()
 
-        print("Testing mod_updates...")
-        for func in combility.mod_updates:
+        print("Testing mods_update_list...")
+        for func in combility.mods_update_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
             func()
 
-        print("Testing mod_enables...")
-        for func in combility.mod_enables:
+        print("Testing mods_enable_list...")
+        for func in combility.mods_enable_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
             func()
 
-        print("Testing mod_disables...")
-        for func in combility.mod_disables:
+        print("Testing mods_disable_list...")
+        for func in combility.mods_disable_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
             func()
 
-        print("Testing mod_helpers...")
-        for func in combility.mod_helpers:
+        print("Testing mods_helper_functions_list...")
+        for func in combility.mods_helper_functions_list:
             print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
             func()
             

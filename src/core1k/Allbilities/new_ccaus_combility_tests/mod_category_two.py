@@ -7,7 +7,12 @@ class Mod_Two_A:
     def update_mod_two_a(self, d):
         pt(d)
         
+    def use_mod_two_a(self):
+        pt('inside of use_mod_two_a')
 class Mod_Two_B:
+    def prepare_mod_two_a(self):
+        pt('prep mod two b')
+        
     def enable_mod_two_b(self, e, f='mod_two_b default kwarg'):
         pt(e, f)
         

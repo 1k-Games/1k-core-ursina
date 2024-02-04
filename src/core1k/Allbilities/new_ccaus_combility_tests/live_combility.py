@@ -16,11 +16,6 @@ class Combility:
         self.mods_disable_list = []
         self.mods_helper_functions_list = []
 
-    # def add_combility_code(self, *mod_mixes):
-    #     for mod_mix in mod_mixes:
-    #         for mod in mod_mix:
-    #             self._process_mod(mod)
-
     def add_combility_code(self, combility_code):
         pt(combility_code)
         for mix_category, mod_mixes in combility_code.items():  # Iterate over key-value pairs
@@ -31,7 +26,6 @@ class Combility:
                     pt(mod)  # This will print the mod dictionary
                     self._process_mod(mod)  # Process each mod dictionary
                 
-
     def _process_mod(self, mod):
         mod_class = mod['method']  # This gets the class
         args = mod.get('args', ())
@@ -75,7 +69,6 @@ class Combility:
                         self.mods_helper_functions_list.append((bound_method, args, kwargs))
                         break  # Add only the first non-prefix method as a helper function
 
-
 if __name__ == "__main__":
     trajectory_mix = mods.create_trajectory_mix(
         mods.add(mods.mods_trajectories.Path_Shape, 20),
@@ -106,35 +99,38 @@ if __name__ == "__main__":
         print("mods_helper_functions_list:", combility.mods_helper_functions_list)
         
     def test_mods(combility):
-        print("\nTesting mods_prepare_list...")
-        for func, args, kwargs in combility.mods_prepare_list:
-            print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func(*args, **kwargs)
+        def generate_func_call_str(func, args, kwargs):
+            args_str = ', '.join(repr(arg) for arg in args)
+            kwargs_str = ', '.join(f"{k}={repr(v)}" for k, v in kwargs.items())
+            all_args_str = ', '.join(filter(None, [args_str, kwargs_str]))
+            original_location = f"{func.__module__}.{func.__qualname__}"
+            current_location = f"{func.__self__.__class__.__module__}.{func.__self__.__class__.__name__}"
+            return (f"{func.__name__}({all_args_str})\n"
+                    f"From: (Origination) {original_location}. (Called from) {current_location}")
 
-        print("\nTesting mods_use_list...")
-        for func, args, kwargs in combility.mods_use_list:
-            print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func(*args, **kwargs)
+        def test_mod_list(mod_list, list_name):
+            print(f"\nTesting {list_name}...")
+            for func, args, kwargs in mod_list:
+                func_call_str = generate_func_call_str(func, args, kwargs)
+                print(f"\nCalling:\n{func_call_str}")
+                func(*args, **kwargs)
 
-        print("\nTesting mods_update_list...")
-        for func, args, kwargs in combility.mods_update_list:
-            print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func(*args, **kwargs)
+        # Now, call test_mod_list for each list in Combility
+        test_mod_list(combility.mods_prepare_list, "mods_prepare_list")
+        test_mod_list(combility.mods_use_list, "mods_use_list")
+        test_mod_list(combility.mods_update_list, "mods_update_list")
+        test_mod_list(combility.mods_enable_list, "mods_enable_list")
+        test_mod_list(combility.mods_disable_list, "mods_disable_list")
+        test_mod_list(combility.mods_helper_functions_list, "mods_helper_functions_list")
 
-        print("\nTesting mods_enable_list...")
-        for func, args, kwargs in combility.mods_enable_list:
-            print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func(*args, **kwargs)
+        # Now, call test_mod_list for each list in Combility
+        test_mod_list(combility.mods_prepare_list, "mods_prepare_list")
+        test_mod_list(combility.mods_use_list, "mods_use_list")
+        test_mod_list(combility.mods_update_list, "mods_update_list")
+        test_mod_list(combility.mods_enable_list, "mods_enable_list")
+        test_mod_list(combility.mods_disable_list, "mods_disable_list")
+        test_mod_list(combility.mods_helper_functions_list, "mods_helper_functions_list")
 
-        print("\nTesting mods_disable_list...")
-        for func, args, kwargs in combility.mods_disable_list:
-            print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func(*args, **kwargs)
 
-        print("\nTesting mods_helper_functions_list...")
-        for func, args, kwargs in combility.mods_helper_functions_list:
-            print(f"Calling {func.__name__} from {func.__self__.__class__.__name__}")
-            func(*args, **kwargs)
-            
     print_mod_lists()
     test_mods(combility)

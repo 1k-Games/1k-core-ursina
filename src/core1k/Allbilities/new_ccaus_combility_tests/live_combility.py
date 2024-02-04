@@ -32,65 +32,54 @@ class Combility:
                     self._process_mod(mod)  # Process each mod dictionary
                 
 
-
-
-
     def _process_mod(self, mod):
         mod_class = mod['method']  # This gets the class
         args = mod.get('args', ())
         kwargs = mod.get('kwargs', {})
         
-        prepare_list = []
-        use_list = []
-        update_list = []
-        enable_list = []
-        disable_list = []
-        helper_functions_list = []
+        # Define the order of method types and their corresponding lists
+        method_order = ['prepare_', 'use_', 'update_', 'enable_', 'disable_']
+        method_lists = {
+            'prepare_': self.mods_prepare_list,
+            'use_': self.mods_use_list,
+            'update_': self.mods_update_list,
+            'enable_': self.mods_enable_list,
+            'disable_': self.mods_disable_list,
+        }
 
-        # Initialize a flag to track if a prepare_ method has been added
-        prepare_added = False
+        # Track if args and kwargs have been added
+        args_kwargs_added = False
 
-        for method_name in dir(mod_class):
-            if method_name.startswith('__'):
-                continue  # Skip magic methods
-            method = getattr(mod_class, method_name)
-            if inspect.isfunction(method):
-                bound_method = types.MethodType(method, self)  # Bind the method to the instance
+        # Iterate through each method type in order
+        for prefix in method_order:
+            for method_name in dir(mod_class):
+                if method_name.startswith(prefix):
+                    method = getattr(mod_class, method_name)
+                    if inspect.isfunction(method):
+                        bound_method = types.MethodType(method, self)
+                        if not args_kwargs_added:
+                            # Add with args and kwargs for the first matching method
+                            method_lists[prefix].append((bound_method, args, kwargs))
+                            args_kwargs_added = True
+                        else:
+                            # Subsequent methods get empty args and kwargs
+                            method_lists[prefix].append((bound_method, (), {}))
 
-                # Add prepare_ method with args and kwargs
-                if method_name.startswith('prepare_'):
-                    self.mods_prepare_list.append((bound_method, args, kwargs))
-                    prepare_added = True
-
-                # Add use_ method only if no prepare_ method has been added
-                elif method_name.startswith('use_') and not prepare_added:
-                    self.mods_use_list.append((bound_method, args, kwargs))
-                    prepare_added = True  # Prevent adding more than one use_ if prepare_ was not found
-
-                # Handle other method types without args and kwargs
-                elif method_name.startswith('update_'):
-                    self.mods_update_list.append((bound_method, (), {}))
-                elif method_name.startswith('enable_'):
-                    self.mods_enable_list.append((bound_method, (), {}))
-                elif method_name.startswith('disable_'):
-                    self.mods_disable_list.append((bound_method, (), {}))
-                else:
-                    self.mods_helper_functions_list.append((bound_method, (), {}))
-
-        # Assuming you want to add these methods to the class lists
-        self.mods_prepare_list.extend(prepare_list)
-        self.mods_use_list.extend(use_list)
-        self.mods_update_list.extend(update_list)
-        self.mods_enable_list.extend(enable_list)
-        self.mods_disable_list.extend(disable_list)
-        self.mods_helper_functions_list.extend(helper_functions_list)
-
+        # If no method matched the prefixes, add to helper functions with original args and kwargs
+        if not args_kwargs_added:
+            for method_name in dir(mod_class):
+                if not any(method_name.startswith(prefix) for prefix in method_order) and not method_name.startswith('__'):
+                    method = getattr(mod_class, method_name)
+                    if inspect.isfunction(method):
+                        bound_method = types.MethodType(method, self)
+                        self.mods_helper_functions_list.append((bound_method, args, kwargs))
+                        break  # Add only the first non-prefix method as a helper function
 
 
 if __name__ == "__main__":
     trajectory_mix = mods.create_trajectory_mix(
-        mods.add(mods.mods_trajectories.Path_Shape, 10, 20),
-        mods.add(mods.mods_trajectories.Path_Curve, curvature=5))
+        mods.add(mods.mods_trajectories.Path_Shape, 20),
+        mods.add(mods.mods_trajectories.Path_Curve, curve=5))
     
     effect_mix = mods.create_effects_mix(
         mods.add(mods.Mod_One_A, a='new kwarg for a'),

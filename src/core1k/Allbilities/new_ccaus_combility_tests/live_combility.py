@@ -1,31 +1,190 @@
+'''
+    NOTE on this msg. It might make the most sense to put this "keys" notes and the 
+    self.eeat stuff into a mod of helper functions category
+    
+    Keys:
+        (Note: severely limit the keys. These are mainly for cutting out long typing, but if I don't
+        immediately remember what each key is when reading it, then it won't really help)
+        
+        - eaat: 'The entity who is going to eat our actions' - 'entity_to_apply_actions_to'
+        - hate: 'Your targeting me to use against others' - 'hit_assistant_target_ent'
+        - path: I am currently using the term "path" to mean the projectile/combility/mod path, 
+            So this is the projectile shape and the projectile curve/movements etc. 
+            
+    TODO:
+    - Add shortcuts for adding mods via both:
+        - combility.add_mod 
+        - combility.add_mods
+        - combility.remove_mod
+        (they'll go through the proper channels to add mods)
+        
+        
+        
+    BUG 1-2:
+        FOR sELF.ACCEPTABLE_BOT_PROJECTILE_TARGETS:
+        ## plural name(s), because each entity controls all of the children parented to hit
+        ###NOTE: ^^^^^^^^^^^^^^^^^^^^^ This is an optimizatin that WILL more than likely CAUSE A BUG in the future. 
+        ### - We set the parent of all of the entities that can be hit by this combility to self.acceptable_bot_projectile_targets. 
+        ### - We pass self.acceptable_bot_projectile_targets into the traverse target. 
+        
+        ### POSSIBLE BUG 1:
+        ### - if all enemy entities have a parent of "enemies", then they can't be parented to other
+        ###   objects etc. like a spaceship etc. 
+        ### SOLUTION BUG 1:
+        ###- We could use panda3d CompassEffect on them though, which doesn't have the benefits
+        ###  or drawbacks of using a parent, because it just updates their position/rotation. 
+        ###   - But compass effect with positions have a strange culling error unless you give large/infinite
+        ###     bounding volume to the main parent. Also, the compasseffect might still be some type of nodepath...
+        ### SOLUTION BUG 1b:
+        ### - We already swap the enemies to the acceptable target type for that combility for that frame. And we
+        ###   And we already have to do this for every combility. So why not keep track of this, and swap
+        ###   Back to their original parents after all combilities have finished? 
+        
+        
+        ### POSSIBLE BUG 2:
+        ### - If target types get parented to a combility Self.acceptable_bot_projectile_targets ,then 
+        ###  the target types are stuck under that original combility. 
+        ### SOLUTION BUG 2:
+        ### - Whenever the Combility is about to do its own personal frame update
+        ###   (on input/update), it gets the self.acceptable_bot_projectile_targets from when this combility was
+        ###   first created, and it parents them under self.acceptable_bot_projectile_targets once again (20-30us)
+        ####################################
+        
+
+'''
+
 from print_tricks import pt
 
 import inspect
 import types
 
+from ursina import *
+
 import combility_code
 import mods
+from create_mesh_path import Mesh_Creator
+from linecast import linecast
 
 
-class Combility:
-    def __init__(self):
+class Merged_Combilities(Entity):
+    '''
+    - Goal of this class is to merge the graphics, collision and logic between 
+    multiple combilities so that we have less Entities, draw calls etc. 
+    - Will have to merge the models, textures, shaders, and combility_code
+    
+    '''
+
+class Combility(Entity):
+    ########################################################################
+    ### initialization 
+    ########################################################################
+    
+    def __init__(self, combility_code=None):
+        super().__init__()
+        
+        self.setup_defaults()
+        
+        self.setup_mod_lists()
+        
+        if combility_code is not None:
+            self._add_combility_code_to_lists(combility_code)
+            
+    ########################################################################
+    ### ...
+    ########################################################################
+
+    def setup_defaults(self):
+        self.default_camera_fov = 90
+        self.mesh_creator = Mesh_Creator()
+        self.spawned_sub_entities = [] ## TODO Any entities dynamically created by a combility
+        ## must be added to this list. Then they can be turned on/off by iterating through it during
+        ## enable/disable. 
+
+
+
+    ########################################################################
+    ### DEBUG 
+    ########################################################################
+    
+    def generate_func_call_str(self, func, args, kwargs):
+        args_str = ', '.join(repr(arg) for arg in args)
+        kwargs_str = ', '.join(f"{k}={repr(v)}" for k, v in kwargs.items())
+        all_args_str = ', '.join(filter(None, [args_str, kwargs_str]))
+        original_location = f"{func.__module__}.{func.__qualname__}"
+        current_location = f"{func.__self__.__class__.__module__}.{func.__self__.__class__.__name__}"
+        return (f"\n{current_location} call:\n"
+                f" {func.__name__}({all_args_str})\n"
+                f"  ({original_location})\n"
+                )
+        
+    def test_mods(self, combility):
+        # Now, call perform_debug_mod_list for each list in Combility
+        self.perform_debug_mod_list(combility.mods_prepare_list, "mods_prepare_list")
+        self.perform_debug_mod_list(combility.mods_use_list, "mods_use_list")
+        self.perform_debug_mod_list(combility.mods_update_list, "mods_update_list")
+        self.perform_debug_mod_list(combility.mods_enable_list, "mods_enable_list")
+        self.perform_debug_mod_list(combility.mods_disable_list, "mods_disable_list")
+        self.perform_debug_mod_list(combility.mods_helper_functions_list, "mods_helper_functions_list")
+
+        # Now, call perform_debug_mod_list for each list in Combility
+        self.perform_debug_mod_list(combility.mods_prepare_list, "mods_prepare_list")
+        self.perform_debug_mod_list(combility.mods_use_list, "mods_use_list")
+        self.perform_debug_mod_list(combility.mods_update_list, "mods_update_list")
+        self.perform_debug_mod_list(combility.mods_enable_list, "mods_enable_list")
+        self.perform_debug_mod_list(combility.mods_disable_list, "mods_disable_list")
+        self.perform_debug_mod_list(combility.mods_helper_functions_list, "mods_helper_functions_list")
+        
+    def perform_debug_mod_list(self, mod_list, list_name):
+        print(f"\nTesting {list_name}...")
+        for func, args, kwargs in mod_list:
+            func_call_str = self.generate_func_call_str(func, args, kwargs)
+            print(f"{func_call_str}")
+            func(*args, **kwargs)
+
+    def print_mod_lists(self):
+        print("mods_prepare_list:", combility.mods_prepare_list)
+        print("mods_use_list:", combility.mods_use_list)
+        print("mods_update_list:", combility.mods_update_list)
+        print("mods_enable_list:", combility.mods_enable_list)
+        print("mods_disable_list:", combility.mods_disable_list)
+        print("mods_helper_functions_list:", combility.mods_helper_functions_list)
+        
+    ########################################################################
+    ### Perform Mod Functions 
+    ########################################################################
+    
+    ##  Mod functions:
+    def setup_mod_lists(self):
         self.mods_prepare_list = []
         self.mods_use_list = []
         self.mods_update_list = []
         self.mods_enable_list = []
         self.mods_disable_list = []
         self.mods_helper_functions_list = []
-
-    def add_combility_code(self, combility_code):
-        pt(combility_code)
+    
+    def add_combility_code(self, combility_code, debug=False):
+        '''
+        - Add all of the mods codes to the various lists
+        - Run all the perform_ functions from the perform lists
+        
+        '''
+        self._add_combility_code_to_lists(combility_code, debug)
+        
+        self.perform_mods_list(self.mods_prepare_list)
+    
+    def _add_combility_code_to_lists(self, combility_code, debug):
+        if debug: pt(combility_code)
+        
         for mix_category, mod_mixes in combility_code.items():  # Iterate over key-value pairs
-            pt(mix_category)  # This will print the category name
+            if debug: pt(mix_category)  # This will print the category name
+            
             for mod_mix in mod_mixes:  # Iterate over each mod_mix in the list of mod_mixes
-                pt(mod_mix)  # This will print the current mod_mix list
-                for mod in mod_mix:  # Iterate over the list of mod dictionaries within the current mod_mix
-                    pt(mod)  # This will print the mod dictionary
-                    self._process_mod(mod)  # Process each mod dictionary
+                if debug: pt(mod_mix)  # This will print the current mod_mix list
                 
+                for mod in mod_mix:  # Iterate over the list of mod dictionaries within the current mod_mix
+                    if debug: pt(mod)  # This will print the mod dictionary
+                    self._process_mod(mod)  # Process each mod dictionary
+    
     def _process_mod(self, mod):
         mod_class = mod['method']  # This gets the class
         args = mod.get('args', ())
@@ -68,7 +227,48 @@ class Combility:
                         bound_method = types.MethodType(method, self)
                         self.mods_helper_functions_list.append((bound_method, args, kwargs))
                         break  # Add only the first non-prefix method as a helper function
-
+    
+    def perform_mods_list(self, mod_list, list_name='', debug=False):
+        if debug:
+            self.perform_debug_mod_list(mod_list, list_name)
+        else:
+            for func, args, kwargs in mod_list:
+                func(*args, **kwargs)
+    
+    def track_spawned_sub_entity(self, entity):
+        self.spawned_sub_entities.append(entity)
+        
+    def reenable_spawned_sub_entities(self):
+        for entity in self.spawned_sub_entities:
+            entity.enable()
+            # scene.entities.append(entity) ## TODO: Performance optimization to ensure that their 
+            ## code stopped running. But might not be necessary on current ursina versions. 
+            
+    def disable_spawned_sub_entities(self):
+        for entity in self.spawned_sub_entities:
+            entity.disable()
+            # scene.entities.remove(entity) ## TODO: Performance optimization to ensure that their 
+            ## code stopped running. But might not be necessary on current ursina versions. 
+    ########################################################################
+    ### Entity Methods 
+    ########################################################################
+    
+    def enable(self, debug=False):
+        self.perform_mods_list(self.mods_enable_list, 'mods_enable_list', debug)
+        
+        
+        self.reenable_spawned_sub_entities()
+        
+    def disable(self, debug=False):
+        self.perform_mods_list(self.mods_disable_list, 'mods_disable_list', debug)
+        
+        self.disable_spawned_sub_entities()
+        
+    def update(self, debug=False):
+        self.perform_mods_list(self.mods_update_list, 'mods_update_list', debug)
+        
+        
+        
 if __name__ == "__main__":
     trajectory_mix = mods.create_trajectory_mix(
         mods.add(mods.mods_trajectories.Path_Shape, 20),
@@ -90,47 +290,6 @@ if __name__ == "__main__":
     combility.add_combility_code(combility_code)
     
     
-    def print_mod_lists():
-        print("mods_prepare_list:", combility.mods_prepare_list)
-        print("mods_use_list:", combility.mods_use_list)
-        print("mods_update_list:", combility.mods_update_list)
-        print("mods_enable_list:", combility.mods_enable_list)
-        print("mods_disable_list:", combility.mods_disable_list)
-        print("mods_helper_functions_list:", combility.mods_helper_functions_list)
-        
-    def test_mods(combility):
-        def generate_func_call_str(func, args, kwargs):
-            args_str = ', '.join(repr(arg) for arg in args)
-            kwargs_str = ', '.join(f"{k}={repr(v)}" for k, v in kwargs.items())
-            all_args_str = ', '.join(filter(None, [args_str, kwargs_str]))
-            original_location = f"{func.__module__}.{func.__qualname__}"
-            current_location = f"{func.__self__.__class__.__module__}.{func.__self__.__class__.__name__}"
-            return (f"{func.__name__}({all_args_str})\n"
-                    f"From: (Origination) {original_location}. (Called from) {current_location}")
 
-        def test_mod_list(mod_list, list_name):
-            print(f"\nTesting {list_name}...")
-            for func, args, kwargs in mod_list:
-                func_call_str = generate_func_call_str(func, args, kwargs)
-                print(f"\nCalling:\n{func_call_str}")
-                func(*args, **kwargs)
-
-        # Now, call test_mod_list for each list in Combility
-        test_mod_list(combility.mods_prepare_list, "mods_prepare_list")
-        test_mod_list(combility.mods_use_list, "mods_use_list")
-        test_mod_list(combility.mods_update_list, "mods_update_list")
-        test_mod_list(combility.mods_enable_list, "mods_enable_list")
-        test_mod_list(combility.mods_disable_list, "mods_disable_list")
-        test_mod_list(combility.mods_helper_functions_list, "mods_helper_functions_list")
-
-        # Now, call test_mod_list for each list in Combility
-        test_mod_list(combility.mods_prepare_list, "mods_prepare_list")
-        test_mod_list(combility.mods_use_list, "mods_use_list")
-        test_mod_list(combility.mods_update_list, "mods_update_list")
-        test_mod_list(combility.mods_enable_list, "mods_enable_list")
-        test_mod_list(combility.mods_disable_list, "mods_disable_list")
-        test_mod_list(combility.mods_helper_functions_list, "mods_helper_functions_list")
-
-
-    print_mod_lists()
-    test_mods(combility)
+    combility.print_mod_lists()
+    combility.test_mods(combility)

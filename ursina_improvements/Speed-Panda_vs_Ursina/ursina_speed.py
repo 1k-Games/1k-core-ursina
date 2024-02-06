@@ -15,7 +15,7 @@ TIME_BETWEEN_PRINTS = int(os.getenv("TIME_BETWEEN_PRINTS", 1))
 
 app = Ursina(
     development_mode=False,
-    size=(800,600),
+    size=Vec2(800,600),
     vsync=False,
 )
 # pt(scene.entities)

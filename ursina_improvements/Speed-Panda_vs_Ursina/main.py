@@ -16,10 +16,10 @@ import os
 import subprocess
 
 run_apps_at_the_same_time = True 
-run_apps_at_the_same_time = False 
+# run_apps_at_the_same_time = False
 
-os.environ["TIME_BETWEEN_PRINTS"] = "10"
-os.environ["TOT_TIME_TO_RUN"] = "180"
+os.environ["TIME_BETWEEN_PRINTS"] = "5"
+os.environ["TOT_TIME_TO_RUN"] = "15"
 
 dad_pc = 'c:/.PythonProjects/sg/1k-core-ursina'
 

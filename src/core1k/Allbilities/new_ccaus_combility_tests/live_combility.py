@@ -60,6 +60,11 @@
         
 
 '''
+import lebowski
+lebowski.enable() ## TODO - Lebowski.enable() should be totally unecessary to have to do
+# lebowski.disable() # If desired
+
+
 
 from print_tricks import pt
 

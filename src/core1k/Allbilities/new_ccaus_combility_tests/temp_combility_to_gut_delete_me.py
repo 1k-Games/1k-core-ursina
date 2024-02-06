@@ -69,7 +69,7 @@ class Mod_Utility_Functions:
             
             - need to add the calculation with the max range, unless that is already
             accounted for here. Actually it is not counted. 
-                - It might be if I used self.path_ent.model.vertices, if not will have to calculate
+                - It might be if I used self.path_raycast_ent.model.vertices, if not will have to calculate
                 via the scale etc. 
                 
             '''
@@ -166,12 +166,12 @@ class Mod_Utility_Functions:
         ###########
         # Raycast Shooting
         ###########
-        def shoot(self, path_type='projectile'):
+        def shoot(self):
             
-            if self in self.projectile_target_types:
+            if self in self.path_target_types:
                 self.eaat = self
                 self.perform_actions()
-            elif self.slot_owner in self.projectile_target_types:
+            elif self.slot_owner in self.path_target_types:
                 self.eaat = self.slot_owner.shield ## NOTE: Shield sends all functions to the EnergyBeing anyways, 
                                                     ## But now the owner will be treated exactly in the same logic 
                                                     ## as any other entity type of the target_types. 
@@ -179,27 +179,26 @@ class Mod_Utility_Functions:
             else:
                 self._choose_ray_type()
 
-        def _choose_ray_type(self, path_type='projectile'):
-            self.current_path_type = path_type
-            self.parent_targets_to_acceptable_bot_targets(self.current_path_type)
-            self.traverse_target = getattr(self, f"acceptable_bot_{self.current_path_type}_targets", None)
+        def _choose_ray_type(self):
+            self.parent_targets_to_targeted_entities()
+            self.traverse_target = getattr(self, "targeted_entities", None)
 
-            path_ent = getattr(self, f"{self.current_path_type}_path_ent")
-            path_vertices = getattr(self, f"{self.current_path_type}_path_vertices", [Vec3(0,0,0)])
+            path_raycast_ent = getattr(self, f"path_raycast_ent")
+            raycast_vertices = getattr(self, f"path_raycast_vertices", [Vec3(0,0,0)])
 
-            if len(path_vertices) == 2:
-                self._straight_raycast(path_ent, path_vertices)
+            if len(raycast_vertices) == 2:
+                self._straight_raycast(path_raycast_ent, raycast_vertices)
             else:
-                self._segmented_linecast(path_ent, path_vertices)
+                self._segmented_linecast(path_raycast_ent, raycast_vertices)
 
-        def _straight_raycast(self, path_ent, path_vertices):
+        def _straight_raycast(self, path_raycast_ent, raycast_vertices):
 
             start_vertex = self.ccaus_barrel_end.world_position
-            end_vertex = scene.getRelativePoint(path_ent, path_vertices[1])
+            end_vertex = scene.getRelativePoint(path_raycast_ent, raycast_vertices[1])
             self._process_hit_info(start_vertex, end_vertex)
 
-        def _segmented_linecast(self, path_ent, path_vertices):
-            vertices = [self.world_position] + [scene.getRelativePoint(path_ent, vertex) for vertex in path_vertices]
+        def _segmented_linecast(self, path_raycast_ent, raycast_vertices):
+            vertices = [self.world_position] + [scene.getRelativePoint(path_raycast_ent, vertex) for vertex in raycast_vertices]
             
             for i in range(len(vertices) - 1):
                 hit_occurred = self._process_hit_info(vertices[i], vertices[i + 1], index=i)
@@ -228,10 +227,7 @@ class Mod_Utility_Functions:
                 
                 self.hit_info = hit_info
                 self.index_of_last_point_before_hit = index
-                if self.current_path_type == 'projectile':
-                    self.eaat = hit_info.entity
-                elif self.current_path_type == 'assistant':
-                    self.hate = hit_info.entity
+                self.eaat = hit_info.entity
                 self.perform_actions()
                 
                 return True  # Return True if a hit occurred
@@ -255,28 +251,28 @@ class Mod_Trajectories:
         def path_speed(self, speed=inf):
             self.path_speed = speed
             
-        def compile_path(self, range=1, rotation=(0,0,0), path_type='projectile'):
+        def compile_path(self, range=1, rotation=(0,0,0)):
             self.path_range = range ## TODO, make the range actually set from the mod, not here. 
             
-            visual_vertices_attr = f"{path_type}_visual_vertices"
-            path_vertices_attr = f"{path_type}_path_vertices"
+            visual_vertices_attr = f"path_visual_vertices"
+            raycast_vertices_attr = f"path_raycast_vertices"
             
             visual_vertices = getattr(self, visual_vertices_attr, [Vec3(0,0,0)])
-            path_vertices = getattr(self, path_vertices_attr, [Vec3(0,0,0)])
+            raycast_vertices = getattr(self, raycast_vertices_attr, [Vec3(0,0,0)])
             
             if len(visual_vertices) == 1:
                 visual_vertices.append(Vec3(visual_vertices[0]) + Vec3(0, 0, 1))
-                path_vertices.append(Vec3(path_vertices[0]) + Vec3(0, 0, 1))
+                raycast_vertices.append(Vec3(raycast_vertices[0]) + Vec3(0, 0, 1))
             # pt('compile', visual_vertices)
             
             setattr(self, visual_vertices_attr, visual_vertices)
-            setattr(self, path_vertices_attr, path_vertices)
+            setattr(self, raycast_vertices_attr, raycast_vertices)
             
             z_dist = self.last_vert_path_z_distance(visual_vertices)
             z_scale = range / z_dist
             
             # visual_vertices = [v * z_scale for v in visual_vertices]
-            # path_vertices = [v * z_scale for v in path_vertices]
+            # raycast_vertices = [v * z_scale for v in raycast_vertices]
             # pt(visual_vertices)
             
             
@@ -303,7 +299,7 @@ class Mod_Trajectories:
             self.track_spawned_sub_entity(visual_ent)
             
             new_vertices, triangles, new_uvs, new_normals = self.mesh_creator.create_mesh_data(
-                path_vertices,
+                raycast_vertices,
                 num_sides=num_sides,
                 rotation=rotation_mesh,
                 # diameter=0.025,
@@ -311,11 +307,11 @@ class Mod_Trajectories:
                 interpolate=False,
                 )
             path_mesh = Mesh(vertices=new_vertices, triangles=triangles, uvs=new_uvs, normals=new_normals, mode='triangle')
-            path_ent = Entity(name='visual_ent',
+            path_raycast_ent = Entity(name='visual_ent',
                 parent=self.ccaus_barrel_end, 
                 model=path_mesh, 
                 color=Color(1,0.647,0,0.6))
-            self.track_spawned_sub_entity(path_ent)
+            self.track_spawned_sub_entity(path_raycast_ent)
             
             
             
@@ -328,67 +324,66 @@ class Mod_Trajectories:
             #         ),
             #     color=color.rgba(1,1,0,.6))
             
-            # path_ent = Entity(name='path_ent',
+            # path_raycast_ent = Entity(name='path_raycast_ent',
             #     parent=self.ccaus_barrel_end,
-            #     model=Mesh(vertices=path_vertices, mode='line',
+            #     model=Mesh(vertices=raycast_vertices, mode='line',
             #         thickness=4,
             #         render_points_in_3d=False
             #     ),
             #     color=color.rgba(1, .647, 0, .85))
             
-            for entity in [visual_ent, path_ent]:
+            for entity in [visual_ent, path_raycast_ent]:
                 entity.rotation = rotation
                 entity.scale = z_scale
 
                 
-            setattr(self, f"{path_type}_visual_ent", visual_ent)
-            setattr(self, f"{path_type}_path_ent", path_ent)
+            setattr(self, f"path_visual_ent", visual_ent)
+            setattr(self, f"path_raycast_ent", path_raycast_ent)
             
-        def _extend_path_vertices(self, incoming_visual_vertices, incoming_path_vertices, path_type):
+        def _extend_raycast_vertices(self, incoming_visual_vertices, incoming_raycast_vertices):
             """
             This method extends the path vertices for a given path type.
 
             Parameters:
             vertices (list): A list of vertices to extend the path.
-            path_type (str): The type of the path.
             
             
             """
             
-            visual_vertices_attr = f"{path_type}_visual_vertices"
-            path_vertices_attr = f"{path_type}_path_vertices"
+            visual_vertices_attr = f"path_visual_vertices"
+            raycast_vertices_attr = f"path_raycast_vertices"
 
 
-            ## Get vertices lists of {path_type} name.
+            ## Get vertices lists of paths
             ## If they don't exist, create them. 
-            ## For example: self.{path_type}_visual_vertices = []
+            ## For example: self.path_visual_vertices = []
             visual_vertices = getattr(self, visual_vertices_attr, [Vec3(0,0,0)])
-            path_vertices = getattr(self, path_vertices_attr, [Vec3(0,0,0)])
+            raycast_vertices = getattr(self, raycast_vertices_attr, [Vec3(0,0,0)])
             # pt('_extend path 1', visual_vertices)
             
             
             ## extend
             visual_vertices.extend(incoming_visual_vertices)
-            path_vertices.extend(incoming_path_vertices)
+            raycast_vertices.extend(incoming_raycast_vertices)
             # pt('_extend path 2', visual_vertices)
             
             # Set the visual and path vertices attributes of the object to the updated lists
             setattr(self, visual_vertices_attr, visual_vertices)
-            setattr(self, path_vertices_attr, path_vertices)
+            setattr(self, raycast_vertices_attr, raycast_vertices)
             
-            return visual_vertices, path_vertices
+            return visual_vertices, raycast_vertices
         
-        def add_points_to_path(self, *vertices, path_type='projectile'):
+        def add_points_to_path(self, *vertices):
             # pt('add_points', vertices)
             
-            self._extend_path_vertices(vertices, vertices, path_type=path_type)
+            self._extend_raycast_vertices(vertices, vertices)
         
-        def add_curve_to_path(self, *args, path_type='projectile', **kwargs):
+        def add_curve_to_path(self, *args, **kwargs):
             # pt('add curve', curve)
             
             visual_curve_vertices, path_curve_vertices,  = self._create_curve(*args, **kwargs)
             
-            self._extend_path_vertices(visual_curve_vertices, path_curve_vertices, path_type=path_type)
+            self._extend_raycast_vertices(visual_curve_vertices, path_curve_vertices)
         
         def _create_curve(self, 
                 scale=(1,1,1), 
@@ -396,9 +391,9 @@ class Mod_Trajectories:
                 visual_resolution=22, 
                 path_resolution=6,
                 existing_visual_vertices=None, 
-                existing_path_vertices=None,
+                existing_raycast_vertices=None,
         ):
-            # pt(self.name, visual_resolution, path_resolution, existing_visual_vertices, existing_path_vertices)
+            # pt(self.name, visual_resolution, path_resolution, existing_visual_vertices, existing_raycast_vertices)
             
             
             ## Normalize scale
@@ -426,7 +421,7 @@ class Mod_Trajectories:
             visual_vertices = reduced_visual_vertices
             
             ## Create reduced vertices for raycasting based on reduced_visual_vertices
-            path_vertices = visual_vertices[::len(visual_vertices) // path_resolution]
+            raycast_vertices = visual_vertices[::len(visual_vertices) // path_resolution]
 
             ## If an existing user-created path exists, offset each new vertex
             ### by where the last vertex of the existing path is. So it starts correctly
@@ -434,15 +429,15 @@ class Mod_Trajectories:
                 last_vertex = existing_visual_vertices[-1]
                 visual_vertices = [v + last_vertex for v in visual_vertices]
                         
-            if existing_path_vertices is not None and len(existing_path_vertices) > 1:
-                last_vertex = existing_path_vertices[-1]
-                path_vertices = [v + last_vertex for v in path_vertices]
+            if existing_raycast_vertices is not None and len(existing_raycast_vertices) > 1:
+                last_vertex = existing_raycast_vertices[-1]
+                raycast_vertices = [v + last_vertex for v in raycast_vertices]
                 
             ## Scaled
             visual_vertices = [v * normalized_scale for v in visual_vertices]
-            path_vertices = [v * normalized_scale for v in path_vertices]
+            raycast_vertices = [v * normalized_scale for v in raycast_vertices]
         
-            return visual_vertices, path_vertices ## Only for functions that need a curve but that don't get added to the path vertices
+            return visual_vertices, raycast_vertices ## Only for functions that need a curve but that don't get added to the path vertices
         
         def add_path_rotation(self, rotation=(0,0,0)):
             self.path_rotation = rotation
@@ -456,24 +451,24 @@ class Mod_Trajectories:
         
     class Target_Types:
         
-        self.level_target_types = level_target_types
-                
         
         ##################
         # Target Types
         ##################
-        self.projectile_target_types = None     ## TODO These might not be necessary to initialize here
-        self.assistant_target_types = None    ## TODO These might not be necessary to initialize here
+        self.path_target_types = None     ## TODO These might not be necessary to initialize here
         
         
         ### TODO Instead of these being heavy entities:
         ###      Try my lightest or one of my lightest "light_entities" 
-        self.acceptable_bot_projectile_targets = Entity(name='acceptable_bot_projectile_targets') ## shooting raycasts/interceptions
-        self.acceptable_bot_assistant_targets = Entity(name='acceptable_bot_assistant_targets') ## Secondary raycasts for things like dash surface types
+        ###     - Probably try to get rid of assistant targets
+        ###     - Probably change the name to ""
+        self.targeted_entities = Entity(name='targeted_entities') ## shooting raycasts/interceptions
 
 
 
-        def add_target_types(self, general=None, specific=None, path_type='projectile'):
+        def add_target_types(self, general=None, specific=None):
+
+            
             ''' Types of targets:  (aka set_target_types)
             - Any number of enemies/teammates/shields/npcs etc. 
             - Or:
@@ -490,15 +485,15 @@ class Mod_Trajectories:
             if self.slot_owner in general and len(general) > 1:
                 raise ValueError("'slot_owner' cannot coexist with other target types")
             
-            setattr(self, f'{path_type}_target_types', general)
-            # self.projectile_target_types = general
+            setattr(self, f'path_target_types', general)
+            # self.path_target_types = general
             
             ######################
             # specific targets
             ######################
             if specific is None:
                 self.specific_target = "energy_being"
-                setattr(self, f'{path_type}_target_types', general)
+                setattr(self, f'path_target_types', general)
             elif specific in ["eb_body", "eb_shield"]:
                 self.specific_target = specific
             
@@ -517,25 +512,24 @@ class Mod_Trajectories:
             ########################
             
             if self not in general and self.slot_owner not in general:
-                self.parent_targets_to_acceptable_bot_targets(path_type=path_type)
+                self.parent_targets_to_targeted_entities()
             
-            # pt(self.name, self.projectile_target_types, self.specific_target)
+            # pt(self.name, self.path_target_types, self.specific_target)
         
-        def parent_targets_to_acceptable_bot_targets(self, path_type='projectile', debug=False):
+        def parent_targets_to_targeted_entities(self, debug=False):
             ''' 
             - This is happening in 20-35us depending on the amount of target_types, 
             - This is far faster than even a single extra linecast of 200-300us. 
-            - This requires only one linecast to the self.acceptable_bot_projectile_targets '''
+            - This requires only one linecast to the self.targeted_entities '''
             
             if debug:
-                pt.c('Deugging parent_targets_to_acceptable_bot_targets')
-                pt(path_type)
-                target_types = getattr(self, f"{path_type}_target_types", [])
-                acceptable_bot_target_types = getattr(self, f"acceptable_bot_{path_type}_targets", None)
-                pt(self.name, path_type, target_types, acceptable_bot_target_types, acceptable_bot_target_types.children)
+                pt.c('Deugging parent_targets_to_targeted_entities')
+                target_types = getattr(self, f"path_target_types", [])
+                targeted_entities_target_types = getattr(self, f"targeted_entities", None)
+                pt(self.name, target_types, targeted_entities_target_types, targeted_entities_target_types.children)
                 
-            for target in getattr(self, f"{path_type}_target_types", []):
-                target.parent = getattr(self, f"acceptable_bot_{path_type}_targets", None)
+            for target in getattr(self, f"path_target_types", []):
+                target.parent = getattr(self, f"targeted_entities", None)
             
         def get_real_eaat(self):
             # pt(self.eaat, self.eaat.parent, self.eaat.parent.parent, self.eaat.parent.parent.parent)
@@ -719,8 +713,8 @@ class Mod_Actions:
         #     self.projectile_visual_ent.texture = 'laser_white_kisspng-light-special-effects-photoscape-transparency-and-color-light-effect-5aae700a43a5c7.2554474615213813862771' 
         #     self.projectile_visual_ent.color = color.red
             
-        #     self.projectile_path_ent.texture = 'laser_white_kisspng-light-special-effects-photoscape-transparency-and-color-light-effect-5aae700a43a5c7.2554474615213813862771' 
-        #     self.projectile_path_ent.color = color.yellow
+        #     self.projectile_path_raycast_ent.texture = 'laser_white_kisspng-light-special-effects-photoscape-transparency-and-color-light-effect-5aae700a43a5c7.2554474615213813862771' 
+        #     self.projectile_path_raycast_ent.color = color.yellow
         #     laser_sound = Audio('laser_pulse_lazerius-139178', autoplay=True)
 
         ######################################
@@ -744,8 +738,8 @@ class Mod_Actions:
             self.projectile_visual_ent.texture = 'laser_white_kisspng-light-special-effects-photoscape-transparency-and-color-light-effect-5aae700a43a5c7.2554474615213813862771' 
             self.projectile_visual_ent.color = color.red
 
-            self.projectile_path_ent.texture = 'laser_white_kisspng-light-special-effects-photoscape-transparency-and-color-light-effect-5aae700a43a5c7.2554474615213813862771' 
-            self.projectile_path_ent.color = color.yellow
+            self.projectile_path_raycast_ent.texture = 'laser_white_kisspng-light-special-effects-photoscape-transparency-and-color-light-effect-5aae700a43a5c7.2554474615213813862771' 
+            self.projectile_path_raycast_ent.color = color.yellow
             laser_sound = Audio('laser_pulse_lazerius-139178', autoplay=True)
 
             # Animate the texture offset for half a second
@@ -758,14 +752,14 @@ class Mod_Actions:
         def animate_texture_offset(self):
             self.dmg_dev_laser_offset += time.dt * -11
             self.projectile_visual_ent.texture_offset = (self.dmg_dev_laser_offset*0.2, self.dmg_dev_laser_offset)
-            self.projectile_path_ent.texture_offset = (self.dmg_dev_laser_offset*0.1, self.dmg_dev_laser_offset)
+            self.projectile_path_raycast_ent.texture_offset = (self.dmg_dev_laser_offset*0.1, self.dmg_dev_laser_offset)
 
         def reset_visuals(self, original_texture, original_color, original_texture_offset):
             self.projectile_visual_ent.texture = original_texture
             self.projectile_visual_ent.color = original_color
             self.projectile_visual_ent.texture_offset = original_texture_offset
-            self.projectile_path_ent.texture = original_texture
-            self.projectile_path_ent.color = original_color
+            self.projectile_path_raycast_ent.texture = original_texture
+            self.projectile_path_raycast_ent.color = original_color
         
         
     class experimental_points:
@@ -775,7 +769,6 @@ class Mod_Actions:
             scale=(1,.4,1), 
             circle_degrees=180, 
             rotation=(0,0,0),
-            path_type='animation',
             ):
             '''
             - This is a blank slate for acquiring points, and then sending them 
@@ -788,17 +781,15 @@ class Mod_Actions:
             self.add_curve_to_path(
                 scale=scale, 
                 circle_degrees=circle_degrees, 
-                path_type=path_type
                 )
             
             self.compile_path(
                 range, 
                 rotation,
-                path_type=path_type,
                 )
             
             dist_of_visual_vertices, num_vertices_path = self.get_length_of_path(
-                self.animation_path_ent.model.vertices, scale=range)
+                self.animation_path_raycast_ent.model.vertices, scale=range)
 
             duration = dist_of_visual_vertices / speed 
 
@@ -827,7 +818,7 @@ class Mod_Actions:
             #########
             ## Slot Owner
             #########
-            if self.slot_owner in self.projectile_target_types:
+            if self.slot_owner in self.path_target_types:
                 self.cam_ent.parent = self.slot_owner
                 self.cam_ent.position = self.slot_owner.cam_mount_main_default_pos
                 
@@ -1089,9 +1080,6 @@ class Mod_Actions:
             
         def disable_camera_prop_zooming_incremental(self):
             self._unset_camera_properties()
-            
-            
-
         
         
     class camera_pip_rtt:
@@ -1400,7 +1388,7 @@ class Mod_Actions:
             surface_types=None,
             dash_style='arc_dash',
             c_dash_last_line=None,
-            path_type='assistant'):
+            ):
             # pt( 
             # range,
             # speed,
@@ -1413,7 +1401,7 @@ class Mod_Actions:
             # surface_types,
             # dash_style,
             # c_dash_last_line,
-            # path_type)
+            # )
             '''
             - Speed is in units/second (meters/sec)
             - rotation and direction are actually identical properties, so we can only recieve one. But we 
@@ -1436,7 +1424,7 @@ class Mod_Actions:
                 circle_degrees=circle_degrees,
                 visual_resolution=visual_resolution,
                 path_resolution=path_resolution,
-                path_type=path_type
+                
                 )
 
             if dash_style != 'c_dash' and c_dash_last_line is not None:
@@ -1450,67 +1438,65 @@ class Mod_Actions:
                     # Add the vector to the last point to get the new point
                     new_point = last_two_points[0] + vector * 10
                     # Add the new point to the path
-                    self.add_points_to_path(new_point, path_type=path_type)
+                    self.add_points_to_path(new_point)
                 else:
-                    self.add_points_to_path(c_dash_last_line, path_type=path_type)
+                    self.add_points_to_path(c_dash_last_line)
             
             self.compile_path(
                 range=range, 
                 rotation=rotation,
-                path_type=path_type,
+                
                 # direction_vec=direction_vec,
                 )
             
-            self.add_target_types(general=surface_types, path_type=path_type)
+            self.add_target_types(general=surface_types)
             
             visual_vertices = self.assistant_visual_ent.model.vertices 
             dist_of_visual_vertices, num_points_visual_vertices = self.get_length_of_path(
                 visual_vertices, scale=range)
             
-            path_vertices = self.assistant_path_ent.model.vertices
-            dist_of_path_vertices, num_points_path_vertices = self.get_length_of_path(
-                path_vertices, scale=range)
+            raycast_vertices = self.assistant_path_raycast_ent.model.vertices
+            dist_of_raycast_vertices, num_points_raycast_vertices = self.get_length_of_path(
+                raycast_vertices, scale=range)
             
             duration = dist_of_visual_vertices / speed 
             
-            ratio_visual_verts_to_path_verts = num_points_visual_vertices / num_points_path_vertices
+            ratio_visual_verts_to_path_verts = num_points_visual_vertices / num_points_raycast_vertices
             
             avg_dist_between_visual_points = dist_of_visual_vertices / (num_points_visual_vertices - 1)
             
             self.is_performing_action_dash = False
             
 
-            return surface_types, path_type, duration, num_points_visual_vertices, ratio_visual_verts_to_path_verts, path_vertices, avg_dist_between_visual_points
+            return surface_types, duration, num_points_visual_vertices, ratio_visual_verts_to_path_verts, raycast_vertices, avg_dist_between_visual_points
             
         def use_dash(self,
             surface_types,
-            path_type,
             duration,
             num_points_visual_vertices,
             ratio_visual_verts_to_path_verts,
-            path_vertices,
+            raycast_vertices,
             avg_dist_between_visual_points):
 
             if self.is_performing_action_dash:
                 return
             
             
-            self.assistant_path_ent.world_position = self.eaat.world_position
-            curve_points = [Vec3(self.world_position)] + [Vec3(scene.getRelativePoint(self.assistant_path_ent, vertex)) for vertex in self.assistant_visual_ent.model.vertices]
+            self.assistant_path_raycast_ent.world_position = self.eaat.world_position
+            curve_points = [Vec3(self.world_position)] + [Vec3(scene.getRelativePoint(self.assistant_path_raycast_ent, vertex)) for vertex in self.assistant_visual_ent.model.vertices]
             
-            # pt(surface_types, path_type)
-            self.add_target_types(general=surface_types, path_type=path_type)
+            self.add_target_types(general=surface_types)
             self.is_performing_action_dash = True
-            self._choose_ray_type(path_type=path_type)
-            self.assistant_path_ent.world_position = self.ccaus_barrel_end.world_position
+            self._choose_ray_type()
+            self.assistant_path_raycast_ent.world_position = self.ccaus_barrel_end.world_position
             
             if not self.hate:
-                pt.c("Dash failed. Target surface type is not in the acceptable_bot targets list.")
+                pt.c("Dash failed. Target surface type is not in the targeted_entities list.")
                 self.is_performing_action_dash = False
                 return
             
             equivalent_visual_index = int(self.index_of_last_point_before_hit * ratio_visual_verts_to_path_verts)
-            hit_point_distance = (self.hit_info.world_point - path_vertices[self.index_of_last_point_before_hit]).length()
+            hit_point_distance = (self.hit_info.world_point - raycast_vertices[self.index_of_last_point_before_hit]).length()
             vertices_to_remove = int(hit_point_distance / avg_dist_between_visual_points)
             equivalent_visual_index -= vertices_to_remove
             
@@ -1677,7 +1663,7 @@ class Mod_Actions:
             if angle > stop_angle:
                 # rotation = self.calculate_rotation_from_direction(self.forward)
                 self.projectile_visual_ent.world_rotation = self.ccaus_barrel_end.world_rotation
-                self.projectile_path_ent.world_rotation = self.ccaus_barrel_end.world_rotation
+                self.projectile_path_raycast_ent.world_rotation = self.ccaus_barrel_end.world_rotation
                 
                 self.attacher_ent.enabled = False
                 
@@ -1706,10 +1692,10 @@ class Mod_Actions:
                 self.look_at_in_local_space(self, self.attacher_ent)
             else:
                 self.look_at_in_local_space(self.projectile_visual_ent, self.attacher_ent)
-                self.look_at_in_local_space(self.projectile_path_ent, self.attacher_ent)
+                self.look_at_in_local_space(self.projectile_path_raycast_ent, self.attacher_ent)
                 
                 self.angle_to_start_stop_attacher(89)
                 ## TODO BUGFIX: I should be able to pass only the self.ccaus_barrel_end instead of both
-                ##  the self.path_ent and self.raycast_path_ent, to achieve the same/cleaner version
+                ##  the self.path_raycast_ent and self.raycast_path_raycast_ent, to achieve the same/cleaner version
                 ##  of the same thing. But when I use the bullet_end, the path shrinks in size. 
                 # self.look_at_in_local_space(self.ccaus_barrel_end, self.attacher_ent)

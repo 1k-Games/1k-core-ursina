@@ -1,33 +1,3 @@
-from target_types import EnergyBeing, EG_Object, Shield, AnimatingShieldPart, Character, Core
-from eg_globals import EG_Globals
-
-
-class CCAUS_Functions:
-    
-    def attach_to_slot(self, slot):
-        '''add_to_slot attach to slot add to slot
-        '''
-        ######
-        # Slot
-        ######
-        current_scale = self.world_scale
-        
-        # pt(self.parent)
-        self.parent = slot
-        # pt(self.parent)
-        # self.rotation=(-180,-180,-180),
-        # pt(self.parent.rotation, self.parent.world_rotation,self.rotation, self.world_rotation)
-        
-        self.world_scale = current_scale
-        
-        self.position = (0, self.scale_y * 0.55, 0)
-        
-        ##########
-        # slot owner (who does this slot belong to?)
-        ##########
-        self.slot_owner = slot.owner
-        self.slot_owners_arm = slot.owners_arm
-        self.slot = slot
 
 
 

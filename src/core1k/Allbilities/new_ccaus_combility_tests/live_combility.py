@@ -71,8 +71,15 @@ from ursina import *
 
 import combility_code
 import mods
+
+
 # from light_entities import *      ## TODO TURN BACK ON
 # from linecast import linecast     ## TODO TURN BACK ON
+
+## TODO - Basically remove both of these. Globals and target types should be dynamically
+##       created and brought in per game, not just for energy game.
+from target_types import EnergyBeing, EG_Object, Shield, AnimatingShieldPart, Character, Core
+from eg_globals import EG_Globals
 
 
 class Merged_Combilities(Entity):
@@ -128,6 +135,8 @@ class Combility(Entity):
         self.hit_info = None    # TODO, all of these may be uneseccary
         self.eaat = None        # TODO, all of these may be uneseccary
         self.hate = None        # TODO, all of these may be uneseccary
+        ## TODO - possibly remove self.hate, as we are doing double combilities now for
+        ## any complex hit detection and reaction systems. 
         
         
     ########################################################################

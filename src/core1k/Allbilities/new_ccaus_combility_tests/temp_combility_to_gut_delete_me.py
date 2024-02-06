@@ -1,123 +1,5 @@
-
-
-from print_tricks import pt
-
-import math
-from math import sin
-from collections import deque
-
-from ursina import curve
-from ursina import *
-from panda3d.core import CompassEffect  ## use this for rotations only. Can point
-                                        ## at another ent for free, don't use for
-                                        ## positions/scales due to rendering/cull.
-from panda3d.core import Camera
-
-from light_entities import *
 from target_types import EnergyBeing, EG_Object, Shield, AnimatingShieldPart, Character, Core
 from eg_globals import EG_Globals
-
-
-
-
-class Combility():
-
-    
-    
-    stored_copied_entity = None             ## Stored for all Combilities to use
-    stored_copied_entity_attributes = None  ## Stored for all Combilities to use
-    fixed_combility_updates_list = []
-    
-    
-    ## Displays and cameras have a nickname that is either user-created, or auto-generated, 
-    pip_regions = {}
-    rtt_regions = {}
-    cameras = {}
-    
-    def __init__(self, level_target_types, *args, name='', ignore_list=None, **kwargs):
-        
-        self.level_target_types = level_target_types
-                
-        
-        ##################
-        # Target Types
-        ##################
-        self.projectile_target_types = None     ## TODO These might not be necessary to initialize here
-        self.assistant_target_types = None    ## TODO These might not be necessary to initialize here
-        
-        
-        ### TODO Test these as NodePaths or simplest pandanode with a parent, instead of Heavy Entities. 
-        self.acceptable_bot_projectile_targets = Entity(name='acceptable_bot_projectile_targets') ## shooting raycasts/interceptions
-        self.acceptable_bot_assistant_targets = Entity(name='acceptable_bot_assistant_targets') ## Secondary raycasts for things like dash surface types
-
-        
-        super().__init__(*args, **kwargs)
-
-        
-        if ignore_list is None:
-            self.ignore_list = [self]
-        else:
-            self.ignore_list = ignore_list + [self]
-        
-        self.name = name
-        self.hit_info = None    # TODO, all of these may be uneseccary
-        self.eaat = None        # TODO, all of these may be uneseccary
-        self.hate = None        # TODO, all of these may be uneseccary
-        self.model = 'cube'
-        self.color = color.blue
-        self.world_scale = (.1, .1, 1)
-        
-        self.path_model = None
-
-        combility_forward_visual = Entity(name='combility_forward_visual', parent=self, position=self.forward*5, model='sphere', scale=(.5,.5,2))
-        
-
-        
-        ######
-        # Animation vars
-        #####
-        
-        # self.animations.append(Sequence(
-        #     Func(self.testblah), Wait(1), loop=True, started=True))
-                
-        # self.animations.append(Sequence(
-        #     Func(self.testblah), Wait(1), loop=True, started=True))
-        
-        # self.animation_sequence = Sequence(
-        #     Func(self.testblah), Wait(1), loop=True, started=True
-        # )
-        # self.animations.append(self.animation_sequence)
-        
-        
-    ################################
-    #       -Defaults              #
-    ################################
-    
-
-    def on_enable(self):
-
-        self.fixed_combility_update_1 = Sequence(
-            Func(self.fixed_update_1), Wait(1), loop=True, started=True
-        )
-        self.fixed_combility_updates_list.append(self.fixed_combility_update_1)
-        self.animations.append(self.fixed_combility_update_1)
-        
-        
-    def on_disable(self):
-
-        if self.fixed_combility_updates_list: ## TODO, this could be for other ursina animations
-            ## I should probably create my own list of my own
-            ## animations that I create then disable them 
-            ## each in here
-            
-            for fixed_update in self.fixed_combility_updates_list:
-                fixed_update.kill()
-                    
-
-
-
-
-
 
 
 class CCAUS_Functions:
@@ -310,6 +192,7 @@ class Mod_Utility_Functions:
         
         
     class Raycast_Shooting:
+        
         ###########
         # Raycast Shooting
         ###########
@@ -387,9 +270,12 @@ class Mod_Utility_Functions:
         
         
 class Mod_Trajectories:
+    from create_mesh_path import Mesh_Creator
     
     class Path:
-        
+        from ursina import curve
+
+
         def prepare_path(self):
             self.path_range()
             
@@ -413,7 +299,6 @@ class Mod_Trajectories:
                 path_vertices.append(Vec3(path_vertices[0]) + Vec3(0, 0, 1))
             # pt('compile', visual_vertices)
             
-                
             setattr(self, visual_vertices_attr, visual_vertices)
             setattr(self, path_vertices_attr, path_vertices)
             
@@ -601,6 +486,23 @@ class Mod_Trajectories:
         
     class Target_Types:
         
+        self.level_target_types = level_target_types
+                
+        
+        ##################
+        # Target Types
+        ##################
+        self.projectile_target_types = None     ## TODO These might not be necessary to initialize here
+        self.assistant_target_types = None    ## TODO These might not be necessary to initialize here
+        
+        
+        ### TODO Instead of these being heavy entities:
+        ###      Try my lightest or one of my lightest "light_entities" 
+        self.acceptable_bot_projectile_targets = Entity(name='acceptable_bot_projectile_targets') ## shooting raycasts/interceptions
+        self.acceptable_bot_assistant_targets = Entity(name='acceptable_bot_assistant_targets') ## Secondary raycasts for things like dash surface types
+
+
+
         def add_target_types(self, general=None, specific=None, path_type='projectile'):
             ''' Types of targets:  (aka set_target_types)
             - Any number of enemies/teammates/shields/npcs etc. 
@@ -697,7 +599,10 @@ class Mod_Actions:
     #        -Mod Actions          #
     ################################
 
-    class force:
+    class Force:
+        from ursina import curve
+
+
         def calculate_energy_dist_for_teleport_hit(self, initial_direction_vec, intial_energy_distance, ignore_list, half_size_eaat):
             original_world_position_eaat = self.eaat.world_position
             total_energy_distance = intial_energy_distance  # Initialize total_energy_distance with the initial energy amount
@@ -815,7 +720,7 @@ class Mod_Actions:
             t /= self.total  # normalize t to the duration
             if t < self.jitter_duration:
                 ## Jitter back and forward, mostly back. 
-                return self.combility_backward_jitter * t + self.forward_jitter * sin(10 * pi * t)
+                return self.combility_backward_jitter * t + self.forward_jitter * math.sin(10 * pi * t)
             else:
                 if not self.jitter_ended:
                     self.jitter_ended = True
@@ -1215,6 +1120,14 @@ class Mod_Actions:
         def disable_camera_prop_zooming_incremental(self):
             self._unset_camera_properties()
             
+            
+
+        
+        
+    class camera_pip_rtt:
+            
+        from panda3d.core import Camera
+        
         def use_camera_prop_resolution(self, resolution=(128, 128)):
             '''    TODO - Not currently working
                 Change Game Resolution, independent of the window size
@@ -1239,9 +1152,6 @@ class Mod_Actions:
             
         def disable_camera_prop_resolution(self):
             self._unset_camera_properties
-        
-        
-    class camera_pip_rtt:
             
         def use_camera_pip(self, cam_parent=None, position=Vec3(0,0,0), rotation=Vec3(0,0,0), energy_amount=100):
             

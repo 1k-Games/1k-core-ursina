@@ -1,6 +1,6 @@
 '''
     NOTE on this msg. It might make the most sense to put this "keys" notes and the 
-    self.eeat stuff into a mod of helper functions category
+    self.eeat stuff into a file for mods of helper functions category
     
     Keys:
         (Note: severely limit the keys. These are mainly for cutting out long typing, but if I don't
@@ -8,17 +8,25 @@
         
         - eaat: 'The entity who is going to eat our actions' - 'entity_to_apply_actions_to'
         - hate: 'Your targeting me to use against others' - 'hit_assistant_target_ent'
+            TODO May be unecessary as I shift to the 2-combilities system for things like dashes. 
+        - pip: Picture-In-Picture (display regions)
+        - rtt: Render-To-Texture (Either used like a display region, or used in the 3d world)
         - path: I am currently using the term "path" to mean the projectile/combility/mod path, 
-            So this is the projectile shape and the projectile curve/movements etc. 
+            So this is the projectile shape, curve, trajectory, movements, speed etc. 
             
     TODO:
     - Add shortcuts for adding mods via both:
         - combility.add_mod 
         - combility.add_mods
         - combility.remove_mod
-        (they'll go through the proper channels to add mods)
+        (they'll go through the proper channels to add mods, add to appropriate lists, etc.)
         
-        
+    - Eliminate the path_ent, make it the visuals/models for the combility itself. 
+    - ccaus will function for the device. 
+    - Perhaps the visual_ent can be either a panda3d actor, or a nodepath with
+    shaders/graphics etc. Or maybe it can remain an entity til I figure it out. 
+    
+
         
     BUG 1-2:
         FOR sELF.ACCEPTABLE_BOT_PROJECTILE_TARGETS:
@@ -57,13 +65,14 @@ from print_tricks import pt
 
 import inspect
 import types
+import math
 
 from ursina import *
 
 import combility_code
 import mods
-from create_mesh_path import Mesh_Creator
-from linecast import linecast
+# from light_entities import *      ## TODO TURN BACK ON
+# from linecast import linecast     ## TODO TURN BACK ON
 
 
 class Merged_Combilities(Entity):
@@ -76,11 +85,27 @@ class Merged_Combilities(Entity):
 
 class Combility(Entity):
     ########################################################################
+    ### Class Variables
+    ########################################################################
+    
+    stored_copied_entity = None             ## Stored for all Combilities to use
+    stored_copied_entity_attributes = None  ## Stored for all Combilities to use
+    fixed_updates_list = []
+    
+    ## Displays and cameras have a nickname that is either user-created, or auto-generated, 
+    pip_regions = {}
+    rtt_regions = {}
+    cameras = {}
+    
+    ########################################################################
     ### initialization 
     ########################################################################
     
-    def __init__(self, combility_code=None):
+    def __init__(self, *args, name='', combility_code=None, **kwargs):
         super().__init__()
+        # super().__init__(*args, **kwargs)
+        
+        self.name = name
         
         self.setup_defaults()
         
@@ -88,20 +113,23 @@ class Combility(Entity):
         
         if combility_code is not None:
             self._add_combility_code_to_lists(combility_code)
-            
-    ########################################################################
-    ### ...
-    ########################################################################
-
+        
+        
     def setup_defaults(self):
+        # self.mesh_creator = Mesh_Creator() ## TODO TURN BACK ON
+        
         self.default_camera_fov = 90
-        self.mesh_creator = Mesh_Creator()
+        
         self.spawned_sub_entities = [] ## TODO Any entities dynamically created by a combility
         ## must be added to this list. Then they can be turned on/off by iterating through it during
         ## enable/disable. 
-
-
-
+        self.fixed_updates_list = []
+        
+        self.hit_info = None    # TODO, all of these may be uneseccary
+        self.eaat = None        # TODO, all of these may be uneseccary
+        self.hate = None        # TODO, all of these may be uneseccary
+        
+        
     ########################################################################
     ### DEBUG 
     ########################################################################
@@ -148,7 +176,75 @@ class Combility(Entity):
         print("mods_enable_list:", combility.mods_enable_list)
         print("mods_disable_list:", combility.mods_disable_list)
         print("mods_helper_functions_list:", combility.mods_helper_functions_list)
+
+
+    ########################################################################
+    ### Cleanup
+    ########################################################################
+    
+    def track_spawned_sub_entity(self, entity):
+        self.spawned_sub_entities.append(entity)
+    
+    def reenable_spawned_sub_entities(self):
+        for entity in self.spawned_sub_entities:
+            entity.enable()
+            # scene.entities.append(entity) ## TODO: Performance optimization to ensure that their 
+            ## code stopped running. But might not be necessary on current ursina versions. 
+    
+    def disable_spawned_sub_entities(self):
+        for entity in self.spawned_sub_entities:
+            entity.disable()
+            # scene.entities.remove(entity) ## TODO: Performance optimization to ensure that their 
+            ## code stopped running. But might not be necessary on current ursina versions. 
+    
+    def create_fixed_update(self, func, wait=1, loop=True, started=True):
+        fixed_update_name = f"fixed_update_{func.__name__}"
         
+        if not hasattr(self, fixed_update_name):
+            setattr(self, fixed_update_name, Sequence(
+                Func(func), Wait(wait), loop=loop, started=started
+            ))
+            
+            self.animations.append(getattr(self, fixed_update_name))
+            
+            self.fixed_updates_list.append(getattr(self, fixed_update_name))
+    
+    def reenable_all_fixed_updates(self):
+        for fixed_update in self.fixed_updates_list:
+            fixed_update.start()
+
+    def reenable_fixed_update(self, func_name):
+        fixed_update_name = f"fixed_update_{func_name}"
+        fixed_update = getattr(self, fixed_update_name, None)
+        if fixed_update:
+            fixed_update.start()
+    
+    def disable_all_fixed_updates(self):
+        for fixed_update in self.fixed_updates_list:
+            fixed_update.kill()
+    
+    def disable_fixed_update(self, func_name):
+        fixed_update_name = f"fixed_update_{func_name}"
+        fixed_update = getattr(self, fixed_update_name, None)
+        if fixed_update:
+            fixed_update.kill()
+    
+    def remove_all_fixed_updates(self):
+        for fixed_update in self.fixed_updates_list:
+            fixed_update.kill()
+            self.fixed_updates_list.remove(fixed_update)
+            self.animations.remove(fixed_update)
+            delattr(self, fixed_update)
+    
+    def remove_fixed_update(self, func_name):
+        fixed_update_name = f"fixed_update_{func_name}"
+        fixed_update = getattr(self, fixed_update_name, None)
+        if fixed_update:
+            fixed_update.kill()
+            self.fixed_updates_list.remove(fixed_update)
+            self.animations.remove(fixed_update)
+            delattr(self, fixed_update_name)
+    
     ########################################################################
     ### Perform Mod Functions 
     ########################################################################
@@ -234,36 +330,31 @@ class Combility(Entity):
         else:
             for func, args, kwargs in mod_list:
                 func(*args, **kwargs)
-    
-    def track_spawned_sub_entity(self, entity):
-        self.spawned_sub_entities.append(entity)
-        
-    def reenable_spawned_sub_entities(self):
-        for entity in self.spawned_sub_entities:
-            entity.enable()
-            # scene.entities.append(entity) ## TODO: Performance optimization to ensure that their 
-            ## code stopped running. But might not be necessary on current ursina versions. 
-            
-    def disable_spawned_sub_entities(self):
-        for entity in self.spawned_sub_entities:
-            entity.disable()
-            # scene.entities.remove(entity) ## TODO: Performance optimization to ensure that their 
-            ## code stopped running. But might not be necessary on current ursina versions. 
+
+
     ########################################################################
     ### Entity Methods 
     ########################################################################
     
     def enable(self, debug=False):
-        self.perform_mods_list(self.mods_enable_list, 'mods_enable_list', debug)
-        
-        
         self.reenable_spawned_sub_entities()
         
+        self.perform_mods_list(self.mods_enable_list, 'mods_enable_list', debug)
+        
+        # Check if fixed_updates have been created already
+        if not hasattr(self, 'fixed_updates_created'):
+            self.create_fixed_update(self.fixed_update_1, wait=1, loop=True, started=True)
+            self.fixed_updates_created = True  # Set the flag to True after creating fixed updates
+        
+        self.reenable_all_fixed_updates()
+
     def disable(self, debug=False):
         self.perform_mods_list(self.mods_disable_list, 'mods_disable_list', debug)
         
         self.disable_spawned_sub_entities()
         
+        self.disable_all_fixed_updates()
+
     def update(self, debug=False):
         self.perform_mods_list(self.mods_update_list, 'mods_update_list', debug)
         

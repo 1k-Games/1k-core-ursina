@@ -9,6 +9,7 @@ app = Ursina(size=(1920,1080), development_mode=True)
 
 e = Entity(model='cube', texture='white_cube')
 
+
 EditorCamera()
 app.run()
 

@@ -27,8 +27,14 @@ class Level_Editor(Entity):
         
         self.grid_cells = grid_cells
         self.cell_size = cell_size 
-        self.grid_size_in_pixels = self.grid_cells * self.cell_size
         
+        base_grid_size_in_pixels = self.grid_cells * self.cell_size
+        ratio_grid_to_grid_size_in_pixels = int(texture_resolution / base_grid_size_in_pixels)
+        self.grid_size_in_pixels = base_grid_size_in_pixels * ratio_grid_to_grid_size_in_pixels
+        pt(ratio_grid_to_grid_size_in_pixels)
+        pt(self.grid_size_in_pixels)
+
+
         self.in_memory_texture = None
         self.ground = Entity(model='cube', scale=ground_scale, collider='box')
         
@@ -80,7 +86,6 @@ class Level_Editor(Entity):
         pixels = img.load()
 
         
-        # pt(self.grid_size_in_pixels)
         for x in range(self.grid_size_in_pixels):
             for z in range(self.grid_size_in_pixels):
                 if x % self.cell_size == 0 or z % self.cell_size == 0:
@@ -113,7 +118,7 @@ class Level_Editor(Entity):
         img = Image.open(self.in_memory_texture)
         pixels = img.load()
 
-        cell_size = 10
+        cell_size = self.cell_size
         for x in range(cell_x * cell_size, (cell_x + 1) * cell_size):
             for z in range(cell_z * cell_size, (cell_z + 1) * cell_size):
                 if x % cell_size == 0 or z % cell_size == 0:
@@ -137,17 +142,45 @@ class Level_Editor(Entity):
         local_x = mouse.world_point[0] - self.ground.position.x + (self.ground.scale_x / 2)
         local_z = mouse.world_point[2] - self.ground.position.z + (self.ground.scale_z / 2)
         
-        cell_x = int(local_x)
-        cell_z = int(self.ground.scale.z - local_z)  # Adjusted for coordinate system mismatch
-
-        # pt(local_x, local_z, cell_x, cell_z, add_path, remove_path)
+        # Adjust local_x and local_z to be in terms of the texture size
+        texture_ratio_x = self.grid_size_in_pixels / self.ground.scale_x
+        texture_ratio_z = self.grid_size_in_pixels / self.ground.scale_z
         
+        # Scale local_x and local_z to texture coordinates
+        texture_x = int(local_x * texture_ratio_x)
+        texture_z = int(local_z * texture_ratio_z)
+        
+        # Invert texture_z to account for potential y-axis inversion
+        texture_z = self.grid_size_in_pixels - texture_z - 1
+        
+        # Ensure texture_x and texture_z are within the bounds of the texture
+        texture_x = max(0, min(self.grid_size_in_pixels - 1, texture_x))
+        texture_z = max(0, min(self.grid_size_in_pixels - 1, texture_z))
+
+        pt(local_x, local_z, texture_z, texture_z)
+
         if add_path:
-            self.update_grid_texture(cell_x, cell_z, color_to_change_to=(255, 255, 0))  # Yellow
+            self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 0))  # Yellow
         elif remove_path:
-            self.update_grid_texture(cell_x, cell_z, color_to_change_to=(255, 255, 255))  # White (or original color)
+            self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 255))  # White (or original color)
 
         self.apply_texture_to_ground()
+    
+    # def click_mouse(self, add_path=False, remove_path=False):
+    #     local_x = mouse.world_point[0] - self.ground.position.x + (self.ground.scale_x / 2)
+    #     local_z = mouse.world_point[2] - self.ground.position.z + (self.ground.scale_z / 2)
+        
+    #     cell_x = int(local_x)
+    #     cell_z = int(self.ground.scale.z - local_z)  # Adjusted for coordinate system mismatch
+
+    #     pt(local_x, local_z, cell_x, cell_z)
+        
+    #     if add_path:
+    #         self.update_grid_texture(cell_x, cell_z, color_to_change_to=(255, 255, 0))  # Yellow
+    #     elif remove_path:
+    #         self.update_grid_texture(cell_x, cell_z, color_to_change_to=(255, 255, 255))  # White (or original color)
+
+    #     self.apply_texture_to_ground()
 
 
 
@@ -158,7 +191,7 @@ if __name__ == "__main__":
     # development_mode=False
     )
     
-    Level_Editor = Level_Editor(grid_cells=20, cell_size=10, texture_resolution=200)
+    Level_Editor = Level_Editor(grid_cells=20, cell_size=10, texture_resolution=400)
 
     app.run()
 

@@ -19,14 +19,13 @@ pt(Entity.default_shader)
 class Level_Editor(Entity):
     def __init__(self, *args, 
                 grid_cells=20, 
-                cell_size=10, 
                 ground_scale=(20, 1, 20), 
                 texture_resolution=200,
                 **kwargs):
         super().__init__(*args, **kwargs)
         
         self.grid_cells = grid_cells
-        self.cell_size = cell_size 
+        self.cell_size = texture_resolution // grid_cells
         
         base_grid_size_in_pixels = self.grid_cells * self.cell_size
         ratio_grid_to_grid_size_in_pixels = int(texture_resolution / base_grid_size_in_pixels)
@@ -173,7 +172,7 @@ if __name__ == "__main__":
     # development_mode=False
     )
     
-    Level_Editor = Level_Editor(grid_cells=20, cell_size=10, texture_resolution=800)
+    Level_Editor = Level_Editor(grid_cells=20, texture_resolution=800)
 
     app.run()
 

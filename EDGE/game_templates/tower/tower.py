@@ -68,16 +68,15 @@ class Level_Editor(Entity):
 
             
     def update(self):
-        if held_keys['left mouse']:
-            self.click_mouse(add_path=True)
-        if held_keys['right mouse']:
-            if mouse.hovered_entity == self.ground:
-                # Temporarily disable right-click camera control
+        if mouse.hovered_entity == self.ground:
+            if held_keys['left mouse']:
+                self.click_mouse(add_path=True)
+            if held_keys['right mouse']:
                 self.editor_cam.rotate_key = None
                 self.click_mouse(remove_path=True)
             else:
-                # Re-enable the camera control if not hovering over the grid
                 self.editor_cam.rotate_key = 'right mouse'
+
             
     def create_grid_texture(self):
         
@@ -96,7 +95,6 @@ class Level_Editor(Entity):
         img.save(buffer, format='PNG')
         buffer.seek(0)
         self.in_memory_texture = buffer
-        pt(self.in_memory_texture)
 
     def apply_texture_to_ground(self):
         if self.in_memory_texture:
@@ -166,22 +164,6 @@ class Level_Editor(Entity):
 
         self.apply_texture_to_ground()
     
-    # def click_mouse(self, add_path=False, remove_path=False):
-    #     local_x = mouse.world_point[0] - self.ground.position.x + (self.ground.scale_x / 2)
-    #     local_z = mouse.world_point[2] - self.ground.position.z + (self.ground.scale_z / 2)
-        
-    #     cell_x = int(local_x)
-    #     cell_z = int(self.ground.scale.z - local_z)  # Adjusted for coordinate system mismatch
-
-    #     pt(local_x, local_z, cell_x, cell_z)
-        
-    #     if add_path:
-    #         self.update_grid_texture(cell_x, cell_z, color_to_change_to=(255, 255, 0))  # Yellow
-    #     elif remove_path:
-    #         self.update_grid_texture(cell_x, cell_z, color_to_change_to=(255, 255, 255))  # White (or original color)
-
-    #     self.apply_texture_to_ground()
-
 
 
 
@@ -191,7 +173,7 @@ if __name__ == "__main__":
     # development_mode=False
     )
     
-    Level_Editor = Level_Editor(grid_cells=20, cell_size=10, texture_resolution=400)
+    Level_Editor = Level_Editor(grid_cells=20, cell_size=10, texture_resolution=800)
 
     app.run()
 

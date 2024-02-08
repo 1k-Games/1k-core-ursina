@@ -100,7 +100,6 @@ class Level_Editor(Entity):
         pixels = img.load()
 
         cell_size = 10
-        pt(color_to_change_to)
         for x in range(grid_x * cell_size, (grid_x + 1) * cell_size):
             for z in range(grid_z * cell_size, (grid_z + 1) * cell_size):
                 if x % cell_size == 0 or z % cell_size == 0:

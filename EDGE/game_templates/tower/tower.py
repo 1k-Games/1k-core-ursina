@@ -30,8 +30,8 @@ class Level_Editor(Entity):
         base_grid_size_in_pixels = self.grid_cells * self.cell_size
         ratio_grid_to_grid_size_in_pixels = int(texture_resolution / base_grid_size_in_pixels)
         self.grid_size_in_pixels = base_grid_size_in_pixels * ratio_grid_to_grid_size_in_pixels
-        pt(ratio_grid_to_grid_size_in_pixels)
-        pt(self.grid_size_in_pixels)
+        # pt(ratio_grid_to_grid_size_in_pixels)
+        # pt(self.grid_size_in_pixels)
 
 
         self.in_memory_texture = None
@@ -64,8 +64,6 @@ class Level_Editor(Entity):
         if key == "x":
             move(targets)
 
-
-            
     def update(self):
         if mouse.hovered_entity == self.ground:
             if held_keys['left mouse']:
@@ -76,7 +74,6 @@ class Level_Editor(Entity):
             else:
                 self.editor_cam.rotate_key = 'right mouse'
 
-            
     def create_grid_texture(self):
         
         img = Image.new('RGB', (self.grid_size_in_pixels, self.grid_size_in_pixels), 
@@ -139,15 +136,13 @@ class Level_Editor(Entity):
         local_x = mouse.world_point[0] - self.ground.position.x + (self.ground.scale_x / 2)
         local_z = mouse.world_point[2] - self.ground.position.z + (self.ground.scale_z / 2)
         
-        # Adjust local_x and local_z to be in terms of the texture size
         texture_ratio_x = self.grid_size_in_pixels / self.ground.scale_x
         texture_ratio_z = self.grid_size_in_pixels / self.ground.scale_z
         
-        # Scale local_x and local_z to texture coordinates
         texture_x = int(local_x * texture_ratio_x)
         texture_z = int(local_z * texture_ratio_z)
         
-        # Invert texture_z to account for potential y-axis inversion
+        ## Invert 
         texture_z = self.grid_size_in_pixels - texture_z - 1
         
         # Ensure texture_x and texture_z are within the bounds of the texture
@@ -162,10 +157,12 @@ class Level_Editor(Entity):
             self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 255))  # White (or original color)
 
         self.apply_texture_to_ground()
-    
 
 
 
+def run():
+    level_editor = Level_Editor(grid_cells=20, texture_resolution=800)
+    level_editor.save_texture_to_disk()
 
 if __name__ == "__main__":
     app = Ursina(

@@ -10,13 +10,13 @@ import io
 
 from ursina import *
 from ursina.shaders import basic_lighting_shader as bls
-# from enemy import *
+from enemy import move
 
 
 Entity.default_shader = bls
 pt(Entity.default_shader)
 
-class Level_Editor(Entity):
+class Grid_Editor(Entity):
     def __init__(self, *args, 
                 grid_cells=20, 
                 ground_scale=(20, 1, 20), 
@@ -30,8 +30,11 @@ class Level_Editor(Entity):
         base_grid_size_in_pixels = self.grid_cells * self.cell_size
         ratio_grid_to_grid_size_in_pixels = int(texture_resolution / base_grid_size_in_pixels)
         self.grid_size_in_pixels = base_grid_size_in_pixels * ratio_grid_to_grid_size_in_pixels
+        pt(self.cell_size)
         # pt(ratio_grid_to_grid_size_in_pixels)
         # pt(self.grid_size_in_pixels)
+        
+        self.path_locations = set()
 
 
         self.in_memory_texture = None
@@ -133,39 +136,106 @@ class Level_Editor(Entity):
             print("No texture in memory to save.")
 
     def click_mouse(self, add_path=False, remove_path=False):
-        local_x = mouse.world_point[0] - self.ground.position.x + (self.ground.scale_x / 2)
-        local_z = mouse.world_point[2] - self.ground.position.z + (self.ground.scale_z / 2)
+        model_x = mouse.world_point[0] - self.ground.position.x + (self.ground.scale_x / 2)
+        model_z = mouse.world_point[2] - self.ground.position.z + (self.ground.scale_z / 2)
         
+        # Calculate the size of each cell in terms of the model's scale
+        cell_grid_ratio_x = self.ground.scale_x / self.grid_cells
+        cell_grid_ratio_z = self.ground.scale_z / self.grid_cells
+        
+        # Calculate cell position by dividing the model position by the cell size
+        cell_pos_x = int(model_x / cell_grid_ratio_x) + 1
+        cell_pos_z = int(model_z / cell_grid_ratio_z) + 1
+
+        # Create Vec3 for the cell position
+        cell_position = Vec3(cell_pos_x, 0, cell_pos_z)
+
+        if add_path:
+            if cell_position in self.path_locations:
+                return
+            self.path_locations.add(cell_position)
+        else:
+            if not cell_position in self.path_locations:
+                return
+            self.path_locations.discard(cell_position)
+            
+
         texture_ratio_x = self.grid_size_in_pixels / self.ground.scale_x
         texture_ratio_z = self.grid_size_in_pixels / self.ground.scale_z
         
-        texture_x = int(local_x * texture_ratio_x)
-        texture_z = int(local_z * texture_ratio_z)
-        
+        texture_x = int(model_x * texture_ratio_x)
+        texture_z = int(model_z * texture_ratio_z)
         ## Invert 
         texture_z = self.grid_size_in_pixels - texture_z - 1
+        
         
         # Ensure texture_x and texture_z are within the bounds of the texture
         texture_x = max(0, min(self.grid_size_in_pixels - 1, texture_x))
         texture_z = max(0, min(self.grid_size_in_pixels - 1, texture_z))
 
-        pt(local_x, local_z, texture_z, texture_z)
+        pt(model_x, model_z, cell_pos_x, cell_pos_z, texture_x, texture_z)
 
         if add_path:
             self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 0))  # Yellow
+        
         elif remove_path:
             self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 255))  # White (or original color)
-
+        
         self.apply_texture_to_ground()
 
+    def update_path(self, model_x, model_z, path_type='add'):
+        ...
+        new_point = Vec3(model_x, 0, model_z)  # Using Vec3 for compatibility with Ursina's distance check
+        
+        # # Check for existing points within cell_size distance
+        # for point in self.path_locations:
+        #     existing_point = Vec3(point[0], 0, point[1])
+        #     if distance(new_point, existing_point) < self.cell_size:
+        #         return False
+        
+        # if path_type == 'add':
+        #     self.path_locations.append((model_x, model_z))
+        #     self.reorganize_path_locations(new_point)
+        # elif path_type == 'remove':
+        #     if (model_x, model_z) in self.path_locations:
+        #         self.path_locations.remove((model_x, model_z))
+        # else:
+        #     print(f"Unknown path type: {path_type}")
 
+    def reorganize_path_locations(self, new_point):
+        if len(self.path_locations) <= 1:
+            return  # No need to reorganize if there's only one or no points
+        
+        # Convert path_locations to Vec3 for distance calculations
+        path_locations_vec3 = [Vec3(point[0], 0, point[1]) for point in self.path_locations]
+        
+        # Start reorganization from the last added point
+        sorted_locations = [new_point]
+        remaining_points = set(path_locations_vec3)
+        remaining_points.remove(new_point)
+        
+        while remaining_points:
+            last_point = sorted_locations[-1]
+            closest_point, min_distance = None, float('inf')
+            
+            for point in remaining_points:
+                dist = distance(last_point, point)
+                if dist < min_distance:
+                    closest_point, min_distance = point, dist
+            
+            sorted_locations.append(closest_point)
+            remaining_points.remove(closest_point)
+        
+        # Convert Vec3 back to tuples and update path_locations
+        self.path_locations = [(point.x, point.z) for point in sorted_locations]
 
 def run():
-    level_editor = Level_Editor(grid_cells=20, texture_resolution=800)
-    level_editor.save_texture_to_disk()
+    grid_editor = Grid_Editor(grid_cells=10, texture_resolution=800)
+    grid_editor.save_texture_to_disk()
 
 if __name__ == "__main__":
     app = Ursina(
+        title='Tower',
     # development_mode=False
     )
     

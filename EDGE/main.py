@@ -86,18 +86,7 @@ class GameMenu(Entity):
 if __name__ == "__main__":
     app = Ursina()
 
-    game_menu = GameMenu()  # Instantiate the game menu
-
-    
-
-    # Attempt to load and run the last selected game, otherwise show the menu
-    try:
-        with open('selected_game.txt', 'r') as f:
-            selected_game = f.read().strip()
-        os.remove('selected_game.txt')  # Remove the file after reading to avoid automatic selection next time
-        game_menu.run_game(selected_game)  # Automatically run the selected game
-    except FileNotFoundError:
-        game_menu.show()  # Show the game menu if no game is selected
+    game_menu = GameMenu() 
 
     EditorCamera()
 

@@ -6,8 +6,13 @@ def run():
     
 if __name__ == "__main__":
     app = Ursina(
+        title='Companion',
+        borderless = False,
+        fullscreen = False,
     # development_mode=False
     )
+    window.cog_button.enabled = False,
+    window.exit_button.enabled = False,
     
     run()
     

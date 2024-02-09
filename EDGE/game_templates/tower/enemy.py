@@ -13,7 +13,7 @@ def move(path):
     enemy.visible = True
     counter = 0
     for cube in path:
-        counter += 2
         invoke(go, enemy, cube.position, counter, delay = counter)
+        counter += 2
 
 

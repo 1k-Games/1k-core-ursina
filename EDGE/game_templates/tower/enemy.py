@@ -5,15 +5,15 @@ path = []
 
 enemy = Entity(model="sphere", color=color.red, scale=.5, visible = False)
 
-def go(enemy, pos, delay):
-    enemy.animate('position', (pos[0], .1, pos[2]), duration = 2, curve = curve.linear)
+def go(enemy, pos, duration):
+    enemy.animate('position', (pos[0], .1, pos[2]), duration=duration, curve = curve.linear)
 
-def move(path):
-    enemy.position = path[0].position
+def move(path_locations_ordered):
+    enemy.position = path_locations_ordered[0]
     enemy.visible = True
     counter = 0
-    for cube in path:
-        invoke(go, enemy, cube.position, counter, delay = counter)
+    for location in path_locations_ordered:
+        invoke(go, enemy, location, duration=2, delay=counter)
         counter += 2
 
 

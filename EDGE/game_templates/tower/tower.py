@@ -30,11 +30,13 @@ class Grid_Editor(Entity):
         base_grid_size_in_pixels = self.grid_cells * self.cell_size
         ratio_grid_to_grid_size_in_pixels = int(texture_resolution / base_grid_size_in_pixels)
         self.grid_size_in_pixels = base_grid_size_in_pixels * ratio_grid_to_grid_size_in_pixels
-        pt(self.cell_size)
+        
+        # pt(self.cell_size)
         # pt(ratio_grid_to_grid_size_in_pixels)
         # pt(self.grid_size_in_pixels)
         
         self.path_locations = set()
+        self.path_locations_ordered = []
 
 
         self.in_memory_texture = None
@@ -47,16 +49,31 @@ class Grid_Editor(Entity):
         self.editor_cam.position = Vec3(1, 22, -19)
         self.editor_cam.rotation = Vec3(50, -1.3, 0)
         self.sky = Sky(texture = "sky_sunset")
+        
+        self.camera_rotation_active = False
 
     def input(self, key):
 
         if mouse.hovered_entity == self.ground:
             if key == 'left mouse down':
                 self.click_mouse(add_path=True)
+                
             elif key == 'right mouse down':
-                self.click_mouse(remove_path=True)
+                # Attempt to remove a path. If successful, ensure camera does not rotate.
+                if self.click_mouse(remove_path=True):
+                    self.camera_rotation_active = False
+                    self.editor_cam.rotate_key = None  # Disable camera rotation
+                else:
+                    # If not removing a path (clicking on an empty cell), enable camera rotation.
+                    self.camera_rotation_active = True
+                    self.editor_cam.rotate_key = 'right mouse'
+            elif key == 'right mouse up':
+                # When the right mouse button is released, you can choose to disable rotation.
+                self.camera_rotation_active = False
+                self.editor_cam.rotate_key = None  # Ensure camera rotation is disabled
+                    
             elif key == 'middle mouse down':
-                # Handle middle click, adjust the method or parameters as needed
+
                 print("Middle click on ground")
                 
         if key == "space":
@@ -65,17 +82,41 @@ class Grid_Editor(Entity):
             print(camera.fov)
 
         if key == "x":
-            move(targets)
+            self.path_locations_ordered = self.order_path_locations(self.path_locations)
+            pt(self.path_locations_ordered)
+            move(self.path_locations_ordered)
 
     def update(self):
-        if mouse.hovered_entity == self.ground:
+        if mouse.hovered_entity == self.ground and not self.camera_rotation_active:
             if held_keys['left mouse']:
                 self.click_mouse(add_path=True)
             if held_keys['right mouse']:
-                self.editor_cam.rotate_key = None
                 self.click_mouse(remove_path=True)
-            else:
-                self.editor_cam.rotate_key = 'right mouse'
+
+
+    def order_path_locations(self, path_locations):
+        if not path_locations:
+            return []
+
+        # Convert set to list and sort it based on the sum of x, y, z components to get the smallest location at the front
+        sorted_locations = sorted(list(path_locations), key=lambda loc: loc.x + loc.y + loc.z)
+
+        # Initialize the ordered list with the first element
+        ordered_locations = [sorted_locations[0]]
+
+        # Remove the first element from sorted_locations as it is already added to ordered_locations
+        sorted_locations.remove(ordered_locations[0])
+
+        # Iterate until all locations are ordered
+        while sorted_locations:
+            last_loc = ordered_locations[-1]
+            # Find the closest location to the last location in ordered_locations
+            closest_loc = min(sorted_locations, key=lambda loc: (loc - last_loc).length())
+            ordered_locations.append(closest_loc)
+            sorted_locations.remove(closest_loc)
+
+        return ordered_locations
+
 
     def create_grid_texture(self):
         
@@ -147,16 +188,15 @@ class Grid_Editor(Entity):
         cell_pos_x = int(model_x / cell_grid_ratio_x) + 1
         cell_pos_z = int(model_z / cell_grid_ratio_z) + 1
 
-        # Create Vec3 for the cell position
         cell_position = Vec3(cell_pos_x, 0, cell_pos_z)
 
         if add_path:
             if cell_position in self.path_locations:
-                return
+                return False
             self.path_locations.add(cell_position)
         else:
             if not cell_position in self.path_locations:
-                return
+                return False
             self.path_locations.discard(cell_position)
             
 
@@ -182,6 +222,8 @@ class Grid_Editor(Entity):
             self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 255))  # White (or original color)
         
         self.apply_texture_to_ground()
+        
+        return True
 
     def update_path(self, model_x, model_z, path_type='add'):
         ...
@@ -202,32 +244,7 @@ class Grid_Editor(Entity):
         # else:
         #     print(f"Unknown path type: {path_type}")
 
-    def reorganize_path_locations(self, new_point):
-        if len(self.path_locations) <= 1:
-            return  # No need to reorganize if there's only one or no points
-        
-        # Convert path_locations to Vec3 for distance calculations
-        path_locations_vec3 = [Vec3(point[0], 0, point[1]) for point in self.path_locations]
-        
-        # Start reorganization from the last added point
-        sorted_locations = [new_point]
-        remaining_points = set(path_locations_vec3)
-        remaining_points.remove(new_point)
-        
-        while remaining_points:
-            last_point = sorted_locations[-1]
-            closest_point, min_distance = None, float('inf')
-            
-            for point in remaining_points:
-                dist = distance(last_point, point)
-                if dist < min_distance:
-                    closest_point, min_distance = point, dist
-            
-            sorted_locations.append(closest_point)
-            remaining_points.remove(closest_point)
-        
-        # Convert Vec3 back to tuples and update path_locations
-        self.path_locations = [(point.x, point.z) for point in sorted_locations]
+
 
 def run():
     grid_editor = Grid_Editor(grid_cells=10, texture_resolution=800)

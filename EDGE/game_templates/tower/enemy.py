@@ -1,19 +1,23 @@
+from print_tricks import pt
 from ursina import *
 from ursina import curve
 
 path = []
 
-enemy = Entity(model="sphere", color=color.red, scale=.5, visible = False)
+enemy = Entity(model="sphere", color=color.red, scale=2, visible = False)
 
 def go(enemy, pos, duration):
-    enemy.animate('position', (pos[0], .1, pos[2]), duration=duration, curve = curve.linear)
-
-def move(path_locations_ordered):
-    enemy.position = path_locations_ordered[0]
+    enemy.animate('position', pos, duration=duration, curve=curve.linear)
+    pt(pos)
+    
+def move(world_positions):
+    pt(world_positions)
+    enemy.position = world_positions[0]
     enemy.visible = True
     counter = 0
-    for location in path_locations_ordered:
-        invoke(go, enemy, location, duration=2, delay=counter)
-        counter += 2
+    duration = 0.7
+    for position in world_positions:
+        counter += duration
+        invoke(go, enemy, position, duration=duration, delay=counter)
 
 

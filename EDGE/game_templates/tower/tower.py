@@ -83,8 +83,11 @@ class Grid_Editor(Entity):
 
         if key == "x":
             self.path_locations_ordered = self.order_path_locations(self.path_locations)
+            world_positions = [self.cell_to_world_position(cell_pos) for cell_pos in self.path_locations_ordered]
+
             pt(self.path_locations_ordered)
-            move(self.path_locations_ordered)
+            pt(world_positions)
+            move(world_positions)
 
     def update(self):
         if mouse.hovered_entity == self.ground and not self.camera_rotation_active:
@@ -93,30 +96,31 @@ class Grid_Editor(Entity):
             if held_keys['right mouse']:
                 self.click_mouse(remove_path=True)
 
-
     def order_path_locations(self, path_locations):
         if not path_locations:
             return []
 
-        # Convert set to list and sort it based on the sum of x, y, z components to get the smallest location at the front
-        sorted_locations = sorted(list(path_locations), key=lambda loc: loc.x + loc.y + loc.z)
+        # Find the starting point with the lowest x and z values
+        starting_point = min(path_locations, key=lambda loc: (loc[0], loc[1]))
+        path_locations_list = list(path_locations)
+        path_locations_list.remove(starting_point)
 
-        # Initialize the ordered list with the first element
-        ordered_locations = [sorted_locations[0]]
-
-        # Remove the first element from sorted_locations as it is already added to ordered_locations
-        sorted_locations.remove(ordered_locations[0])
+        ordered_locations = [starting_point]
 
         # Iterate until all locations are ordered
-        while sorted_locations:
+        while path_locations_list:
             last_loc = ordered_locations[-1]
             # Find the closest location to the last location in ordered_locations
-            closest_loc = min(sorted_locations, key=lambda loc: (loc - last_loc).length())
+            closest_loc, closest_dist = None, float('inf')
+            for loc in path_locations_list:
+                dist = distance_2d(last_loc, loc)  # Assuming distance is an appropriate function or method
+                if dist < closest_dist:
+                    closest_loc, closest_dist = loc, dist
             ordered_locations.append(closest_loc)
-            sorted_locations.remove(closest_loc)
+            path_locations_list.remove(closest_loc)
 
+        pt(path_locations, ordered_locations)
         return ordered_locations
-
 
     def create_grid_texture(self):
         
@@ -188,7 +192,7 @@ class Grid_Editor(Entity):
         cell_pos_x = int(model_x / cell_grid_ratio_x) + 1
         cell_pos_z = int(model_z / cell_grid_ratio_z) + 1
 
-        cell_position = Vec3(cell_pos_x, 0, cell_pos_z)
+        cell_position = (cell_pos_x, cell_pos_z)
 
         if add_path:
             if cell_position in self.path_locations:
@@ -244,10 +248,22 @@ class Grid_Editor(Entity):
         # else:
         #     print(f"Unknown path type: {path_type}")
 
-
+    def cell_to_world_position(self, cell_position):
+        # Calculate the size of each cell in terms of the model's scale
+        cell_grid_ratio_x = self.ground.scale_x / self.grid_cells
+        cell_grid_ratio_z = self.ground.scale_z / self.grid_cells
+        
+        # Convert cell position back to world position
+        world_x = (cell_position[0] - 0.5) * cell_grid_ratio_x + self.ground.position.x - (self.ground.scale_x / 2)
+        world_z = (cell_position[1] - 0.5) * cell_grid_ratio_z + self.ground.position.z - (self.ground.scale_z / 2)
+        
+        # Assuming the y position is the same as the ground's y position
+        world_y = self.ground.position.y
+        
+        return Vec3(world_x, world_y, world_z)
 
 def run():
-    grid_editor = Grid_Editor(grid_cells=10, texture_resolution=800)
+    grid_editor = Grid_Editor(grid_cells=10, texture_resolution=100)
     grid_editor.save_texture_to_disk()
 
 if __name__ == "__main__":

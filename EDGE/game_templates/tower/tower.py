@@ -169,7 +169,7 @@ if __name__ == "__main__":
     # development_mode=False
     )
     
-    Level_Editor = Level_Editor(grid_cells=20, texture_resolution=800)
-
+    run()
+    
     app.run()
 

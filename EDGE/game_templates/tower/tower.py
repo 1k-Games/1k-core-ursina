@@ -1,25 +1,21 @@
 from print_tricks import pt
+pt.easy_imports('main.py')
 
-pt.c('------- tower ---------')
-
-
-from print_tricks import pt
 
 from PIL import Image
 import io
 
 from ursina import *
-from ursina.shaders import basic_lighting_shader as bls
-from enemy import move
+from engine.ai.enemy import move
+import placeable_turrets
 
+pt.c('------- tower ---------')
 
-Entity.default_shader = bls
-pt(Entity.default_shader)
 
 class Grid_Editor(Entity):
     def __init__(self, *args, 
                 grid_cells=20, 
-                ground_scale=(20, 1, 20), 
+                ground_scale=(20, .11, 20), 
                 texture_resolution=200,
                 **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,21 +33,23 @@ class Grid_Editor(Entity):
         
         self.path_locations = set()
         self.path_locations_ordered = []
-
-
+        
         self.in_memory_texture = None
         self.ground = Entity(model='cube', scale=ground_scale, collider='box')
         
-        self.create_grid_texture()
-        self.apply_texture_to_ground()
-
         self.editor_cam = EditorCamera()
         self.editor_cam.position = Vec3(1, 22, -19)
         self.editor_cam.rotation = Vec3(50, -1.3, 0)
         self.sky = Sky(texture = "sky_sunset")
         
         self.camera_rotation_active = False
+        self.path_location_color = color.red
+        self.trail_color = color.gray
+        self.grid_background_color = color.white
 
+        self.create_grid_texture()
+        self.apply_texture_to_ground()
+    
     def input(self, key):
 
         if mouse.hovered_entity == self.ground:
@@ -84,10 +82,12 @@ class Grid_Editor(Entity):
         if key == "x":
             self.path_locations_ordered = self.order_path_locations(self.path_locations)
             world_positions = [self.cell_to_world_position(cell_pos) for cell_pos in self.path_locations_ordered]
-
-            pt(self.path_locations_ordered)
-            pt(world_positions)
-            move(world_positions)
+            # self.draw_path_trail()
+            
+            # pt(self.path_locations_ordered)
+            # pt(world_positions)
+            # move(world_positions)
+            invoke(move, world_positions, delay=1)
 
     def update(self):
         if mouse.hovered_entity == self.ground and not self.camera_rotation_active:
@@ -95,6 +95,98 @@ class Grid_Editor(Entity):
                 self.click_mouse(add_path=True)
             if held_keys['right mouse']:
                 self.click_mouse(remove_path=True)
+
+    def cell_to_texture_position(self, cell_position):
+        """Convert cell position to texture (pixel) position, inverting the Z-axis."""
+        texture_x = int(cell_position[0] * self.cell_size + self.cell_size / 2)
+        # Invert the Z-axis for PIL image coordinates
+        texture_z = self.grid_size_in_pixels - int(cell_position[1] * self.cell_size + self.cell_size / 2)
+        return texture_x, texture_z
+
+    def draw_path_trail(self):
+        self.in_memory_texture.seek(0)
+        img = Image.open(self.in_memory_texture)
+        pixels = img.load()
+
+        # Draw the trail
+        for i in range(len(self.path_locations_ordered) - 1):
+            start_cell = self.path_locations_ordered[i]
+            end_cell = self.path_locations_ordered[i + 1]
+
+            start_x, start_z = self.cell_to_texture_position(start_cell)
+            end_x, end_z = self.cell_to_texture_position(end_cell)
+
+            self.draw_line(pixels, start_x, start_z, end_x, end_z)
+            self.draw_circle(pixels, start_x, start_z, 8)
+            self.draw_circle(pixels, end_x, end_z, 8)
+
+        # Redraw the original points on top of the trail
+        for cell in self.path_locations_ordered:
+            x, z = self.cell_to_texture_position(cell)
+            self.redraw_original_point(pixels, x, z)
+
+        # Save and apply the updated texture
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        self.in_memory_texture = buffer
+        self.apply_texture_to_ground()
+
+    def redraw_original_point(self, pixels, x, z):
+        """Draws the original path point on top of the trail."""
+        original_point_color = int(self.path_location_color[0] * 255), int(self.path_location_color[1] * 255), int(self.path_location_color[2] * 255)  # White, or choose the color that represents the original points
+        radius = 1  # Smaller radius to ensure visibility
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                if dx**2 + dy**2 <= radius**2:
+                    pixels[x + dx, z + dy] = original_point_color
+
+    def draw_line(self, pixels, x0, y0, x1, y1):
+        """Draws a line from (x0, y0) to (x1, y1) with a given radius and color gradient."""
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        x, y = x0, y0
+        sx = -1 if x0 > x1 else 1
+        sy = -1 if y0 > y1 else 1
+        self.draw_circle(pixels, x, y, 12) ## Beginning Point Circle 
+        if dx > dy:
+            err = dx / 2.0
+            while x != x1:
+                self.draw_circle(pixels, x, y, 12)
+                err -= dy
+                if err < 0:
+                    y += sy
+                    err += dx
+                x += sx
+        else:
+            err = dy / 2.0
+            while y != y1:
+                self.draw_circle(pixels, x, y, 12)
+                err -= dx
+                if err < 0:
+                    x += sx
+                    err += dy
+                y += sy
+        # self.draw_circle(pixels, x, y, 8) ## End Point Circle
+
+    def draw_circle(self, pixels, x0, y0, radius):
+        """Draws a circle of a given radius around a point (x0, y0) with a color gradient."""
+        trail_color = (int(self.trail_color[0] * 255), int(self.trail_color[1] * 255), int(self.trail_color[2] * 255))
+        background_color = (int(self.grid_background_color[0] * 255), int(self.grid_background_color[1] * 255), int(self.grid_background_color[2] * 255))
+        for x in range(x0 - radius, x0 + radius + 1):
+            for y in range(y0 - radius, y0 + radius + 1):
+                if (x - x0)**2 + (y - y0)**2 <= radius**2:
+                    # Calculate gradient ratio based on distance from the center
+                    distance = ((x - x0)**2 + (y - y0)**2)**0.23
+                    ratio = 1 - (distance / radius)  # Invert ratio for correct gradient direction
+                    # Mix colors based on the ratio
+                    mixed_color = self.mix_colors(trail_color, background_color, ratio)
+                    if 0 <= x < self.grid_size_in_pixels and 0 <= y < self.grid_size_in_pixels:
+                        pixels[x, y] = mixed_color
+
+    def mix_colors(self, color1, color2, ratio):
+        """Mixes two colors together with a given ratio. Closer to 1 means more of color1."""
+        return tuple(int(c1 * ratio + c2 * (1 - ratio)) for c1, c2 in zip(color1, color2))
 
     def order_path_locations(self, path_locations):
         if not path_locations:
@@ -122,17 +214,19 @@ class Grid_Editor(Entity):
         pt(path_locations, ordered_locations)
         return ordered_locations
 
-    def create_grid_texture(self):
-        
+    def create_grid_texture(self, draw_grid_lines=False):
         img = Image.new('RGB', (self.grid_size_in_pixels, self.grid_size_in_pixels), 
-                        color='white')
-        pixels = img.load()
-
-        
-        for x in range(self.grid_size_in_pixels):
-            for z in range(self.grid_size_in_pixels):
-                if x % self.cell_size == 0 or z % self.cell_size == 0:
-                    pixels[ x, z] = (0, 255, 0)  # Grid lines are green
+                        color=(int(self.grid_background_color[0] * 255), 
+                               int(self.grid_background_color[1] * 255), 
+                               int(self.grid_background_color[2] * 255)
+                                )
+                        )
+        if draw_grid_lines:
+            pixels = img.load()
+            for x in range(self.grid_size_in_pixels):
+                for z in range(self.grid_size_in_pixels):
+                    if x % self.cell_size == 0 or z % self.cell_size == 0:
+                        pixels[x, z] = (0, 255, 0)  # Grid lines are green
 
         # Save the image to a bytes buffer instead of a file
         buffer = io.BytesIO()
@@ -140,6 +234,26 @@ class Grid_Editor(Entity):
         buffer.seek(0)
         self.in_memory_texture = buffer
 
+    def update_grid_texture(self, cell_x, cell_z, color_to_change_to, draw_grid_lines=False):
+        color_to_change_to = (int(color_to_change_to[0] * 255), 
+                              int(color_to_change_to[1] * 255), 
+                              int(color_to_change_to[2] * 255), 255)
+        
+        img = Image.open(self.in_memory_texture)
+        pixels = img.load()
+
+        cell_size = self.cell_size
+        for x in range(cell_x * cell_size, (cell_x + 1) * cell_size):
+            for z in range(cell_z * cell_size, (cell_z + 1) * cell_size):
+                if draw_grid_lines and (x % cell_size == 0 or z % cell_size == 0):
+                    continue
+                pixels[x, z] = color_to_change_to  
+
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        self.in_memory_texture = buffer
+    
     def apply_texture_to_ground(self):
         if self.in_memory_texture:
             # Load the image from the in-memory buffer
@@ -155,23 +269,10 @@ class Grid_Editor(Entity):
         else:
             print("No texture in memory to apply.")
 
-    def update_grid_texture(self, cell_x, cell_z, color_to_change_to):
-        
-        img = Image.open(self.in_memory_texture)
-        pixels = img.load()
+    def mix_colors(self, color1, color2, ratio):
+        """Mixes two colors together with a given ratio."""
+        return tuple(int(c1 * ratio + c2 * (1 - ratio)) for c1, c2 in zip(color1, color2))
 
-        cell_size = self.cell_size
-        for x in range(cell_x * cell_size, (cell_x + 1) * cell_size):
-            for z in range(cell_z * cell_size, (cell_z + 1) * cell_size):
-                if x % cell_size == 0 or z % cell_size == 0:
-                    continue
-                pixels[x, z] = color_to_change_to  
-
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        buffer.seek(0)
-        self.in_memory_texture = buffer
-        
     def save_texture_to_disk(self, filename=r'EDGE/game_templates/tower/assets/grid_texture.png'):
         self.in_memory_texture
         if self.in_memory_texture:
@@ -217,36 +318,17 @@ class Grid_Editor(Entity):
         texture_x = max(0, min(self.grid_size_in_pixels - 1, texture_x))
         texture_z = max(0, min(self.grid_size_in_pixels - 1, texture_z))
 
-        pt(model_x, model_z, cell_pos_x, cell_pos_z, texture_x, texture_z)
+        # pt(model_x, model_z, cell_pos_x, cell_pos_z, texture_x, texture_z)
 
         if add_path:
-            self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 0))  # Yellow
+            self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=self.path_location_color)  
         
         elif remove_path:
-            self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=(255, 255, 255))  # White (or original color)
+            self.update_grid_texture(texture_x // self.cell_size, texture_z // self.cell_size, color_to_change_to=self.grid_background_color)
         
         self.apply_texture_to_ground()
         
         return True
-
-    def update_path(self, model_x, model_z, path_type='add'):
-        ...
-        new_point = Vec3(model_x, 0, model_z)  # Using Vec3 for compatibility with Ursina's distance check
-        
-        # # Check for existing points within cell_size distance
-        # for point in self.path_locations:
-        #     existing_point = Vec3(point[0], 0, point[1])
-        #     if distance(new_point, existing_point) < self.cell_size:
-        #         return False
-        
-        # if path_type == 'add':
-        #     self.path_locations.append((model_x, model_z))
-        #     self.reorganize_path_locations(new_point)
-        # elif path_type == 'remove':
-        #     if (model_x, model_z) in self.path_locations:
-        #         self.path_locations.remove((model_x, model_z))
-        # else:
-        #     print(f"Unknown path type: {path_type}")
 
     def cell_to_world_position(self, cell_position):
         # Calculate the size of each cell in terms of the model's scale
@@ -262,8 +344,8 @@ class Grid_Editor(Entity):
         
         return Vec3(world_x, world_y, world_z)
 
-def run():
-    grid_editor = Grid_Editor(grid_cells=10, texture_resolution=100)
+def run(grid_cells=55, texture_resolution=333):
+    grid_editor = Grid_Editor(grid_cells=grid_cells, texture_resolution=texture_resolution)
     grid_editor.save_texture_to_disk()
 
 if __name__ == "__main__":
@@ -272,7 +354,10 @@ if __name__ == "__main__":
     # development_mode=False
     )
     
-    run()
+    Entity(model='cube', texture='temp_symbol')
+
+    
+    run(grid_cells=400, texture_resolution=444)
     
     app.run()
 

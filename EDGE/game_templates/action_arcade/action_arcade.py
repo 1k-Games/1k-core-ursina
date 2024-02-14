@@ -10,7 +10,7 @@ if __name__ == "__main__":
         title='Action Arcade',
         # development_mode=False
     )
-    
+    Mesh()
     run()
     
     app.run()

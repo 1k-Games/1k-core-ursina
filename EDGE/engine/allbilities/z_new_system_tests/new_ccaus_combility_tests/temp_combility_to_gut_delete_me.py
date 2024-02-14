@@ -1370,7 +1370,7 @@ class Mod_Actions:
                 # self.ursina_window.removeDisplayRegion(pip_region)
                 del Combility.cameras[camera_name]
                 self.this_camera.removeNode()
-                
+        
         def prepare_camera_vr_simulation(self):
             ...
         

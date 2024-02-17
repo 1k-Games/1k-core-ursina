@@ -4,16 +4,23 @@
     rotated, but also slightly above the xy plane. 
 - Triangles are distorted very badly. 
 '''
-
+from print_tricks import pt
 from ursina import *
 import random
 
 class CustomMesh(Entity):
-    def __init__(self, texture_atlas, mode='triangle', double_sided=True, spacing='uniform', spacing_range=(1, 1, 1), 
-                 planes=['xy'], shape='quad', **kwargs):
+    def __init__(self, texture_atlas, 
+                mode='triangle', 
+                double_sided=True, 
+                spacing='uniform', 
+                spacing_range=(1, 1, 1), 
+                planes=['xy'], 
+                shape='quad',
+                point_count=9,
+                **kwargs):
         super().__init__(double_sided=double_sided, **kwargs)
         self.texture_atlas = texture_atlas
-        self.point_count = 9  # For the 3x3 grid
+        self.point_count = point_count  # For the 3x3 grid
         self.vertices = []
         self.triangles = []
         self.uvs = []
@@ -22,9 +29,10 @@ class CustomMesh(Entity):
             self.point_positions = [Vec3(x * spacing_range[0], y * spacing_range[1], z * spacing_range[2]) 
                                     for z in range(-1, 2) for y in range(-1, 2) for x in range(-1, 2)]
         elif spacing == 'random':
-            self.point_positions = [Vec3(random.uniform(-spacing_range[0], spacing_range[0]), 
-                                         random.uniform(-spacing_range[1], spacing_range[1]), 
-                                         random.uniform(-spacing_range[2], spacing_range[2])) for _ in range(self.point_count)]
+            self.point_positions = [Vec3(   
+                random.uniform(-spacing_range[0], spacing_range[0]), 
+                random.uniform(-spacing_range[1], spacing_range[1]), 
+                random.uniform(-spacing_range[2], spacing_range[2])) for _ in range(self.point_count)]
 
         self.generate_mesh(mode, planes, shape)
         self.model = Mesh(vertices=self.vertices, triangles=self.triangles, uvs=self.uvs, mode=mode)
@@ -139,13 +147,21 @@ class CustomMesh(Entity):
         self.triangles.extend([tri_start, tri_start + 1, tri_start + 2])
 
 if __name__ == '__main__':
+    
+    
     app = Ursina()
     texture_atlas = 'texture_atlas_spheres.png'
-    custom_mesh = CustomMesh(texture_atlas=texture_atlas, spacing='random', spacing_range=(2, 2, 2), double_sided=True,
+    custom_mesh = CustomMesh(
+        texture_atlas=texture_atlas, 
+        spacing='random', 
+        spacing_range=(2, 2, 2), 
+        double_sided=True,
         planes=['xy', 'zy', 'xz'], 
         # shape='triangle',
         shape='quad',
-        )  # Example usage
+        # point_count=33,
+        point_count=222333,
+        )
     EditorCamera()
     app.run()
     

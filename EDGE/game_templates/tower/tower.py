@@ -4,6 +4,7 @@ pt.easy_imports('main.py')
 
 from PIL import Image
 import io
+import json
 
 from ursina import *
 from engine.ai.enemy import move
@@ -46,10 +47,14 @@ class Grid_Editor(Entity):
         self.path_location_color = color.red
         self.trail_color = color.gray
         self.grid_background_color = color.white
-
+        
         self.create_grid_texture()
         self.apply_texture_to_ground()
-    
+        self.create_ui()
+        
+        self.load_and_run_from_slot(1)
+
+
     def input(self, key):
 
         if mouse.hovered_entity == self.ground:
@@ -86,8 +91,8 @@ class Grid_Editor(Entity):
             
             # pt(self.path_locations_ordered)
             # pt(world_positions)
-            # move(world_positions)
-            invoke(move, world_positions, delay=1)
+            move(world_positions)
+            # invoke(move, world_positions, delay=1)
 
     def update(self):
         if mouse.hovered_entity == self.ground and not self.camera_rotation_active:
@@ -96,6 +101,108 @@ class Grid_Editor(Entity):
             if held_keys['right mouse']:
                 self.click_mouse(remove_path=True)
 
+    def load_and_run_from_slot(self, slot):
+        if self.load_from_slot(slot):
+            self.path_locations_ordered = self.order_path_locations(self.path_locations)
+            self.run_move_enemy_command()
+        
+    def run_move_enemy_command(self):
+        if self.path_locations_ordered:
+            world_positions = [self.cell_to_world_position(cell_pos) for cell_pos in self.path_locations_ordered]
+            move(world_positions)
+            
+    def create_ui(self):
+        save_menu = self.create_expandable_menu('Save', Vec2(-0.8, 0.45), self.save_to_slot, 7)
+        
+        load_menu = self.create_expandable_menu('Load', Vec2(-0.7, 0.45), self.load_from_slot, 7)
+
+        clear_button = self.create_expandable_menu('Clear', Vec2(-0.6, 0.45), self.clear, 0)
+
+    def create_expandable_menu(self, title, position, action, slots=7):
+        menu = Entity(parent=camera.ui)
+        main_button = Button(text=title, parent=menu, 
+            position=position, 
+            scale=Vec2(0.1, 0.1))
+        
+        # Placeholder for expandable slot buttons
+        slot_buttons = []
+        for i in range(1, slots + 1):
+            slot_button = Button(text=str(i), parent=menu, 
+                position=position + Vec2(0, -0.1 * i), 
+                scale=Vec2(0.2, 0.1))
+            
+            # Modify the on_click function to also toggle the slots visibility after performing the action
+            def on_click_action(slot=i):
+                action(slot)
+                toggle_slots()  # Call toggle_slots to hide the sub-buttons after an action
+            
+            slot_button.on_click = Func(on_click_action)
+            slot_button.enabled = False  # Initially hidden
+            slot_buttons.append(slot_button)
+        
+        def toggle_slots():
+            # Check if any button is enabled, then disable all
+            if any(button.enabled for button in slot_buttons):
+                for button in slot_buttons:
+                    button.enabled = False
+            else:
+                for button in slot_buttons:
+                    button.enabled = True
+        
+        if title == 'Clear':
+            main_button.on_click = Func(self.clear_texture_and_points)
+        else:
+            main_button.on_click = Func(toggle_slots)
+            
+        return menu
+
+    def save_to_slot(self, slot):
+        self.save_points_and_texture(slot)
+
+    def load_from_slot(self, slot):
+        self.load_points_and_texture(slot)
+    
+    def clear(self):
+        self.clear_texture_and_points()
+        
+    def save_points_and_texture(self, slot=1):
+        points_filename = f'path_points_{slot}.json'
+        texture_filename = f'grid_texture_{slot}.png'
+        # Save points
+        with open(points_filename, 'w') as f:
+            json.dump(list(self.path_locations), f)
+        
+        # Save texture
+        self.save_texture_to_disk(texture_filename)
+
+    def load_points_and_texture(self, slot=1):
+        points_filename = f'path_points_{slot}.json'
+        texture_filename = f'grid_texture_{slot}.png'
+        # Check if points file exists
+        if not os.path.exists(points_filename):
+            print(f"{points_filename} does not exist.")
+            return False
+        # Load points
+        with open(points_filename, 'r') as f:
+            self.path_locations = set(tuple(point) for point in json.load(f))
+            self.path_locations_ordered = self.order_path_locations(self.path_locations)
+        
+        # Check if texture file exists
+        if not os.path.exists(texture_filename):
+            print(f"{texture_filename} does not exist.")
+            return False
+        # Load texture
+        with open(texture_filename, 'rb') as f:
+            self.in_memory_texture = io.BytesIO(f.read())
+            self.apply_texture_to_ground()
+
+    def clear_texture_and_points(self):
+        self.path_locations = set()
+        self.path_locations_ordered = []
+
+        self.create_grid_texture()
+        self.apply_texture_to_ground()
+    
     def cell_to_texture_position(self, cell_position):
         """Convert cell position to texture (pixel) position, inverting the Z-axis."""
         texture_x = int(cell_position[0] * self.cell_size + self.cell_size / 2)
@@ -211,7 +318,7 @@ class Grid_Editor(Entity):
             ordered_locations.append(closest_loc)
             path_locations_list.remove(closest_loc)
 
-        pt(path_locations, ordered_locations)
+        # pt(path_locations, ordered_locations)
         return ordered_locations
 
     def create_grid_texture(self, draw_grid_lines=False):
@@ -253,7 +360,7 @@ class Grid_Editor(Entity):
         img.save(buffer, format='PNG')
         buffer.seek(0)
         self.in_memory_texture = buffer
-    
+
     def apply_texture_to_ground(self):
         if self.in_memory_texture:
             # Load the image from the in-memory buffer

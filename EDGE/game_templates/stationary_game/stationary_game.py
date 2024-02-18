@@ -19,6 +19,11 @@
         - parented to camera instead of updated on every frame to it. 
         - Uses the compass effect for performant rotation-based on render/scene
         - uses -x scale to flip the texture inside the sphere (instead of using double_sided)
+        - TODO: Allow compatibility with these shapes:
+            - Sphere
+            - Dome
+            - Box
+    
     '''
 
 from print_tricks import pt

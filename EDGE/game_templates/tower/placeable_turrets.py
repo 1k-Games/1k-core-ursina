@@ -1,4 +1,7 @@
 from print_tricks import pt
+pt.easy_imports('main.py')
+
+from engine.aura.aura import Aura
 
 '''
     These can be either:

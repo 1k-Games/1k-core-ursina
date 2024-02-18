@@ -9,7 +9,7 @@
         
         '''
 
-from print_tricks import *
+from print_tricks import pt
 
 from panda3d.core import NodePath
 from ursina.vec3 import Vec3
@@ -199,3 +199,11 @@ class Light_Entity_Model(Light_Entity):
     @color.setter
     def color(self, value):
         self.actor.setColor(value)
+        
+if __name__ == '__main__':
+    from ursina import *
+    app = Ursina()
+
+    BaseEntity()
+    
+    app.run()

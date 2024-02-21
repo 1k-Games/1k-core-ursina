@@ -18,7 +18,8 @@
     - My skybox is likely much more performant and simple than ursina's. 
         - parented to camera instead of updated on every frame to it. 
         - Uses the compass effect for performant rotation-based on render/scene
-        - uses -x scale to flip the texture inside the sphere (instead of using double_sided)
+        - uses -x scale to flip the texture inside the sp
+        here (instead of using double_sided)
         - TODO: Allow compatibility with these shapes:
             - Sphere
             - Dome
@@ -39,7 +40,11 @@ class StationaryGame(Entity):
         super().__init__(*args, **kwargs)
         
         self.script_directory = os.path.dirname(os.path.abspath(__file__))
-        self.directory = os.path.join(self.script_directory, "assets", "pics_3d")
+        self.directory = os.path.join(self.script_directory, 
+            "assets", "pics_3d",
+            # "FreePik_com"
+            "FreePolyHaven",
+            )
         self.image_list = self.load_images(self.directory)
         self.current_image_index = 0
 
@@ -59,16 +64,16 @@ class StationaryGame(Entity):
         self.portal = Entity(
             model='sphere',
             scale=(-8, 8, 8),
-            position=(-10, 0, -10)
+            position=(-15, 1.75, -12)
             )
         self.skybox_1k.scale = (-clip_scale, clip_scale, clip_scale)
         #######################################
         
-        self.ground = Entity(model='plane', y=-1, scale=(15, 1, 15), 
-                            texture='brick',
-                            color=color.rgba(0,1,0,0.24),
-                            # collider='box'
-                            )
+        # self.ground = Entity(model='plane', y=-1, scale=(15, 1, 15), 
+        #                     texture='brick',
+        #                     color=color.rgba(0,1,0,0.24),
+        #                     # collider='box'
+        #                     )
         self.player = FirstPersonController()
         self.player.gravity = False
 
@@ -92,18 +97,27 @@ class StationaryGame(Entity):
             self.current_image_index = (self.current_image_index - 1) % len(self.image_list)
             self.skybox_1k.texture = os.path.join(self.image_list[self.current_image_index])        
             self.portal.texture = os.path.join(self.image_list[self.current_image_index-1])        
-
+            pt(self.skybox_1k.texture)
+            
         elif key == 'right arrow' or key == '2':
             self.current_image_index = (self.current_image_index + 1) % len(self.image_list)
             self.skybox_1k.texture = os.path.join(self.image_list[self.current_image_index])        
-            
+            self.portal.texture = os.path.join(self.image_list[self.current_image_index-1])        
+            pt(self.skybox_1k.texture)
 
 
 
 
 
 if __name__ == "__main__":
-    app = Ursina()
+    app = Ursina(
+        development_mode=False,
+        # borderless=True,
+        )
+    # window.fullscreen = False
+    # window.size = (1280, 720)
+    app.setFrameRateMeter(True)
+    
     
     game = StationaryGame()
     

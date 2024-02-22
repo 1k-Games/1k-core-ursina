@@ -1,9 +1,8 @@
 from print_tricks import pt
 pt.easy_imports()
 
-from panda3d.core import NodePath, WindowProperties
+from panda3d.core import NodePath, loadPrcFileData
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import FrameRateMeter
 
 from ursina import *
 
@@ -178,19 +177,18 @@ if __name__ == "__main__":
         
         profile_resources(num_instances, Test_Aura_Entity)
     
-    
-    engine = 'ursina'
     engine = 'panda3d'
+    engine = 'ursina'
     
     if engine == 'ursina':
-        app = Ursina(
-            development_mode=False,
-            # borderless=True,
-            )
+        loadPrcFileData('', '''frame-rate-meter-milliseconds #t
+                        ''')
+        app = Ursina(development_mode=False)
+        app.setFrameRateMeter(True)
         window.fullscreen = False 
         window.size = (1280, 720)
-        
-        app.setFrameRateMeter(True)
+
+
     else:
         class PandaApp(ShowBase):
             def __init__(self):
@@ -219,8 +217,8 @@ if __name__ == "__main__":
             '''
             
     # test_aura_nodepaths(1_000_000, use_dict, parent=scene)
-    test_aura_nodepaths(1_000_000, use_dict, parent=None)
-    # test_aura_nodepaths(1_000, use_dict, parent=None)
+    # test_aura_nodepaths(1_000_000, use_dict, parent=None)
+    test_aura_nodepaths(1_000, use_dict, parent=None)
     
     
     # test_aura_entities(10_000, use_dict, add_to_scene_entities = False)

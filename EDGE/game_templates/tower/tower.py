@@ -54,7 +54,6 @@ class Grid_Editor(Entity):
         
         self.load_and_run_from_slot(1)
 
-
     def input(self, key):
 
         if mouse.hovered_entity == self.ground:
@@ -105,12 +104,12 @@ class Grid_Editor(Entity):
         if self.load_from_slot(slot):
             self.path_locations_ordered = self.order_path_locations(self.path_locations)
             self.run_move_enemy_command()
-        
+
     def run_move_enemy_command(self):
         if self.path_locations_ordered:
             world_positions = [self.cell_to_world_position(cell_pos) for cell_pos in self.path_locations_ordered]
             move(world_positions)
-            
+
     def create_ui(self):
         save_menu = self.create_expandable_menu('Save', Vec2(-0.8, 0.45), self.save_to_slot, 7)
         

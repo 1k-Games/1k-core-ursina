@@ -78,8 +78,9 @@ class Aura:
         
         
         self.aura_id = aura_manager.aura_count + 1
+        pt(f'{self.name} - {self.aura_id}')
         if self.name is '':
-            pt.c('-------------WARNING: Aura has no name. It is best to have one for debugging purposes')
+            pt(f'-------------WARNING: Aura ID# {self.aura_id} has no name. It is best to have one for debugging purposes')
 
 
     ######################################################

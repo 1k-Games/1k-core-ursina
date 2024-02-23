@@ -6,15 +6,22 @@ from ursina import curve
 
 from engine.aura.aura import Aura
 
-path = []
+enemies = []
 
-class Enemy(Entity):
-    def __init__(self, start_position=Vec3(0,0,0), **kwargs):
+
+class Enemy_2d(Entity):
+    def __init__(self, name='', aura: Aura=None, start_position=Vec3(0,0,0), **kwargs):
         super().__init__(model="cube", color=color.red, scale=1, visible=False, position=start_position, **kwargs)
-        # Assuming Aura and its method add_entity are defined elsewhere and compatible with this approach
-        self.aura = Aura()
-        self.aura.add_entity(self)  # Here, 'self' refers to the Enemy instance, which is now an Entity
-
+        
+        ###################################
+        ## AURA Integration
+        ###################################
+        if aura:
+            self.position = aura.position
+        else:
+            self.aura = Aura(name=name)
+            self.aura.add_entity(self)
+            
     def go(self, pos, duration):
         self.animate('position', pos, duration=duration, curve=curve.linear)
 

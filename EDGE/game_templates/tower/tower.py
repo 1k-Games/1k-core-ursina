@@ -7,8 +7,8 @@ import io
 import json
 
 from ursina import *
-from engine.ai.enemy import move
-import placeable_turrets
+from engine.ai.enemy import Enemy_2d, enemies
+from placeable_turrets import Placeable_Turret
 
 pt.c('------- tower ---------')
 
@@ -37,6 +37,9 @@ class Grid_Editor(Entity):
         
         self.in_memory_texture = None
         self.ground = Entity(model='cube', scale=ground_scale, collider='box')
+        
+        self.selected_turret = None
+        
         
         self.editor_cam = EditorCamera()
         self.editor_cam.position = Vec3(1, 22, -19)
@@ -90,10 +93,34 @@ class Grid_Editor(Entity):
             
             # pt(self.path_locations_ordered)
             # pt(world_positions)
-            move(world_positions)
+            
+            if not hasattr(self, 'enemy'):
+                self.enemy = Enemy_2d()
+            self.enemy.move(world_positions)
             # invoke(move, world_positions, delay=1)
 
+        if key == 't':
+            if not self.selected_turret:  # Only allow selecting a new turret if one isn't already selected
+                self.selected_turret = Placeable_Turret()
+                self.selected_turret.model = 'cube'  # Example model, adjust as needed
+                self.selected_turret.color = color.blue  # Example color, adjust as needed
+                self.selected_turret.scale = Vec3(1, 1, 1)  # Example scale, adjust as needed
+        elif key == 'left mouse down' and self.selected_turret:
+            self.place_turret_on_grid()
+
+    def move_turret_with_mouse(self):
+        if mouse.hovered_entity == self.ground:
+            self.selected_turret.position = mouse.world_point
+            self.selected_turret.y = self.ground.y + 0.5  # Adjust turret's Y position to be slightly above the ground
+
+    def place_turret_on_grid(self):
+        # Here you can add logic to snap the turret to the grid if necessary
+        # For now, the turret is simply placed where the mouse is
+        self.selected_turret = None  # Deselect the turret after placing it
+        
     def update(self):
+        if self.selected_turret:
+            self.move_turret_with_mouse()
         if mouse.hovered_entity == self.ground and not self.camera_rotation_active:
             if held_keys['left mouse']:
                 self.click_mouse(add_path=True)

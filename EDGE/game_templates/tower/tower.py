@@ -86,41 +86,11 @@ class Grid_Editor(Entity):
             print(self.editor_cam.rotation) 
             print(camera.fov)
 
-        if key == "x":
-            self.path_locations_ordered = self.order_path_locations(self.path_locations)
-            world_positions = [self.cell_to_world_position(cell_pos) for cell_pos in self.path_locations_ordered]
-            # self.draw_path_trail()
-            
-            # pt(self.path_locations_ordered)
-            # pt(world_positions)
-            
-            if not hasattr(self, 'enemy'):
-                self.enemy = Enemy_2d(name='enemy')
-            self.enemy.move(world_positions)
-            # invoke(move, world_positions, delay=1)
 
-        if key == 't':
-            if not self.selected_turret:  # Only allow selecting a new turret if one isn't already selected
-                self.selected_turret = Placeable_Turret(name='placeable_turret')
-                self.selected_turret.model = 'cube'  # Example model, adjust as needed
-                self.selected_turret.color = color.blue  # Example color, adjust as needed
-                self.selected_turret.scale = Vec3(1, 1, 1)  # Example scale, adjust as needed
-        elif key == 'left mouse down' and self.selected_turret:
-            self.place_turret_on_grid()
 
-    def move_turret_with_mouse(self):
-        if mouse.hovered_entity == self.ground:
-            self.selected_turret.position = mouse.world_point
-            self.selected_turret.y = self.ground.y + 0.5  # Adjust turret's Y position to be slightly above the ground
 
-    def place_turret_on_grid(self):
-        # Here you can add logic to snap the turret to the grid if necessary
-        # For now, the turret is simply placed where the mouse is
-        self.selected_turret = None  # Deselect the turret after placing it
-        
     def update(self):
-        if self.selected_turret:
-            self.move_turret_with_mouse()
+
         if mouse.hovered_entity == self.ground and not self.camera_rotation_active:
             if held_keys['left mouse']:
                 self.click_mouse(add_path=True)
@@ -135,7 +105,7 @@ class Grid_Editor(Entity):
     def run_move_enemy_command(self):
         if self.path_locations_ordered:
             world_positions = [self.cell_to_world_position(cell_pos) for cell_pos in self.path_locations_ordered]
-            move(world_positions)
+            self.enemy.move(world_positions)
 
     def create_ui(self):
         save_menu = self.create_expandable_menu('Save', Vec2(-0.8, 0.45), self.save_to_slot, 7)
@@ -477,9 +447,61 @@ class Grid_Editor(Entity):
         
         return Vec3(world_x, world_y, world_z)
 
+class TurretPlacementHandler:
+    def __init__(self, ground):
+        self.selected_turret = None
+        self.ground = ground
+
+    def select_turret(self):
+        if not self.selected_turret:
+            self.selected_turret = Placeable_Turret(name='placeable_turret')
+            self.selected_turret.model = 'cube'
+            self.selected_turret.color = color.blue
+            self.selected_turret.scale = Vec3(1, 1, 1)
+
+    def place_turret_on_grid(self):
+        if self.selected_turret:
+            # Logic to place the turret on the grid
+            self.selected_turret = None
+
+    def move_turret_with_mouse(self):
+        if mouse.hovered_entity == self.ground and self.selected_turret:
+            self.selected_turret.position = mouse.world_point
+            self.selected_turret.y = self.ground.y + 0.5
+
+class MapEditor(Entity):
+    def __init__(self, grid_cells=20, texture_resolution=200):
+        super().__init__()
+        self.grid_editor = Grid_Editor(grid_cells=grid_cells, texture_resolution=texture_resolution)
+        self.grid_editor.save_texture_to_disk() ## TODO Verify that I need this on the run?
+        
+        self.turret_handler = TurretPlacementHandler(self.grid_editor.ground)
+
+    def input(self, key):
+        if key == 't':
+            self.turret_handler.select_turret()
+            
+        elif key == 'left mouse down' and self.turret_handler.selected_turret:
+            self.turret_handler.place_turret_on_grid()
+            
+        elif key == "x":
+            self.grid_editor.path_locations_ordered = self.grid_editor.order_path_locations(
+                self.grid_editor.path_locations)
+            world_positions = [
+                self.grid_editor.cell_to_world_position(cell_pos) for cell_pos in self.grid_editor.path_locations_ordered]
+            
+            if not hasattr(self, 'enemy'):
+                self.enemy = Enemy_2d(name='enemy')
+            self.enemy.move(world_positions)
+            # invoke(move, world_positions, delay=1)
+            
+    def update(self):
+        self.turret_handler.move_turret_with_mouse()
+
 def run(grid_cells=55, texture_resolution=333):
-    grid_editor = Grid_Editor(grid_cells=grid_cells, texture_resolution=texture_resolution)
-    grid_editor.save_texture_to_disk()
+    map_editor = MapEditor(grid_cells=400, texture_resolution=444)
+
+
 
 if __name__ == "__main__":
     app = Ursina(

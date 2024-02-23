@@ -35,7 +35,6 @@ class AuraManager:
         
     def set_aura_position(self, aura_id, position):
         self.aura_positions[aura_id] = position
-    
 
 aura_manager = AuraManager()
 
@@ -54,7 +53,7 @@ class Aura:
     Aura Names:
     - Necessary for development and debugging
     - Maybe should be removed for deployment to remove the memory of millions of strings
-    that might not be used. 
+    that are stored in memory that might not be used for the millions of aura's. 
     
         '''
     def __init__(self,
@@ -77,8 +76,9 @@ class Aura:
         self.lod_entities = []  # List to manage LOD entities
         
         
-        self.aura_id = aura_manager.aura_count + 1
-        pt(f'{self.name} - {self.aura_id}')
+        aura_manager.aura_count += 1
+        self.aura_id = aura_manager.aura_count
+        pt(f'{self.name} - aura id #: {self.aura_id}')
         if self.name is '':
             pt(f'-------------WARNING: Aura ID# {self.aura_id} has no name. It is best to have one for debugging purposes')
 

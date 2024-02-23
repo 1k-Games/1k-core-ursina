@@ -95,13 +95,13 @@ class Grid_Editor(Entity):
             # pt(world_positions)
             
             if not hasattr(self, 'enemy'):
-                self.enemy = Enemy_2d()
+                self.enemy = Enemy_2d(name='enemy')
             self.enemy.move(world_positions)
             # invoke(move, world_positions, delay=1)
 
         if key == 't':
             if not self.selected_turret:  # Only allow selecting a new turret if one isn't already selected
-                self.selected_turret = Placeable_Turret()
+                self.selected_turret = Placeable_Turret(name='placeable_turret')
                 self.selected_turret.model = 'cube'  # Example model, adjust as needed
                 self.selected_turret.color = color.blue  # Example color, adjust as needed
                 self.selected_turret.scale = Vec3(1, 1, 1)  # Example scale, adjust as needed

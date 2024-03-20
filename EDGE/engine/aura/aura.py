@@ -9,11 +9,21 @@ class AuraManager:
     
     
     Multiple Aura managed locations:
-        - I may want an Aura_Zone for each zone (sectioned off in distance to player,
-        and coordinates around the player). 
+        - I may want an Aura_Zone for each zone (sectioned off in both angles and 
+        distance to player, so maybe 6 angles and 3 distances = 18+ zones). 
         - So each AuraZone would need their own spatial hash grid dict, and own dict of 
-        aura id's etc. Then AuraManager would hellp move aura's around between all of
-        the various zones. 
+        aura id's etc. Then AuraManager would help move aura's around between all of
+        the various zones.
+    Multipe Aura Zones/conflict with Collisions:
+        - colliders "cAura's" must be updated at all times.
+            - But we can have a single collider for an entire mesh vertice texture atlas
+            system (and then do a precision system like voxels or something else for the
+            individual nodepaths), or a single collider for an entire zone (it would load
+            the grid dict stuff for that hash cell size in that area)
+        - Visuals "vAura's" do not need to update if you can't see them, or don't need
+        to update frequently if they are far away. 
+    Solution:
+        - How do I have an aura manager, and aura zones for visuals but not for colliders? 
         
     '''
     aura_count = 0
@@ -32,7 +42,7 @@ class AuraManager:
     
     def add_aura(self, aura_id, aura):
         self.auras.set(aura_id, aura)
-        
+    
     def set_aura_position(self, aura_id, position):
         self.aura_positions[aura_id] = position
 
@@ -95,7 +105,8 @@ class Aura:
                 - So the "parent" point has a billboard, where one of the pixels is this aura. 
             
             - a picture within another mesh vertice point picture/billboard:
-                - The "parent" billboard has a smaller image of this aura, next to other aura's. 
+                - The "parent" billboard has a smaller image of this aura, next to other aura's
+                on a texture atlas. 
                 
             - a billboard
             
@@ -106,7 +117,7 @@ class Aura:
                 - various LOD models
             
             '''
-        
+
     def lod_manager(self):
         ...
 
@@ -166,7 +177,7 @@ class Aura:
         self.entity = entity
         self.entity.position = self.position
         self.entity.kvt_pos = self.kvt_pos
-        
+
     def reenable_entity(self, entity):
         """
         Wake an entity (Make it active/render/enable because was previously disabled).

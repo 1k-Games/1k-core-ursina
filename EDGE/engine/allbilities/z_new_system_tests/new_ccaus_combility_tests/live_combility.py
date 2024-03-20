@@ -60,8 +60,8 @@
         
 
 '''
-import lebowski
-lebowski.enable() ## TODO - Lebowski.enable() should be totally unecessary to have to do
+# import lebowski
+# lebowski.enable() ## TODO - Lebowski.enable() should be totally unecessary to have to do
 # lebowski.disable() # If desired
 
 
@@ -83,8 +83,8 @@ import mods
 
 ## TODO - Basically remove both of these. Globals and target types should be dynamically
 ##       created and brought in per game, not just for energy game.
-from target_types import EnergyBeing, EG_Object, Shield, AnimatingShieldPart, Character, Core
-from eg_globals import EG_Globals
+# from target_types import EnergyBeing, EG_Object, Shield, AnimatingShieldPart, Character, Core
+# from eg_globals import EG_Globals
 
 
 class Merged_Combilities(Entity):
@@ -124,7 +124,7 @@ class Combility(Entity):
         self.setup_mod_lists()
         
         if combility_code is not None:
-            self._add_combility_code_to_lists(combility_code)
+            self.add_combility_code(combility_code)
         
         
     def setup_defaults(self):
@@ -199,13 +199,13 @@ class Combility(Entity):
     def track_spawned_sub_entity(self, entity):
         self.spawned_sub_entities.append(entity)
     
-    def reenable_spawned_sub_entities(self):
+    def _reenable_spawned_sub_entities(self):
         for entity in self.spawned_sub_entities:
             entity.enable()
             # scene.entities.append(entity) ## TODO: Performance optimization to ensure that their 
             ## code stopped running. But might not be necessary on current ursina versions. 
     
-    def disable_spawned_sub_entities(self):
+    def _disable_spawned_sub_entities(self):
         for entity in self.spawned_sub_entities:
             entity.disable()
             # scene.entities.remove(entity) ## TODO: Performance optimization to ensure that their 
@@ -223,7 +223,7 @@ class Combility(Entity):
             
             self.fixed_updates_list.append(getattr(self, fixed_update_name))
     
-    def reenable_all_fixed_updates(self):
+    def _reenable_all_fixed_updates(self):
         for fixed_update in self.fixed_updates_list:
             fixed_update.start()
 
@@ -233,7 +233,7 @@ class Combility(Entity):
         if fixed_update:
             fixed_update.start()
     
-    def disable_all_fixed_updates(self):
+    def _disable_all_fixed_updates(self):
         for fixed_update in self.fixed_updates_list:
             fixed_update.kill()
     
@@ -280,7 +280,7 @@ class Combility(Entity):
         '''
         self._add_combility_code_to_lists(combility_code, debug)
         
-        self.perform_mods_list(self.mods_prepare_list)
+        self._perform_mods_list(self.mods_prepare_list)
     
     def _add_combility_code_to_lists(self, combility_code, debug):
         if debug: pt(combility_code)
@@ -338,7 +338,7 @@ class Combility(Entity):
                         self.mods_helper_functions_list.append((bound_method, args, kwargs))
                         break  # Add only the first non-prefix method as a helper function
     
-    def perform_mods_list(self, mod_list, list_name='', debug=False):
+    def _perform_mods_list(self, mod_list, list_name='', debug=False):
         if debug:
             self.perform_debug_mod_list(mod_list, list_name)
         else:
@@ -351,29 +351,28 @@ class Combility(Entity):
     ########################################################################
     
     def enable(self, debug=False):
-        self.reenable_spawned_sub_entities()
+        self._reenable_spawned_sub_entities()
         
-        self.perform_mods_list(self.mods_enable_list, 'mods_enable_list', debug)
+        self._perform_mods_list(self.mods_enable_list, 'mods_enable_list', debug)
         
         # Check if fixed_updates have been created already
         if not hasattr(self, 'fixed_updates_created'):
             self.create_fixed_update(self.fixed_update_1, wait=1, loop=True, started=True)
             self.fixed_updates_created = True  # Set the flag to True after creating fixed updates
         
-        self.reenable_all_fixed_updates()
+        self._reenable_all_fixed_updates()
 
     def disable(self, debug=False):
-        self.perform_mods_list(self.mods_disable_list, 'mods_disable_list', debug)
+        self._perform_mods_list(self.mods_disable_list, 'mods_disable_list', debug)
         
-        self.disable_spawned_sub_entities()
+        self._disable_spawned_sub_entities()
         
-        self.disable_all_fixed_updates()
+        self._disable_all_fixed_updates()
 
     def update(self, debug=False):
-        self.perform_mods_list(self.mods_update_list, 'mods_update_list', debug)
-        
-        
-        
+        self._perform_mods_list(self.mods_update_list, 'mods_update_list', debug)
+
+
 if __name__ == "__main__":
     trajectory_mix = mods.create_trajectory_mix(
         mods.add(mods.mods_trajectories.Path_Shape, 20),
@@ -390,6 +389,9 @@ if __name__ == "__main__":
     
     combility_code = combility_code.create(trajectory_mix, [effect_mix, effect_mix_2])
     pt(combility_code)
+    
+    
+    app = Ursina()
     
     combility = Combility()
     combility.add_combility_code(combility_code)

@@ -30,7 +30,6 @@ class Enemy_2d(Entity):
         if len(world_positions) < 3:
             print("Need at least 3 points to move between averages.")
             return
-
         self.position = world_positions[0]
         self.visible = True
         counter = 0

@@ -113,3 +113,88 @@ Swap Loadouts:
 
 - Swapping loadouts via the rods in your R arm.
 - Accessing even more loadouts/options via a cog wheel on your r arm.
+
+
+
+<h1>
+File Structure
+</h1>
+
+<h2>
+Keys:
+</h2>
+
+</h4>
+
+- E = Entity,
+- NP = Nodepath,
+- GI = GPU Instance
+- BB = Billboard (np)
+- I = instantiated simple class,
+- D = data (data to be used in other classes),
+
+- N = Number of objects/instances/
+
+
+
+
+<h3>
+Character / CCAUS / Combility / Mods:
+</h3>
+-> Game -> Game Manager
+
+-> Character (E) -> CCAUS device (E)
+
+-> live_combility (NP) -> combility_code (D)
+
+-> Mods (D)
+ - Mods_Effects 
+    - brings in various mod files
+    - has a filter, for certain mods per game.
+    - has low-level and high-level mod files
+ - Mods_Trajectories
+    - (Same stuff as mods_effects)
+
+
+
+<h3>
+Aura's (E, NP, I, D)
+</h3>
+-> AuraManager (I) -> AuraSector (I) -> AuraZone (I)
+
+-> AGG_Color_Atlas, -> AGG_Box_Atlas, -> AGG_3d_Atlas, 
+
+-> AuraGroup_Color_Atlas -> AuraGroup_Box_Atlas, -> AuraGroup_3d_Atlas (NP, I*N), 
+
+-> AuraBB, -> AuraGI -> AuraNodepath -> AuraEntity
+
+
+
+AuraGrandGroup
+(with: AGG_color_Atlas, AGG_box_Atlas, AGG_3d_Atlas)
+- A texture atlas Mesh points, where each point is a picture of AuraGroup that was absorbed by this Grand Group. 
+
+AuraGroup_color_atlas:
+- Each aura is represented by a couple of colored pixels at best. 
+
+AuraGroup_box_Atlas:
+- A simple 6-sided box that has the Aura picture taken from 6 sides. 
+
+AuraGroup_3d_Atlas:
+- Aura has images placed on multiple angles. A rough 3d view of the model is formed depending on the angle viewed. Each image is on a texture atlas. Each Aura is part of a Mesh(), and is just
+one re-created quad or a couple of quads with a texture atlas to recreate his likness. 
+
+AuraBB:
+- The active Billboard part of an Aura
+
+AuraGI:
+- The active GPU instance part of an Aura
+
+AuraNodepath:
+- The active Nodepath part of an Aura
+
+AuraEntity: 
+- The active entity part of an aura
+
+
+

@@ -10,7 +10,6 @@ from engine.ai.enemy import enemies
     - Aura's that use CCAUS devices
 
     '''
-pt.c('placeable_turrets.py')
 
 
 from ursina import *
@@ -22,8 +21,8 @@ class Placeable_Turret(Entity):
         super().__init__(position=position, model="cube", color=color.blue, **kwargs)
         # self.ccaus = CCAUS(range=5)
         # self.range = self.ccaus.range
-        self.range = 2
-        self.ai_reaction_time = 0.33 ## The ai's reaction time. 
+        self.range = 4
+        self.ai_reaction_time = 0.2 ## The ai's reaction time. 
         self.ai_last_trigger_time = 0.0
         
         if aura:

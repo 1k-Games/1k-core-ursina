@@ -3,7 +3,13 @@
     trio/tractor etc. 
         - There's not need to optimiza by getting rid of entities (and converting to a singular entity
         or several nodepaths or a singular nodepath), if I don't even know what the optimization/threading/
-        integration route will look like. )'''
+        integration route will look like. )
+        
+    - While doing the python 3.12/multicore refactor, rebuild this using my 1k core Menu builder class, I was building for companion in the dark
+    but to be a universal menu
+    
+    
+        '''
 import subprocess
 
 from print_tricks import pt
@@ -131,8 +137,6 @@ class Zac:
             self.app_launcher_menus[category].enable()
             self.current_category = category
 
-
-
 class TopMenu(Entity):
     def __init__(self, switch_function, **kwargs):
         super().__init__(**kwargs)
@@ -173,7 +177,6 @@ class TopMenu(Entity):
 
             print(f"{btn.text}: position = {btn.position}, scale_x = {scale_x}")  # Debug print
             pt(btn.name, text_length, scale_x)
-
 
 class AppLauncherMenu(Entity):
     def __init__(self, list_of_apps, app_category='game_templates', **kwargs):

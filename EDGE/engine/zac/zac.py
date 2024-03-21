@@ -10,7 +10,7 @@
     
     
         '''
-import subprocess
+import os, subprocess
 
 from print_tricks import pt
 # import lebowski
@@ -106,13 +106,30 @@ settings = [
     'tower',
 ]
 
+import os
+
+class DirectoryScanner:
+    @staticmethod
+    def scan_for_templates(directory, ignore_list=None):
+        if ignore_list is None:
+            ignore_list = []
+        game_templates = [item for item in os.listdir(directory) if os.path.isdir(os.path.join(directory, item)) and item not in ignore_list]
+        return game_templates
+    
+class ConfigReader:
+    @staticmethod
+    def read_edge_installed_apps(config_file_path):
+        with open(config_file_path, 'r') as file:
+            apps = [line.strip() for line in file.readlines()]
+        return apps
+    
 class Zac:
-    def __init__(self, game_templates, store, tests, engine_tests, games, settings):
-        self.game_templates = game_templates
-        self.store = store
-        self.tests = tests
-        self.engine_tests = engine_tests
-        self.games = games
+    def __init__(self, game_templates_directory, store_apps_config_file, tests_directory, engine_tests_directory, games_config_file, settings):
+        self.store = ConfigReader.read_edge_installed_apps(store_apps_config_file)
+        self.games = ConfigReader.read_edge_installed_apps(games_config_file)
+        self.tests = DirectoryScanner.scan_for_templates(tests_directory)
+        self.engine_tests = DirectoryScanner.scan_for_templates(engine_tests_directory)
+        self.game_templates = DirectoryScanner.scan_for_templates(game_templates_directory, ignore_list=['__pycache__', ''])
         self.settings = settings
         self.app_launcher_menus = {}  # Dictionary to hold AppLauncherMenu instances by category
         self.current_category = None  # Track the current category
@@ -214,34 +231,22 @@ class AppLauncherMenu(Entity):
         screen_width = window.aspect_ratio
         screen_height = 1
         
-        # Adjust grid_width to accurately represent 2/3 of the screen's width
         grid_width = screen_width * (2/3)
-        grid_height = screen_height * 0.85  # Adjust grid height to ensure buttons fit on screen
+        grid_height = screen_height * 0.85
         
-        # Offsets for fine-tuning the starting position of the grid
-        vertical_start_offset = 0.0  # Adjust to move the first row up or down
-        horizontal_start_offset = 0.0  # Adjust to move the columns left or right, reducing effective grid width
-        
-        # Calculate the number of columns and rows based on the number of apps
         max_buttons_per_row = 4
         num_columns = max(1, min(max_buttons_per_row, len(apps)))
-        num_rows = len(apps) // num_columns + (1 if len(apps) % num_columns > 0 else 0)
+        num_rows = max(1, len(apps) // num_columns + (1 if len(apps) % num_columns > 0 else 0))
         
-        # Adjust button size to maintain aspect ratio and fit within the grid
         button_aspect_ratio = 1.6
-        spacing = 0.05  # Spacing between buttons
+        spacing = 0.05
         total_spacing = spacing * (num_columns - 1)
-        available_width_for_buttons = grid_width - total_spacing - (horizontal_start_offset * 2)  # Adjust for horizontal_start_offset
+        available_width_for_buttons = grid_width - total_spacing
         button_width = min(available_width_for_buttons / num_columns, grid_height / num_rows / button_aspect_ratio)
         button_height = button_width / button_aspect_ratio
         
-        # Calculate starting position with offsets applied
-        start_x = -0.5 + (screen_width - grid_width) / 2 + horizontal_start_offset        
-        pt(start_x)
-        # Calculate starting Y position with offsets applied, adjusted for Ursina's coordinate system
-        # Adjust start_y to account for even distribution of buttons within the grid_height
+        start_x = -0.5 + (screen_width - grid_width) / 2
         start_y = 0.5 - (button_height / 2) - ((1 - grid_height) / 2)
-        pt(start_y)
         
         for i, app_name in enumerate(apps):
             row = i // num_columns
@@ -250,8 +255,7 @@ class AppLauncherMenu(Entity):
             button_x = start_x + col * (button_width + spacing)
             button_y = start_y - row * (button_height * 1.15)
             
-            button_text = f"{app_name}"
-            button = Button(text=button_text, 
+            button = Button(text=app_name, 
                             position=(button_x, button_y), 
                             scale=(button_width, button_height),
                             parent=self)
@@ -277,11 +281,21 @@ class AppLauncherMenu(Entity):
                 else:
                     mouse.hovered_entity.color = self.button_run_color
 
-
 if __name__ == "__main__":
+    # pt.easy_imports('main.py')
+    
     app = Ursina()
 
-    zac = Zac(game_templates, store, tests, engine_tests, games, settings)
+    # zac = Zac(game_templates, store, tests, engine_tests, games, settings)
+
+    zac = Zac(
+            store_apps_config_file="EDGE/engine/zac/edge_store_apps.toml",
+            games_config_file="EDGE/engine/zac/edge_installed_games.toml",
+            tests_directory="EDGE/tests(move_crafspace_tests_here_and_organize)/",
+            engine_tests_directory="EDGE/tests(move_crafspace_tests_here_and_organize)/est_engine_specific_tests/",
+            game_templates_directory="EDGE/game_templates",
+            settings=settings
+    )
 
     EditorCamera()
 

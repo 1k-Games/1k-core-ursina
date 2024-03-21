@@ -1,0 +1,23 @@
+[fake_store_app_companion]
+path = "game_templates/companion/companion.py"
+
+[fake_store_app_haulers]
+path = "game_templates/haulers/haulers.py"
+
+[fake_store_app_tiny_marbies]
+path = "game_templates/tiny_marbies/tiny_marbies.py"
+
+[fake_store_app_tiny_energy_game]
+path = "game_templates/tiny_energy_game/tiny_energy_game.py"
+
+[fake_store_app_simulation_shooter]
+path = "game_templates/simulation_shooter/simulation_shooter.py"
+
+[fake_store_app_action_arcade]
+path = "game_templates/action_arcade/action_arcade.py"
+
+[fake_store_app_smash]
+path = "game_templates/smash/smash.py"
+
+[fake_store_app_tower]
+path = "game_templates/tower/tower.py"

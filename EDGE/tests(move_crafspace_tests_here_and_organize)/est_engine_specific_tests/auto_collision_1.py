@@ -1,0 +1,1 @@
+print('auto_collision_1')

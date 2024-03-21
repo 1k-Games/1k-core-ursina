@@ -209,39 +209,49 @@ class AppLauncherMenu(Entity):
 
     def create_app_buttons(self, apps):
         screen_width = window.aspect_ratio
-        screen_height = 1 
+        screen_height = 1
         
-        grid_width = screen_width * (2/3)  # Grid takes up 2/3 of the screen width
-        grid_height = screen_height * 0.8  # Adjust grid height to ensure buttons fit on screen
+        # Adjust grid_width to accurately represent 2/3 of the screen's width
+        grid_width = screen_width * (2/3)
+        grid_height = screen_height * 0.85  # Adjust grid height to ensure buttons fit on screen
+        
+        # Offsets for fine-tuning the starting position of the grid
+        vertical_start_offset = 0.0  # Adjust to move the first row up or down
+        horizontal_start_offset = 0.0  # Adjust to move the columns left or right, reducing effective grid width
         
         # Calculate the number of columns and rows based on the number of apps
-        # Ensure num_columns is at least 1 to avoid division by zero
-        max_buttons_per_row = 4  # Adjust based on your preference
+        max_buttons_per_row = 4
         num_columns = max(1, min(max_buttons_per_row, len(apps)))
         num_rows = len(apps) // num_columns + (1 if len(apps) % num_columns > 0 else 0)
         
         # Adjust button size to maintain aspect ratio and fit within the grid
-        button_aspect_ratio = 1.6  # Adjust based on desired button width:height ratio
-        button_width = min(grid_width / num_columns / 1.3, grid_height / num_rows / button_aspect_ratio)
+        button_aspect_ratio = 1.6
+        spacing = 0.05  # Spacing between buttons
+        total_spacing = spacing * (num_columns - 1)
+        available_width_for_buttons = grid_width - total_spacing - (horizontal_start_offset * 2)  # Adjust for horizontal_start_offset
+        button_width = min(available_width_for_buttons / num_columns, grid_height / num_rows / button_aspect_ratio)
         button_height = button_width / button_aspect_ratio
         
-        # Calculate starting position
-        start_x = (screen_width - grid_width) / 2  # Center the grid horizontally
-        start_y = (grid_height / 2) - (button_height / 2)  # Start from the top of the grid
+        # Calculate starting position with offsets applied
+        start_x = -0.5 + (screen_width - grid_width) / 2 + horizontal_start_offset        
+        pt(start_x)
+        # Calculate starting Y position with offsets applied, adjusted for Ursina's coordinate system
+        # Adjust start_y to account for even distribution of buttons within the grid_height
+        start_y = 0.5 - (button_height / 2) - ((1 - grid_height) / 2)
+        pt(start_y)
         
         for i, app_name in enumerate(apps):
             row = i // num_columns
             col = i % num_columns
             
-            button_x = start_x + col * (button_width * 1.15) + button_width / 2
+            button_x = start_x + col * (button_width + spacing)
             button_y = start_y - row * (button_height * 1.15)
             
             button_text = f"{app_name}"
             button = Button(text=button_text, 
                             position=(button_x, button_y), 
                             scale=(button_width, button_height),
-                            parent=self,
-                            )
+                            parent=self)
             
             def on_click(app_name=app_name, button=button):
                 if mouse.point[1] < self.button_close_location:

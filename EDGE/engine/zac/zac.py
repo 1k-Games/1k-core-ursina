@@ -12,7 +12,18 @@ from print_tricks import pt
 
 from ursina import *
 
-
+store = [
+    'Games',
+    'Skins',
+    'Mods',
+    
+]
+tests = [
+    '...',
+]
+engine_tests = [
+    '...',
+]
 game_templates = [
     'companion',
     'haulers',
@@ -23,9 +34,91 @@ game_templates = [
     'smash',
     'tower',
 ]
+games = [
+    '...',
+]
+settings = [
+    '...',
+]
+
+class Zac:
+    def __init__(self, game_templates, store, tests, engine_tests, games, settings):
+        self.game_templates = game_templates
+        self.store = store
+        self.tests = tests
+        self.engine_tests = engine_tests
+        self.games = games
+        self.settings = settings
+        self.app_launcher_menu = None
+        self.top_menu = None
+        self.initialize_ui()
+
+    def initialize_ui(self):
+        self.top_menu = TopMenu(self.switch_app_category)
+        self.app_launcher_menu = AppLauncherMenu(self.game_templates)
 
 
-class AppLauncher(Entity):
+    def switch_app_category(self, category):
+        # Map category to the corresponding list of apps
+        category_to_list = {
+            "store": self.store,
+            "tests": self.tests,
+            "engine_tests": self.engine_tests,
+            "game_templates": self.game_templates,
+            "games": self.games,
+            "settings": self.settings,
+        }
+        selected_list = category_to_list.get(category, [])
+        if self.app_launcher_menu:
+            self.app_launcher_menu.disable()  # Disable the current launcher instance
+        self.app_launcher_menu = AppLauncherMenu(selected_list, app_category=category)
+        self.app_launcher_menu.enable()  # Enable the new launcher instance
+
+
+
+class TopMenu(Entity):
+    def __init__(self, switch_function, **kwargs):
+        super().__init__(**kwargs)
+        self.parent = camera.ui
+        self.menu_items = ["store", "tests", "engine_tests", "game_templates", "games", "settings"]
+        self.switch_function = switch_function
+        
+        self.btn_y_pos = 0.46
+        self.create_menu()
+
+    def create_menu(self):
+        max_length = max(len(item) for item in self.menu_items)  # Find the longest item
+        base_scale_x = 0.1  # Base scale for X, adjust as needed
+        base_scale_y = 0.05  # Base scale for Y, adjust as needed
+        scale_factor = 0.15  # Adjust this factor to increase or decrease the scaling effect
+        spacing = 0.05  # Spacing between buttons, adjust as needed
+
+        # Calculate total width required for all buttons including spacing
+        total_width = sum(base_scale_x + (len(item) / max_length) * scale_factor for item in self.menu_items)
+        total_width += spacing * (len(self.menu_items) - 1)  # Add spacing between buttons
+
+        # Calculate initial cumulative_x based on total width to center or align buttons as needed
+        cumulative_x = -total_width / 2  # Adjust this to change alignment
+
+        for i, item in enumerate(self.menu_items):
+            text_length = len(item)
+            # Calculate scale_x as base_scale_x plus an additional factor based on text length
+            scale_x = base_scale_x + (text_length / max_length) * scale_factor
+
+            btn = Button(text=item.capitalize(),
+                        position=(cumulative_x + scale_x / 2, self.btn_y_pos),  # Adjust position to account for button width
+                        scale=(scale_x, base_scale_y),
+                        parent=self,
+                        on_click=Func(self.switch_function, item))
+
+            # Update cumulative_x for the next button, adding the current button's width plus fixed spacing
+            cumulative_x += scale_x + spacing
+
+            print(f"{btn.text}: position = {btn.position}, scale_x = {scale_x}")  # Debug print
+            pt(btn.name, text_length, scale_x)
+
+
+class AppLauncherMenu(Entity):
     def __init__(self, list_of_apps, app_category='game_templates', **kwargs):
         super().__init__(**kwargs)
         self.app_category = app_category
@@ -45,15 +138,10 @@ class AppLauncher(Entity):
         self.button_close_location = -0.31
 
         self.create_app_buttons(list_of_apps)
-        
+
     def run_app(self, app_name):
-        # Path to the app script
-        app_script_path = f"edge/game_templates/{app_name}/{app_name}.py"
-        
-        # Launch the app as a separate process
+        app_script_path = f"edge/{self.app_category}/{app_name}/{app_name}.py"
         process = subprocess.Popen(["python", app_script_path], start_new_session=True)
-        
-        # Store the process handle, using the app name as the key
         self.app_processes[app_name] = process
 
     def kill_app(self, app_name):
@@ -63,7 +151,6 @@ class AppLauncher(Entity):
             del self.app_processes[app_name]  # Remove the process from the dictionary
 
     def create_app_buttons(self, apps):
-        
         screen_width = window.aspect_ratio
         screen_height = 1 
         
@@ -71,9 +158,9 @@ class AppLauncher(Entity):
         grid_height = screen_height  # Grid takes up full screen height
         
         # Calculate the number of columns and rows based on the number of apps
-        # Adjust these values based on your needs for minimum button size or maximum buttons per row
+        # Ensure num_columns is at least 1 to avoid division by zero
         max_buttons_per_row = 4  # Example: Adjust based on your preference
-        num_columns = min(max_buttons_per_row, len(apps))
+        num_columns = max(1, min(max_buttons_per_row, len(apps)))
         num_rows = len(apps) // num_columns + (1 if len(apps) % num_columns > 0 else 0)
         
         # Calculate button size
@@ -86,7 +173,6 @@ class AppLauncher(Entity):
         
         for i, app_name in enumerate(apps):
             # Existing button setup code...
-            # Integrate "x" into the button's text
             row = i // num_columns
             col = i % num_columns
             
@@ -127,10 +213,11 @@ class AppLauncher(Entity):
                 else:
                     mouse.hovered_entity.color = self.button_run_color
 
+
 if __name__ == "__main__":
     app = Ursina()
 
-    launcher_menu = AppLauncher(game_templates)
+    zac = Zac(game_templates, store, tests, engine_tests, games, settings)
 
     EditorCamera()
 

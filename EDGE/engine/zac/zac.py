@@ -19,10 +19,20 @@ store = [
     
 ]
 tests = [
-    '...',
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+
 ]
 engine_tests = [
-    '...',
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+    'simulation_shooter',
+    'action_arcade',
+
 ]
 game_templates = [
     'companion',
@@ -33,12 +43,61 @@ game_templates = [
     'action_arcade',
     'smash',
     'tower',
+    
+
 ]
 games = [
-    '...',
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+    'simulation_shooter',
+    'action_arcade',
+    'smash',
+    'tower',
+    
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+
 ]
 settings = [
-    '...',
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+    'simulation_shooter',
+    'action_arcade',
+    'smash',
+    'tower',
+    
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+    'simulation_shooter',
+    'action_arcade',
+    'smash',
+    'tower',
+
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+    'simulation_shooter',
+    'action_arcade',
+    'smash',
+    'tower',
+    
+    'companion',
+    'haulers',
+    'tiny_marbies',
+    'tiny_energy_game',
+    'simulation_shooter',
+    'action_arcade',
+    'smash',
+    'tower',
 ]
 
 class Zac:
@@ -49,30 +108,28 @@ class Zac:
         self.engine_tests = engine_tests
         self.games = games
         self.settings = settings
-        self.app_launcher_menu = None
-        self.top_menu = None
+        self.app_launcher_menus = {}  # Dictionary to hold AppLauncherMenu instances by category
+        self.current_category = None  # Track the current category
         self.initialize_ui()
 
     def initialize_ui(self):
         self.top_menu = TopMenu(self.switch_app_category)
-        self.app_launcher_menu = AppLauncherMenu(self.game_templates)
-
+        # Initialize all categories at the start but do not display them
+        for category in ["store", "tests", "engine_tests", "game_templates", "games", "settings"]:
+            category_list = getattr(self, category)
+            self.app_launcher_menus[category] = AppLauncherMenu(category_list, app_category=category)
+            self.app_launcher_menus[category].disable()  # Start with all menus disabled
+            pt(self.app_launcher_menus[category].name)
 
     def switch_app_category(self, category):
-        # Map category to the corresponding list of apps
-        category_to_list = {
-            "store": self.store,
-            "tests": self.tests,
-            "engine_tests": self.engine_tests,
-            "game_templates": self.game_templates,
-            "games": self.games,
-            "settings": self.settings,
-        }
-        selected_list = category_to_list.get(category, [])
-        if self.app_launcher_menu:
-            self.app_launcher_menu.disable()  # Disable the current launcher instance
-        self.app_launcher_menu = AppLauncherMenu(selected_list, app_category=category)
-        self.app_launcher_menu.enable()  # Enable the new launcher instance
+        # Disable the current launcher menu
+        if self.current_category and self.current_category in self.app_launcher_menus:
+            self.app_launcher_menus[self.current_category].disable()
+        
+        # Enable the selected category's launcher menu
+        if category in self.app_launcher_menus:
+            self.app_launcher_menus[category].enable()
+            self.current_category = category
 
 
 
@@ -130,7 +187,7 @@ class AppLauncherMenu(Entity):
         
         self.update_interval = 0.25
         self.time_since_last_check = 0
-        self.previous_hovered_entity = None
+        self.previous_hovered_entity = Entity()
         
         self.button_color = color.rgba(0, 0, 0, 1)
         self.button_run_color = color.rgba(0, 1, 0, 0.75)
@@ -155,48 +212,42 @@ class AppLauncherMenu(Entity):
         screen_height = 1 
         
         grid_width = screen_width * (2/3)  # Grid takes up 2/3 of the screen width
-        grid_height = screen_height  # Grid takes up full screen height
+        grid_height = screen_height * 0.8  # Adjust grid height to ensure buttons fit on screen
         
         # Calculate the number of columns and rows based on the number of apps
         # Ensure num_columns is at least 1 to avoid division by zero
-        max_buttons_per_row = 4  # Example: Adjust based on your preference
+        max_buttons_per_row = 4  # Adjust based on your preference
         num_columns = max(1, min(max_buttons_per_row, len(apps)))
         num_rows = len(apps) // num_columns + (1 if len(apps) % num_columns > 0 else 0)
         
-        # Calculate button size
-        button_width = grid_width / num_columns / 1.3
-        button_height = grid_height / num_rows / 1.3
+        # Adjust button size to maintain aspect ratio and fit within the grid
+        button_aspect_ratio = 1.6  # Adjust based on desired button width:height ratio
+        button_width = min(grid_width / num_columns / 1.3, grid_height / num_rows / button_aspect_ratio)
+        button_height = button_width / button_aspect_ratio
         
         # Calculate starting position
-        start_x = screen_width / 3  # Since the grid is on the right 2/3 of the screen
-        start_y = 0  
+        start_x = (screen_width - grid_width) / 2  # Center the grid horizontally
+        start_y = (grid_height / 2) - (button_height / 2)  # Start from the top of the grid
         
         for i, app_name in enumerate(apps):
-            # Existing button setup code...
             row = i // num_columns
             col = i % num_columns
             
-            button_x = start_x + col * (button_width * 1.15) - screen_width / 2 + button_width / 2  # Adjust position based on grid size
-            button_y = start_y - row * (button_height * 1.15) + button_height / 2  # Adjust position based on grid size
+            button_x = start_x + col * (button_width * 1.15) + button_width / 2
+            button_y = start_y - row * (button_height * 1.15)
             
-            # Adjust the number of '\n' and ' ' based on your button size and desired layout
-            button_text = f"\n\n\n\n\n\n{app_name}\n\n\n\n\n\nx"
+            button_text = f"{app_name}"
             button = Button(text=button_text, 
                             position=(button_x, button_y), 
                             scale=(button_width, button_height),
-                            # highlight_color=color.rgba(0, 1, 0, .75), 
-                            highlight_scale=1.1,
+                            parent=self,
                             )
-            self.previous_hovered_entity = button
             
-            # Custom on_click function to handle both app launch and kill
             def on_click(app_name=app_name, button=button):
                 if mouse.point[1] < self.button_close_location:
                     self.kill_app(app_name)
-                    # pt('kill app')
                 else:
                     self.run_app(app_name)
-                    # pt(app_name)
             
             button.on_click = Func(on_click)
             self.app_buttons.append(button)
